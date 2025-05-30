@@ -384,6 +384,51 @@ const appReducer = (state, action) => {
             : venue
         )
       };
+    case 'REPORT_VENUE':
+      const { venueId: reportVenueId, reportData } = action.payload;
+      return {
+        ...state,
+        venues: state.venues.map(venue => {
+          if (venue.id === reportVenueId) {
+            return {
+              ...venue,
+              crowdLevel: reportData.crowdLevel || venue.crowdLevel,
+              waitTime: reportData.waitTime !== undefined ? reportData.waitTime : venue.waitTime,
+              reports: venue.reports + 1,
+              lastUpdate: "Just now",
+              confidence: Math.min(98, venue.confidence + 5)
+            };
+          }
+          return venue;
+        }),
+        userProfile: {
+          ...state.userProfile,
+          points: state.userProfile.points + 10,
+          totalReports: state.userProfile.totalReports + 1
+        }
+      };
+    case 'RATE_VENUE':
+      const { venueId: rateVenueId, rating, comment } = action.payload;
+      return {
+        ...state,
+        venues: state.venues.map(venue => {
+          if (venue.id === rateVenueId) {
+            const newTotalRatings = venue.totalRatings + 1;
+            const newRating = ((venue.rating * venue.totalRatings) + rating) / newTotalRatings;
+            return {
+              ...venue,
+              rating: Math.round(newRating * 10) / 10,
+              totalRatings: newTotalRatings
+            };
+          }
+          return venue;
+        }),
+        userProfile: {
+          ...state.userProfile,
+          points: state.userProfile.points + 5,
+          totalRatings: state.userProfile.totalRatings + 1
+        }
+      };
     case 'ADD_NOTIFICATION':
       const notification = {
         id: Date.now(),
@@ -430,6 +475,12 @@ export const AppProvider = ({ children }) => {
     }, []),
     unfollowVenue: useCallback((venueId, venueName) => {
       dispatch({ type: 'UNFOLLOW_VENUE', payload: { venueId, venueName } });
+    }, []),
+    reportVenue: useCallback((venueId, reportData) => {
+      dispatch({ type: 'REPORT_VENUE', payload: { venueId, reportData } });
+    }, []),
+    rateVenue: useCallback((venueId, rating, comment) => {
+      dispatch({ type: 'RATE_VENUE', payload: { venueId, rating, comment } });
     }, []),
     addNotification: useCallback((notification) => {
       dispatch({ type: 'ADD_NOTIFICATION', payload: notification });

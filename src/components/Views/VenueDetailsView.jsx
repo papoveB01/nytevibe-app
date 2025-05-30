@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, MapPin, Clock, Phone, Star, Users, Share2, Navigation } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Phone, Star, Users, Share2, Navigation, AlertTriangle, ThumbsUp } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import FollowButton from '../Follow/FollowButton';
 import FollowStats from '../Follow/FollowStats';
@@ -27,6 +27,16 @@ const VenueDetailsView = ({ onBack, onShare }) => {
       </div>
     );
   }
+
+  const handleRateVenue = () => {
+    actions.setSelectedVenue(venue);
+    actions.setShowRatingModal(true);
+  };
+
+  const handleReportStatus = () => {
+    actions.setSelectedVenue(venue);
+    actions.setShowReportModal(true);
+  };
 
   return (
     <div className="venue-details-view">
@@ -101,10 +111,23 @@ const VenueDetailsView = ({ onBack, onShare }) => {
             <div className="info-item">
               <Users className="info-icon" />
               <div>
-                <div className="info-label">Wait Time</div>
+                <div className="info-label">Current Status</div>
                 <div className="info-value">
-                  {venue.waitTime > 0 ? `${venue.waitTime} minutes` : 'No wait'}
+                  <span className={getCrowdColor(venue.crowdLevel)}>
+                    {getCrowdLabel(venue.crowdLevel)}
+                  </span>
+                  {venue.waitTime > 0 && (
+                    <span className="ml-2 text-gray-600">• {venue.waitTime} min wait</span>
+                  )}
                 </div>
+              </div>
+            </div>
+
+            <div className="info-item">
+              <Clock className="info-icon" />
+              <div>
+                <div className="info-label">Last Updated</div>
+                <div className="info-value text-gray-600">{venue.lastUpdate}</div>
               </div>
             </div>
           </div>
@@ -121,6 +144,7 @@ const VenueDetailsView = ({ onBack, onShare }) => {
           </div>
         </div>
 
+        {/* Navigation & Share Actions */}
         <div className="action-buttons-section">
           <Button onClick={() => openGoogleMaps(venue)}>
             <MapPin className="w-4 h-4" />
@@ -136,21 +160,44 @@ const VenueDetailsView = ({ onBack, onShare }) => {
           </Button>
         </div>
 
-        <div className="action-buttons-section">
-          <Button 
-            variant="warning" 
-            onClick={() => actions.setShowRatingModal(true)}
-          >
-            <Star className="w-4 h-4" />
-            Rate Venue
-          </Button>
-          <Button 
-            variant="secondary" 
-            onClick={() => actions.setShowReportModal(true)}
-          >
-            <Users className="w-4 h-4" />
-            Report Status
-          </Button>
+        {/* Community Actions */}
+        <div className="community-actions-section">
+          <h3>Help the Community</h3>
+          <p className="community-subtitle">Share your experience and help others know what to expect!</p>
+          
+          <div className="action-buttons-section">
+            <Button 
+              variant="warning" 
+              onClick={handleRateVenue}
+              className="community-action-btn"
+            >
+              <Star className="w-4 h-4" />
+              Rate Venue
+              <span className="action-points">+5 pts</span>
+            </Button>
+            <Button 
+              variant="primary" 
+              onClick={handleReportStatus}
+              className="community-action-btn report-btn"
+            >
+              <AlertTriangle className="w-4 h-4" />
+              Report Status
+              <span className="action-points">+10 pts</span>
+            </Button>
+          </div>
+          
+          <div className="community-stats">
+            <div className="stat-box">
+              <Users className="w-4 h-4 text-blue-500" />
+              <span className="stat-number">{venue.reports}</span>
+              <span className="stat-label">recent reports</span>
+            </div>
+            <div className="stat-box">
+              <ThumbsUp className="w-4 h-4 text-green-500" />
+              <span className="stat-number">{venue.confidence}%</span>
+              <span className="stat-label">confidence</span>
+            </div>
+          </div>
         </div>
 
         {venue.reviews && venue.reviews.length > 0 && (
