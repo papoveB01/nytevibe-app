@@ -10,25 +10,24 @@ const App = () => {
   const [showReviewsModal, setShowReviewsModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
-  const [venueFilter, setVenueFilter] = useState('all'); // 'all' or 'followed'
 
   // Enhanced User Profile State with Follow System
   const [userProfile, setUserProfile] = useState({
     id: 'usr_12345',
-    firstName: 'Marcus',
-    lastName: 'Johnson',
-    username: 'marcus_houston',
-    email: 'marcus.j@example.com',
+    firstName: 'Papove',
+    lastName: 'Bombando',
+    username: 'papove_bombando',
+    email: 'papove.b@example.com',
     phone: '+1 (713) 555-0199',
-    avatar: null,
+    avatar: null, // Will use initials if no avatar
     points: 1247,
     level: 'Gold Explorer',
-    levelTier: 'gold',
+    levelTier: 'gold', // bronze, silver, gold, platinum, diamond
     memberSince: '2023',
     totalReports: 89,
     totalRatings: 156,
-    totalFollows: 3,
-    followedVenues: [1, 3, 4],
+    totalFollows: 3, // Number of venues followed
+    followedVenues: [1, 3, 4], // IDs of followed venues
     badgesEarned: ['Early Bird', 'Community Helper', 'Venue Expert', 'Houston Local'],
     preferences: {
       notifications: true,
@@ -57,7 +56,7 @@ const App = () => {
   // Banner state
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
 
-  // Promotional banners data
+  // Promotional banners data - VISIBLE and WORKING
   const promotionalBanners = useMemo(() => [
     {
       id: 'community',
@@ -115,15 +114,16 @@ const App = () => {
     }
   ], []);
 
-  // Banner rotation
+  // Simple, working banner rotation
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentBannerIndex((prev) => (prev + 1) % promotionalBanners.length);
-    }, 12000);
+    }, 12000); // 12 seconds
 
     return () => clearInterval(interval);
   }, [promotionalBanners.length]);
 
+  // Manual banner navigation
   const nextBanner = () => {
     setCurrentBannerIndex((prev) => (prev + 1) % promotionalBanners.length);
   };
@@ -173,33 +173,21 @@ const App = () => {
     setUserProfile(prev => {
       const isCurrentlyFollowed = prev.followedVenues.includes(venueId);
       
-      // Update venue follower count
-      setVenues(prevVenues =>
-        prevVenues.map(venue =>
-          venue.id === venueId
-            ? {
-                ...venue,
-                followersCount: isCurrentlyFollowed 
-                  ? (venue.followersCount || 100) - 1
-                  : (venue.followersCount || 100) + 1
-              }
-            : venue
-        )
-      );
-      
       if (isCurrentlyFollowed) {
+        // Unfollow
         return {
           ...prev,
           followedVenues: prev.followedVenues.filter(id => id !== venueId),
           totalFollows: prev.totalFollows - 1,
-          points: prev.points - 2
+          points: prev.points - 2 // Lose 2 points for unfollowing
         };
       } else {
+        // Follow
         return {
           ...prev,
           followedVenues: [...prev.followedVenues, venueId],
           totalFollows: prev.totalFollows + 1,
-          points: prev.points + 3
+          points: prev.points + 3 // Gain 3 points for following
         };
       }
     });
@@ -210,324 +198,83 @@ const App = () => {
     return venues.filter(venue => userProfile.followedVenues.includes(venue.id));
   };
 
-  // Enhanced Follow Notification Component
-  const FollowNotification = ({ show, message, type = 'follow' }) => {
-    if (!show) return null;
-    
-    return (
-      <div className={`follow-notification ${type}`}>
-        <div className="notification-content">
-          <Heart className={`notification-icon ${type === 'follow' ? 'filled' : 'outline'}`} />
-          <span className="notification-text">{message}</span>
-        </div>
-      </div>
-    );
-  };
-
-  // Enhanced Follow Button Component with Haptic Feedback
-  const EnhancedFollowButton = ({ venue, className = "", showTooltip = true, showCount = false }) => {
-    const [showNotification, setShowNotification] = useState(false);
-    const [notificationMessage, setNotificationMessage] = useState('');
-    const [notificationType, setNotificationType] = useState('follow');
+  // Sleek Follow Button Component
+  const FollowButton = ({ venue, className = "" }) => {
     const isFollowed = isVenueFollowed(venue.id);
-    
-    const handleFollow = (e) => {
-      e.stopPropagation();
-      
-      // Haptic feedback for mobile
-      if (navigator.vibrate) {
-        navigator.vibrate(isFollowed ? [50] : [100, 50, 100]);
-      }
-      
-      // Visual feedback
-      const message = isFollowed 
-        ? `Unfollowed ${venue.name}` 
-        : `Following ${venue.name}!`;
-      
-      setNotificationMessage(message);
-      setNotificationType(isFollowed ? 'unfollow' : 'follow');
-      setShowNotification(true);
-      
-      // Handle the follow action
-      handleVenueFollow(venue.id, venue.name);
-      
-      // Hide notification after 2 seconds
-      setTimeout(() => setShowNotification(false), 2000);
-    };
-
-    return (
-      <>
-        <button
-          onClick={handleFollow}
-          className={`follow-button ${showCount ? 'enhanced' : ''} ${isFollowed ? 'followed' : 'not-followed'} ${className}`}
-          aria-label={isFollowed ? `Unfollow ${venue.name}` : `Follow ${venue.name}`}
-          title={showTooltip ? (isFollowed ? `Unfollow ${venue.name}` : `Follow ${venue.name}`) : ''}
-          data-followed={isFollowed}
-        >
-          <Heart className={`follow-icon ${isFollowed ? 'filled' : 'outline'}`} />
-          {showCount && <span className="follow-count">{venue.followersCount || 100}</span>}
-        </button>
-        
-        <FollowNotification 
-          show={showNotification} 
-          message={notificationMessage} 
-          type={notificationType} 
-        />
-      </>
-    );
-  };
-
-  // Followed Venues Filter Component
-  const FollowedVenuesFilter = ({ onFilter }) => {
-    const toggleFollowedFilter = () => {
-      const newFilter = venueFilter === 'all' ? 'followed' : 'all';
-      setVenueFilter(newFilter);
-      onFilter(newFilter);
-    };
     
     return (
       <button
-        onClick={toggleFollowedFilter}
-        className={`filter-button ${venueFilter === 'followed' ? 'active' : ''}`}
+        onClick={(e) => {
+          e.stopPropagation();
+          handleVenueFollow(venue.id, venue.name);
+        }}
+        className={`follow-button ${isFollowed ? 'followed' : 'not-followed'} ${className}`}
+        aria-label={isFollowed ? `Unfollow ${venue.name}` : `Follow ${venue.name}`}
+        title={isFollowed ? `Unfollow ${venue.name}` : `Follow ${venue.name}`}
       >
-        <Heart className={`filter-icon ${venueFilter === 'followed' ? 'filled' : 'outline'}`} />
-        <span>Followed Only</span>
-        {venueFilter === 'followed' && <span className="filter-count">{getFollowedVenues().length}</span>}
+        <Heart className={`follow-icon ${isFollowed ? 'filled' : 'outline'}`} />
       </button>
     );
   };
 
-  // Follow Suggestions Component
-  const FollowSuggestions = () => {
-    const suggestedVenues = venues
-      .filter(venue => !userProfile.followedVenues.includes(venue.id))
-      .filter(venue => venue.rating >= 4.0)
-      .slice(0, 3);
-
-    if (suggestedVenues.length === 0) return null;
+  // Followed Venues List Component for Profile Dropdown
+  const FollowedVenuesList = () => {
+    const followedVenues = getFollowedVenues();
+    
+    if (followedVenues.length === 0) {
+      return (
+        <div className="followed-venues-empty">
+          <Heart className="empty-heart-icon" />
+          <p className="empty-text">No venues followed yet</p>
+          <p className="empty-subtext">Follow your favorite venues to see them here!</p>
+        </div>
+      );
+    }
 
     return (
-      <div className="follow-suggestions">
-        <h4 className="suggestions-title">
-          <Star className="suggestions-icon" />
-          Recommended for You
-        </h4>
-        <div className="suggestions-list">
-          {suggestedVenues.map(venue => (
-            <div key={venue.id} className="suggestion-item">
-              <div className="suggestion-info">
-                <h5 className="suggestion-name">{venue.name}</h5>
-                <div className="suggestion-rating">
-                  <StarRating rating={venue.rating} size="sm" />
-                  <span className="suggestion-reason">Highly rated</span>
+      <div className="followed-venues-list">
+        {followedVenues.slice(0, 3).map((venue) => (
+          <div
+            key={venue.id}
+            className="followed-venue-item"
+            onClick={() => {
+              setSelectedVenue(venue);
+              setCurrentView('detail');
+              setShowUserDropdown(false);
+            }}
+          >
+            <div className="followed-venue-info">
+              <h5 className="followed-venue-name">{venue.name}</h5>
+              <p className="followed-venue-type">{venue.type} • {venue.distance}</p>
+              <div className="followed-venue-status">
+                <div className={getCrowdColor(venue.crowdLevel)}>
+                  <Users className="w-3 h-3 mr-1" />
+                  {getCrowdLabel(venue.crowdLevel)}
                 </div>
               </div>
-              <EnhancedFollowButton venue={venue} className="suggestion-follow" showTooltip={false} />
             </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  // Venue Follow Stats Component
-  const VenueFollowStats = ({ venue }) => {
-    const isFollowed = isVenueFollowed(venue.id);
-    
-    return (
-      <div className="venue-follow-stats">
-        <div className="follow-stat">
-          <Heart className="stat-icon filled" />
-          <span className="stat-number">{(venue.followersCount || 100).toLocaleString()}</span>
-          <span className="stat-label">followers</span>
-        </div>
-        {isFollowed && (
-          <div className="follow-stat you-follow">
-            <Users className="stat-icon" />
-            <span className="stat-text">You follow this venue</span>
+            <ChevronRight className="followed-venue-arrow" />
+          </div>
+        ))}
+        
+        {followedVenues.length > 3 && (
+          <div className="followed-venues-see-more">
+            <button
+              onClick={() => {
+                setShowUserDropdown(false);
+                // Could navigate to a dedicated followed venues page
+              }}
+              className="see-more-button"
+            >
+              View all {followedVenues.length} followed venues
+            </button>
           </div>
         )}
       </div>
     );
   };
 
-  // Enhanced Followed Venues List Component
-  const EnhancedFollowedVenuesList = () => {
-    const followedVenues = getFollowedVenues();
-    const [expandedVenue, setExpandedVenue] = useState(null);
-    
-    if (followedVenues.length === 0) {
-      return (
-        <div className="followed-venues-empty enhanced">
-          <div className="empty-illustration">
-            <Heart className="empty-heart-icon" />
-            <div className="empty-heart-pulse" />
-          </div>
-          <p className="empty-text">No venues followed yet</p>
-          <p className="empty-subtext">Follow your favorite venues to see them here!</p>
-          <button 
-            className="empty-action-btn"
-            onClick={() => setShowUserDropdown(false)}
-          >
-            Explore Venues
-          </button>
-        </div>
-      );
-    }
-
-    return (
-      <div className="followed-venues-list enhanced">
-        {followedVenues.map((venue) => (
-          <div
-            key={venue.id}
-            className={`followed-venue-item enhanced ${expandedVenue === venue.id ? 'expanded' : ''}`}
-          >
-            <div className="followed-venue-header">
-              <div className="followed-venue-info">
-                <h5 className="followed-venue-name">{venue.name}</h5>
-                <p className="followed-venue-type">{venue.type} • {venue.distance}</p>
-                <div className="followed-venue-status">
-                  <div className={getCrowdColor(venue.crowdLevel)}>
-                    <Users className="w-3 h-3 mr-1" />
-                    {getCrowdLabel(venue.crowdLevel)}
-                  </div>
-                  {venue.hasPromotion && (
-                    <div className="mini-promotion">
-                      <Gift className="w-3 h-3 mr-1" />
-                      <span>Promo</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              <div className="followed-venue-actions">
-                <button
-                  onClick={() => setExpandedVenue(expandedVenue === venue.id ? null : venue.id)}
-                  className="expand-btn"
-                  aria-label={expandedVenue === venue.id ? 'Collapse' : 'Expand'}
-                >
-                  <ChevronDown className={`expand-icon ${expandedVenue === venue.id ? 'rotated' : ''}`} />
-                </button>
-                <EnhancedFollowButton venue={venue} className="mini-follow" showTooltip={false} />
-              </div>
-            </div>
-            
-            {expandedVenue === venue.id && (
-              <div className="followed-venue-details">
-                <VenueFollowStats venue={venue} />
-                <div className="quick-actions">
-                  <button
-                    onClick={() => {
-                      setSelectedVenue(venue);
-                      setCurrentView('detail');
-                      setShowUserDropdown(false);
-                    }}
-                    className="quick-action-btn primary"
-                  >
-                    <ExternalLink className="w-3 h-3 mr-1" />
-                    View Details
-                  </button>
-                  <button
-                    onClick={() => getDirections(venue)}
-                    className="quick-action-btn secondary"
-                  >
-                    <Navigation className="w-3 h-3 mr-1" />
-                    Directions
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
-        
-        <div className="followed-venues-summary">
-          <div className="summary-stats">
-            <span className="stat">Following {followedVenues.length} venues</span>
-            <span className="stat">Avg rating: {(followedVenues.reduce((sum, v) => sum + v.rating, 0) / followedVenues.length || 0).toFixed(1)}</span>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Follow Analytics Component
-  const FollowAnalytics = () => {
-    const followedVenues = getFollowedVenues();
-    const avgRating = followedVenues.reduce((sum, v) => sum + v.rating, 0) / followedVenues.length || 0;
-    const mostFollowedType = followedVenues.reduce((acc, venue) => {
-      acc[venue.type] = (acc[venue.type] || 0) + 1;
-      return acc;
-    }, {});
-    const preferredType = Object.keys(mostFollowedType).reduce((a, b) => 
-      mostFollowedType[a] > mostFollowedType[b] ? a : b, 'None'
-    );
-
-    return (
-      <div className="follow-analytics">
-        <h5 className="analytics-title">Your Taste Profile</h5>
-        <div className="analytics-grid">
-          <div className="analytic-item">
-            <div className="analytic-number">{avgRating.toFixed(1)}</div>
-            <div className="analytic-label">Avg Rating</div>
-          </div>
-          <div className="analytic-item">
-            <div className="analytic-number">{preferredType}</div>
-            <div className="analytic-label">Favorite Type</div>
-          </div>
-          <div className="analytic-item">
-            <div className="analytic-number">{followedVenues.length}</div>
-            <div className="analytic-label">Following</div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Bulk Follow Actions Component
-  const BulkFollowActions = () => {
-    const [isProcessing, setIsProcessing] = useState(false);
-    
-    const followAllHighRated = async () => {
-      setIsProcessing(true);
-      const highRatedVenues = venues.filter(v => 
-        v.rating >= 4.5 && !userProfile.followedVenues.includes(v.id)
-      );
-      
-      for (const venue of highRatedVenues) {
-        await new Promise(resolve => setTimeout(resolve, 300));
-        handleVenueFollow(venue.id, venue.name);
-      }
-      
-      setIsProcessing(false);
-    };
-
-    return (
-      <div className="bulk-follow-actions">
-        <h5 className="bulk-title">Quick Actions</h5>
-        <div className="bulk-buttons">
-          <button
-            onClick={followAllHighRated}
-            disabled={isProcessing}
-            className="bulk-btn primary"
-          >
-            {isProcessing ? (
-              <>
-                <div className="spinner" />
-                <span>Following...</span>
-              </>
-            ) : (
-              <>
-                <Star className="w-4 h-4 mr-2" />
-                <span>Follow All 4.5+ Rated</span>
-              </>
-            )}
-          </button>
-        </div>
-      </div>
-    );
-  };
-
-  // Enhanced User Profile Component with Analytics
+  // Sleek User Profile Component
   const UserProfileCard = () => (
     <div className="user-profile-container" ref={dropdownRef}>
       <button
@@ -610,19 +357,25 @@ const App = () => {
             </div>
           </div>
 
-          <FollowAnalytics />
-
           <div className="user-dropdown-section">
             <h5 className="section-title">
               <Heart className="section-icon" />
               Followed Venues
             </h5>
-            <EnhancedFollowedVenuesList />
+            <FollowedVenuesList />
           </div>
 
-          <FollowSuggestions />
-          
-          <BulkFollowActions />
+          <div className="user-dropdown-badges">
+            <h5 className="badges-title">Recent Badges</h5>
+            <div className="badges-grid">
+              {userProfile.badgesEarned.slice(0, 4).map((badge, index) => (
+                <div key={index} className="badge-item">
+                  <Award className="badge-icon" />
+                  <span className="badge-name">{badge}</span>
+                </div>
+              ))}
+            </div>
+          </div>
 
           <div className="user-dropdown-menu-items">
             <button className="dropdown-menu-item">
@@ -653,7 +406,7 @@ const App = () => {
     </div>
   );
 
-  // Working Promotional Banner Component
+  // Working Promotional Banner Component - VISIBLE
   const PromotionalBanner = () => {
     const currentBanner = promotionalBanners[currentBannerIndex];
     const IconComponent = currentBanner.icon;
@@ -709,7 +462,7 @@ const App = () => {
     );
   };
 
-  // Houston area venues with follower counts
+  // Houston area venues - completely static
   const [venues, setVenues] = useState([
     {
       id: 1,
@@ -736,7 +489,6 @@ const App = () => {
       trending: "stable",
       hasPromotion: true,
       promotionText: "Free Hookah for Ladies 6-10PM!",
-      followersCount: 342,
       reviews: [
         { id: 1, user: "Mike R.", rating: 5, comment: "Amazing vibe and music! Perfect for a night out.", date: "2 days ago", helpful: 12 },
         { id: 2, user: "Sarah L.", rating: 4, comment: "Great atmosphere but can get really crowded.", date: "1 week ago", helpful: 8 },
@@ -768,7 +520,6 @@ const App = () => {
       trending: "stable",
       hasPromotion: true,
       promotionText: "R&B Night - 2-for-1 Cocktails!",
-      followersCount: 128,
       reviews: [
         { id: 1, user: "Alex P.", rating: 5, comment: "Smooth R&B vibes and great cocktails!", date: "3 days ago", helpful: 9 },
         { id: 2, user: "Maria G.", rating: 4, comment: "Love the music selection, drinks are pricey though.", date: "5 days ago", helpful: 6 }
@@ -799,7 +550,6 @@ const App = () => {
       trending: "stable",
       hasPromotion: true,
       promotionText: "Big Game Tonight! 50¢ Wings!",
-      followersCount: 567,
       reviews: [
         { id: 1, user: "Tom B.", rating: 4, comment: "Great for watching games! Food is solid too.", date: "1 day ago", helpful: 14 },
         { id: 2, user: "Lisa K.", rating: 5, comment: "Best sports bar in the area. Always lively!", date: "3 days ago", helpful: 11 },
@@ -831,7 +581,6 @@ const App = () => {
       trending: "stable",
       hasPromotion: true,
       promotionText: "DJ Chin Tonight! 9PM-2AM",
-      followersCount: 234,
       reviews: [
         { id: 1, user: "Emma S.", rating: 5, comment: "Perfect date night spot! Cocktails are incredible.", date: "2 days ago", helpful: 18 },
         { id: 2, user: "Ryan C.", rating: 5, comment: "Classy atmosphere, amazing bartender skills.", date: "4 days ago", helpful: 13 },
@@ -840,31 +589,22 @@ const App = () => {
     }
   ]);
 
-  // Smart search and filter functionality
+  // Smart search functionality
   const filteredVenues = useMemo(() => {
-    let filtered = venues;
+    if (!searchQuery.trim()) return venues;
     
-    // Apply search filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter(venue => {
-        return (
-          venue.name.toLowerCase().includes(query) ||
-          venue.city.toLowerCase().includes(query) ||
-          venue.postcode.includes(query) ||
-          venue.type.toLowerCase().includes(query) ||
-          venue.address.toLowerCase().includes(query)
-        );
-      });
-    }
+    const query = searchQuery.toLowerCase().trim();
     
-    // Apply follow filter
-    if (venueFilter === 'followed') {
-      filtered = filtered.filter(venue => userProfile.followedVenues.includes(venue.id));
-    }
-    
-    return filtered;
-  }, [venues, searchQuery, venueFilter, userProfile.followedVenues]);
+    return venues.filter(venue => {
+      return (
+        venue.name.toLowerCase().includes(query) ||
+        venue.city.toLowerCase().includes(query) ||
+        venue.postcode.includes(query) ||
+        venue.type.toLowerCase().includes(query) ||
+        venue.address.toLowerCase().includes(query)
+      );
+    });
+  }, [venues, searchQuery]);
 
   // Clear search
   const clearSearch = () => {
@@ -896,7 +636,7 @@ const App = () => {
     return "badge badge-red";
   };
 
-  // Search Bar Component
+  // Smart Search Bar Component
   const SearchBar = () => (
     <div className={`search-container ${searchFocused ? 'search-focused' : ''}`}>
       <div className="search-wrapper">
@@ -916,10 +656,10 @@ const App = () => {
           </button>
         )}
       </div>
-      {(searchQuery || venueFilter === 'followed') && (
+      {searchQuery && (
         <div className="search-results-info">
           {filteredVenues.length === 0 ? (
-            <span className="text-muted">No venues found</span>
+            <span className="text-muted">No venues found for "{searchQuery}"</span>
           ) : (
             <span className="text-muted">
               {filteredVenues.length} venue{filteredVenues.length !== 1 ? 's' : ''} found
@@ -962,10 +702,295 @@ const App = () => {
     );
   };
 
-  // Rest of the components (Rating Modal, Reviews Modal, Report Modal, etc.) remain the same...
-  // [Including all the remaining components from the original code]
+  // Rating Breakdown Component
+  const RatingBreakdown = ({ breakdown, totalRatings }) => {
+    return (
+      <div className="space-y-2">
+        {[5, 4, 3, 2, 1].map((stars) => {
+          const count = breakdown[stars] || 0;
+          const percentage = totalRatings > 0 ? (count / totalRatings) * 100 : 0;
+          
+          return (
+            <div key={stars} className="flex items-center text-sm">
+              <span className="w-3 text-muted">{stars}</span>
+              <Star className="w-3 h-3 fill-yellow-400 text-yellow-400 mx-1" />
+              <div className="flex-1 mx-2 bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-yellow-400 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${percentage}%` }}
+                />
+              </div>
+              <span className="w-8 text-right text-muted">{count}</span>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
 
-  // Enhanced Venue Card Component
+  // Rating Modal Component
+  const RatingModal = ({ venue, onClose, onSubmit }) => {
+    const [rating, setRating] = useState(0);
+    const [review, setReview] = useState('');
+
+    const handleSubmit = () => {
+      if (rating === 0) {
+        alert('Please select a rating');
+        return;
+      }
+      
+      onSubmit({
+        rating,
+        review: review.trim(),
+        date: new Date().toISOString(),
+        user: 'You'
+      });
+      onClose();
+    };
+
+    return (
+      <div className="modal-overlay">
+        <div className="modal-content">
+          <h3 className="text-xl font-bold mb-4 text-primary">Rate {venue.name}</h3>
+          
+          <div className="text-center mb-6">
+            <p className="text-secondary mb-4">How would you rate your experience?</p>
+            <StarRating 
+              rating={rating} 
+              size="lg" 
+              interactive={true} 
+              onRatingChange={setRating}
+            />
+            <p className="text-sm text-muted mt-2">
+              {rating === 0 && "Select a rating"}
+              {rating === 1 && "Terrible"}
+              {rating === 2 && "Poor"}
+              {rating === 3 && "Average"}
+              {rating === 4 && "Good"}
+              {rating === 5 && "Excellent"}
+            </p>
+          </div>
+
+          <div className="mb-6">
+            <label className="block text-sm font-semibold mb-2 text-secondary">
+              Write a review (optional)
+            </label>
+            <textarea
+              value={review}
+              onChange={(e) => setReview(e.target.value)}
+              className="form-input form-textarea"
+              rows="4"
+              placeholder="Share your experience with others..."
+              maxLength="500"
+            />
+            <div className="text-xs text-muted mt-1 text-right">
+              {review.length}/500 characters
+            </div>
+          </div>
+
+          <div className="flex space-x-3">
+            <button
+              onClick={onClose}
+              className="btn btn-secondary flex-1"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSubmit}
+              className="btn btn-primary flex-1"
+              disabled={rating === 0}
+            >
+              Submit Rating (+10 points)
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Reviews Modal Component
+  const ReviewsModal = ({ venue, onClose }) => {
+    const sortedReviews = venue.reviews.sort((a, b) => b.helpful - a.helpful);
+
+    return (
+      <div className="modal-overlay">
+        <div className="modal-content max-w-2xl">
+          <div className="flex justify-between items-start mb-4">
+            <h3 className="text-xl font-bold text-primary">Reviews for {venue.name}</h3>
+            <button onClick={onClose} className="btn btn-secondary text-sm">×</button>
+          </div>
+
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <StarRating 
+                  rating={venue.rating} 
+                  size="lg" 
+                  showCount={true} 
+                  totalRatings={venue.totalRatings}
+                />
+              </div>
+              <button
+                onClick={() => {
+                  onClose();
+                  setShowRatingModal(true);
+                }}
+                className="btn btn-primary"
+              >
+                Write Review
+              </button>
+            </div>
+            
+            <RatingBreakdown 
+              breakdown={venue.ratingBreakdown} 
+              totalRatings={venue.totalRatings}
+            />
+          </div>
+
+          <div className="max-h-96 overflow-y-auto space-y-4">
+            {sortedReviews.map((review) => (
+              <div key={review.id} className="card p-4">
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <div className="flex items-center mb-1">
+                      <span className="font-semibold text-sm">{review.user}</span>
+                      <span className="mx-2 text-muted">•</span>
+                      <StarRating rating={review.rating} size="sm" />
+                    </div>
+                    <p className="text-sm text-muted">{review.date}</p>
+                  </div>
+                </div>
+                
+                <p className="text-secondary mb-3">{review.comment}</p>
+                
+                <div className="flex items-center text-sm text-muted">
+                  <span>{review.helpful} people found this helpful</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Report Modal Component
+  const ReportModal = ({ venue, onClose, onSubmit }) => {
+    const [crowdLevel, setCrowdLevel] = useState(Math.round(venue.crowdLevel));
+    const [waitTime, setWaitTime] = useState(venue.waitTime);
+    const [vibe, setVibe] = useState([]);
+    const [note, setNote] = useState('');
+
+    const vibeOptions = ["Chill", "Lively", "Loud", "Dancing", "Sports", "Date Night", "Business", "Family", "Hip-Hop", "R&B", "Live Music", "Karaoke"];
+
+    const toggleVibe = (option) => {
+      setVibe(prev => 
+        prev.includes(option) 
+          ? prev.filter(v => v !== option)
+          : [...prev, option]
+      );
+    };
+
+    const handleSubmit = () => {
+      onSubmit({
+        crowdLevel,
+        waitTime,
+        vibe,
+        note
+      });
+      onClose();
+    };
+
+    return (
+      <div className="modal-overlay">
+        <div className="modal-content">
+          <h3 className="text-xl font-bold mb-4 text-primary">Report Status: {venue.name}</h3>
+          
+          <div className="mb-4">
+            <label className="block text-sm font-semibold mb-3 text-secondary">How busy is it?</label>
+            <div className="flex space-x-2">
+              {[1,2,3,4,5].map(level => (
+                <button
+                  key={level}
+                  onClick={() => setCrowdLevel(level)}
+                  className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
+                    crowdLevel === level 
+                      ? 'btn btn-primary' 
+                      : 'btn btn-secondary'
+                  }`}
+                >
+                  {level}
+                </button>
+              ))}
+            </div>
+            <div className="text-xs text-muted mt-2">
+              1 = Empty, 5 = Packed
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-semibold mb-2 text-secondary">Wait time (minutes)</label>
+            <input
+              type="number"
+              value={waitTime}
+              onChange={(e) => setWaitTime(Number(e.target.value))}
+              className="form-input"
+              min="0"
+              max="120"
+              placeholder="0"
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-semibold mb-3 text-secondary">Vibe (select all that apply)</label>
+            <div className="flex flex-wrap gap-2">
+              {vibeOptions.map(option => (
+                <button
+                  key={option}
+                  onClick={() => toggleVibe(option)}
+                  className={`px-3 py-2 rounded-full text-sm font-medium transition-all ${
+                    vibe.includes(option)
+                      ? 'btn btn-primary'
+                      : 'btn btn-secondary'
+                  }`}
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <label className="block text-sm font-semibold mb-2 text-secondary">Additional notes (optional)</label>
+            <textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              className="form-input form-textarea"
+              rows="3"
+              placeholder="Any special events, music, atmosphere details..."
+            />
+          </div>
+
+          <div className="flex space-x-3">
+            <button
+              onClick={onClose}
+              className="btn btn-secondary flex-1"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSubmit}
+              className="btn btn-primary flex-1"
+            >
+              Submit Report (+5 points)
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Enhanced Venue Card Component with Follow Button
   const VenueCard = ({ venue, onClick, showReportButton = true }) => {
     const highlightText = (text, query) => {
       if (!query.trim()) return text;
@@ -982,7 +1007,8 @@ const App = () => {
 
     return (
       <div className={`card card-venue animate-fadeIn ${isFollowed ? 'venue-followed' : ''}`}>
-        <EnhancedFollowButton venue={venue} className="venue-follow-btn" showCount={true} />
+        {/* Follow Button - Top Right Corner */}
+        <FollowButton venue={venue} className="venue-follow-btn" />
         
         {venue.hasPromotion && (
           <div className="venue-promotion-badge">
@@ -1049,9 +1075,7 @@ const App = () => {
           ))}
         </div>
 
-        <VenueFollowStats venue={venue} />
-
-        <div className="flex space-x-2 mt-4">
+        <div className="flex space-x-2">
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -1086,7 +1110,155 @@ const App = () => {
     );
   };
 
-  // Enhanced Home View Component
+  // Venue Detail Component
+  const VenueDetail = ({ venue }) => (
+    <div className="app-layout">
+      {/* Fixed Header Section */}
+      <div className="header-frame">
+        <div className="header-content">
+          <UserProfileCard />
+          <button
+            onClick={() => setCurrentView('home')}
+            className="btn btn-secondary mb-3 text-sm flex items-center"
+          >
+            <ArrowLeft className="icon icon-sm mr-2" />
+            Back to venues
+          </button>
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <h1 className="app-title">{venue.name}</h1>
+              <p className="app-subtitle font-semibold">{venue.type} • {venue.hours}</p>
+            </div>
+            <FollowButton venue={venue} className="detail-follow-btn" />
+          </div>
+          <div className="flex items-center justify-between mt-3">
+            <StarRating 
+              rating={venue.rating} 
+              size="lg" 
+              showCount={true} 
+              totalRatings={venue.totalRatings}
+            />
+            <button
+              onClick={() => {
+                setSelectedVenue(venue);
+                setShowReviewsModal(true);
+              }}
+              className="btn btn-secondary text-sm"
+            >
+              Read Reviews
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Scrollable Content Section */}
+      <div className="content-frame">
+        <div className="p-4 space-y-4">
+          {venue.hasPromotion && (
+            <div className="card promotion-card">
+              <div className="flex items-center mb-2">
+                <Gift className="w-5 h-5 mr-2 text-primary" />
+                <h3 className="font-bold text-primary">Current Promotion</h3>
+              </div>
+              <p className="text-secondary font-medium">{venue.promotionText}</p>
+            </div>
+          )}
+
+          <div className="card">
+            <h3 className="font-bold text-lg mb-4 text-primary">Current Status</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="stats-card">
+                <div className="stats-number">{Math.round(venue.crowdLevel)}/5</div>
+                <div className="stats-label">Crowd Level</div>
+              </div>
+              <div className="stats-card" style={{background: 'var(--gradient-success)'}}>
+                <div className="stats-number">{venue.waitTime}m</div>
+                <div className="stats-label">Wait Time</div>
+              </div>
+            </div>
+            <div className="mt-4 text-sm text-muted text-center">
+              Last updated {venue.lastUpdate} • {venue.reports} reports today • {venue.confidence}% confidence
+            </div>
+          </div>
+
+          <div className="card">
+            <h3 className="font-bold text-lg mb-4 text-primary">Location & Contact</h3>
+            
+            <div className="flex items-start space-x-3 mb-4">
+              <MapPin className="icon icon-lg text-primary mt-1" />
+              <div className="flex-1">
+                <div className="text-sm font-semibold text-primary">{venue.address}</div>
+                <div className="text-xs text-muted">{venue.city}, {venue.postcode} • {venue.distance} away</div>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-3 mb-4">
+              <Phone className="icon icon-lg text-primary" />
+              <a href={`tel:${venue.phone}`} className="text-sm font-semibold text-primary hover:underline">
+                {venue.phone}
+              </a>
+            </div>
+
+            <div className="flex items-center space-x-3 mb-6">
+              <Clock className="icon icon-lg text-primary" />
+              <div className="text-sm font-semibold text-primary">{venue.hours}</div>
+            </div>
+
+            <div className="flex space-x-3">
+              <button
+                onClick={() => openGoogleMaps(venue)}
+                className="btn btn-success flex-1 flex items-center justify-center"
+              >
+                <Map className="icon icon-sm mr-2" />
+                View on Map
+              </button>
+              <button
+                onClick={() => getDirections(venue)}
+                className="btn btn-primary flex-1 flex items-center justify-center"
+              >
+                <Navigation className="icon icon-sm mr-2" />
+                Directions
+              </button>
+            </div>
+          </div>
+
+          <div className="card">
+            <h3 className="font-bold text-lg mb-4 text-primary">Vibe & Atmosphere</h3>
+            <div className="flex flex-wrap gap-2">
+              {venue.vibe.map((tag, index) => (
+                <span key={index} className="badge badge-blue text-sm px-4 py-2">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => {
+                setSelectedVenue(venue);
+                setShowReportModal(true);
+              }}
+              className="btn btn-primary py-4 font-bold text-base"
+            >
+              Update Status (+5 pts)
+            </button>
+            <button
+              onClick={() => {
+                setSelectedVenue(venue);
+                setShowRatingModal(true);
+              }}
+              className="btn btn-warning py-4 font-bold text-base"
+            >
+              Rate Venue (+10 pts)
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Enhanced Home View Component with Frame Separation
   const HomeView = () => {
     const [sortBy, setSortBy] = useState('distance');
     
@@ -1096,8 +1268,6 @@ const App = () => {
           return b.rating - a.rating;
         case 'crowd':
           return b.crowdLevel - a.crowdLevel;
-        case 'followers':
-          return (b.followersCount || 0) - (a.followersCount || 0);
         default:
           return parseFloat(a.distance) - parseFloat(b.distance);
       }
@@ -1105,6 +1275,7 @@ const App = () => {
 
     return (
       <div className="app-layout">
+        {/* Fixed Header Frame */}
         <div className="header-frame">
           <div className="header-content">
             <UserProfileCard />
@@ -1120,14 +1291,15 @@ const App = () => {
           </div>
         </div>
 
+        {/* Scrollable Content Frame */}
         <div className="content-frame">
           <div className="content-header">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-white">
-                {searchQuery ? `Search Results` : venueFilter === 'followed' ? 'Followed Venues' : 'Nearby Venues'}
+                {searchQuery ? `Search Results` : 'Nearby Venues'}
               </h2>
               <div className="flex items-center space-x-2">
-                <FollowedVenuesFilter onFilter={setVenueFilter} />
+                <span className="text-sm text-white">Sort:</span>
                 <select 
                   value={sortBy} 
                   onChange={(e) => setSortBy(e.target.value)}
@@ -1136,7 +1308,6 @@ const App = () => {
                   <option value="distance">Distance</option>
                   <option value="rating">Rating</option>
                   <option value="crowd">Crowd Level</option>
-                  <option value="followers">Popularity</option>
                 </select>
               </div>
             </div>
@@ -1147,23 +1318,13 @@ const App = () => {
               <div className="card text-center py-8">
                 <Search className="w-12 h-12 mx-auto text-muted mb-4" />
                 <h3 className="text-lg font-semibold text-primary mb-2">No venues found</h3>
-                <p className="text-muted">
-                  {venueFilter === 'followed' 
-                    ? "You haven't followed any venues yet. Start following your favorites!" 
-                    : searchQuery 
-                      ? `Try searching for a different venue name, city, or postcode.`
-                      : "No venues available."
-                  }
-                </p>
-                {(searchQuery || venueFilter === 'followed') && (
+                <p className="text-muted">Try searching for a different venue name, city, or postcode.</p>
+                {searchQuery && (
                   <button
-                    onClick={() => {
-                      clearSearch();
-                      setVenueFilter('all');
-                    }}
+                    onClick={clearSearch}
                     className="btn btn-primary mt-4"
                   >
-                    Show All Venues
+                    Clear Search
                   </button>
                 )}
               </div>
@@ -1186,14 +1347,110 @@ const App = () => {
     );
   };
 
-  // [Rest of the components remain the same - VenueDetail, modals, etc.]
-  
+  // Handle report submission
+  const handleReportSubmit = (reportData) => {
+    setVenues(prevVenues =>
+      prevVenues.map(venue =>
+        venue.id === selectedVenue.id
+          ? {
+              ...venue,
+              crowdLevel: reportData.crowdLevel,
+              waitTime: reportData.waitTime,
+              vibe: reportData.vibe.length > 0 ? reportData.vibe : venue.vibe,
+              lastUpdate: "Just now",
+              reports: venue.reports + 1,
+              confidence: Math.min(99, venue.confidence + 3),
+              trending: "stable"
+            }
+          : venue
+      )
+    );
+    
+    // Update user points and stats
+    setUserProfile(prev => ({
+      ...prev,
+      points: prev.points + 5,
+      totalReports: prev.totalReports + 1
+    }));
+    
+    setSelectedVenue(null);
+  };
+
+  // Handle rating submission
+  const handleRatingSubmit = (ratingData) => {
+    setVenues(prevVenues =>
+      prevVenues.map(venue =>
+        venue.id === selectedVenue.id
+          ? {
+              ...venue,
+              reviews: [
+                {
+                  id: venue.reviews.length + 1,
+                  user: ratingData.user,
+                  rating: ratingData.rating,
+                  comment: ratingData.review || "No comment provided",
+                  date: "Just now",
+                  helpful: 0
+                },
+                ...venue.reviews
+              ],
+              ratingBreakdown: {
+                ...venue.ratingBreakdown,
+                [ratingData.rating]: (venue.ratingBreakdown[ratingData.rating] || 0) + 1
+              },
+              totalRatings: venue.totalRatings + 1,
+              rating: ((venue.rating * venue.totalRatings) + ratingData.rating) / (venue.totalRatings + 1)
+            }
+          : venue
+      )
+    );
+    
+    // Update user points and stats
+    setUserProfile(prev => ({
+      ...prev,
+      points: prev.points + 10,
+      totalRatings: prev.totalRatings + 1
+    }));
+    
+    setSelectedVenue(null);
+  };
+
   return (
     <div className="font-sans">
       {currentView === 'home' && <HomeView />}
       {currentView === 'detail' && selectedVenue && <VenueDetail venue={selectedVenue} />}
       
-      {/* Modals remain the same */}
+      {showReportModal && selectedVenue && (
+        <ReportModal
+          venue={selectedVenue}
+          onClose={() => {
+            setShowReportModal(false);
+            setSelectedVenue(null);
+          }}
+          onSubmit={handleReportSubmit}
+        />
+      )}
+
+      {showRatingModal && selectedVenue && (
+        <RatingModal
+          venue={selectedVenue}
+          onClose={() => {
+            setShowRatingModal(false);
+            setSelectedVenue(null);
+          }}
+          onSubmit={handleRatingSubmit}
+        />
+      )}
+
+      {showReviewsModal && selectedVenue && (
+        <ReviewsModal
+          venue={selectedVenue}
+          onClose={() => {
+            setShowReviewsModal(false);
+            setSelectedVenue(null);
+          }}
+        />
+      )}
     </div>
   );
 };
