@@ -1,1201 +1,143 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { MapPin, Users, Clock, Star, TrendingUp, MessageCircle, Award, ChevronRight, Phone, ExternalLink, ArrowLeft, Navigation, Map, Search, X, Filter, ChevronLeft, Volume2, Calendar, Gift, User, Settings, LogOut, Bell, Shield, Crown, ChevronDown, Heart, Bookmark } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { AppProvider, useApp } from './context/AppContext';
+import Header from './components/Layout/Header';
+import HomeView from './components/Views/HomeView';
+import VenueDetailsView from './components/Views/VenueDetailsView';
+import ShareModal from './components/Social/ShareModal';
+import RatingModal from './components/Venue/RatingModal';
+import ReportModal from './components/Venue/ReportModal';
+import { useVenues } from './hooks/useVenues';
+import { useNotifications } from './hooks/useNotifications';
 import './App.css';
 
-const App = () => {
-  const [currentView, setCurrentView] = useState('home');
-  const [selectedVenue, setSelectedVenue] = useState(null);
-  const [showReportModal, setShowReportModal] = useState(false);
-  const [showRatingModal, setShowRatingModal] = useState(false);
-  const [showReviewsModal, setShowReviewsModal] = useState(false);
+function AppContent() {
+  const { state, actions } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchFocused, setSearchFocused] = useState(false);
-  const [venueFilter, setVenueFilter] = useState('all'); // 'all' or 'followed'
+  const [venueFilter, setVenueFilter] = useState('all');
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareVenue, setShareVenue] = useState(null);
+  const { updateVenueData } = useVenues();
+  const { notifications, removeNotification } = useNotifications();
 
-  // Enhanced User Profile State with Follow System
-  const [userProfile, setUserProfile] = useState({
-    id: 'usr_12345',
-    firstName: 'Marcus',
-    lastName: 'Johnson',
-    username: 'marcus_houston',
-    email: 'marcus.j@example.com',
-    phone: '+1 (713) 555-0199',
-    avatar: null,
-    points: 1247,
-    level: 'Gold Explorer',
-    levelTier: 'gold',
-    memberSince: '2023',
-    totalReports: 89,
-    totalRatings: 156,
-    totalFollows: 3,
-    followedVenues: [1, 3, 4],
-    badgesEarned: ['Early Bird', 'Community Helper', 'Venue Expert', 'Houston Local'],
-    preferences: {
-      notifications: true,
-      privateProfile: false,
-      shareLocation: true
-    }
-  });
-
-  const [showUserDropdown, setShowUserDropdown] = useState(false);
-  const dropdownRef = useRef(null);
-
-  // Close dropdown when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setShowUserDropdown(false);
-      }
-    };
+    let interval;
+    if (state.currentView === 'home' && !document.hidden) {
+      interval = setInterval(() => {
+        updateVenueData();
+      }, 45000);
+    }
 
-    document.addEventListener('mousedown', handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      if (interval) clearInterval(interval);
     };
-  }, []);
+  }, [state.currentView, updateVenueData]);
 
-  // Banner state
-  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
-
-  // Promotional banners data
-  const promotionalBanners = useMemo(() => [
-    {
-      id: 'community',
-      type: 'community',
-      icon: MessageCircle,
-      title: "Help your community!",
-      subtitle: "Rate venues and report status to earn points",
-      bgColor: "rgba(59, 130, 246, 0.15)",
-      borderColor: "rgba(59, 130, 246, 0.3)",
-      iconColor: "#3b82f6"
-    },
-    {
-      id: 'nyc-promo',
-      type: 'promotion',
-      venue: 'NYC Vibes',
-      icon: Gift,
-      title: "NYC Vibes says: Free Hookah for Ladies! 🎉",
-      subtitle: "6:00 PM - 10:00 PM • Tonight Only • Limited Time",
-      bgColor: "rgba(236, 72, 153, 0.15)",
-      borderColor: "rgba(236, 72, 153, 0.3)",
-      iconColor: "#ec4899"
-    },
-    {
-      id: 'best-regards-event',
-      type: 'event',
-      venue: 'Best Regards',
-      icon: Volume2,
-      title: "Best Regards Says: Guess who's here tonight! 🎵",
-      subtitle: "#DJ Chin is spinning • 9:00 PM - 2:00 AM • Don't miss out!",
-      bgColor: "rgba(168, 85, 247, 0.15)",
-      borderColor: "rgba(168, 85, 247, 0.3)",
-      iconColor: "#a855f7"
-    },
-    {
-      id: 'rumors-special',
-      type: 'promotion',
-      venue: 'Rumors',
-      icon: Calendar,
-      title: "Rumors: R&B Night Special! 🎤",
-      subtitle: "2-for-1 cocktails • Live R&B performances • 8:00 PM start",
-      bgColor: "rgba(34, 197, 94, 0.15)",
-      borderColor: "rgba(34, 197, 94, 0.3)",
-      iconColor: "#22c55e"
-    },
-    {
-      id: 'classic-game',
-      type: 'event',
-      venue: 'Classic',
-      icon: Volume2,
-      title: "Classic Bar: Big Game Tonight! 🏈",
-      subtitle: "Texans vs Cowboys • 50¢ wings • Free shots for TDs!",
-      bgColor: "rgba(251, 146, 60, 0.15)",
-      borderColor: "rgba(251, 146, 60, 0.3)",
-      iconColor: "#fb923c"
-    }
-  ], []);
-
-  // Banner rotation
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentBannerIndex((prev) => (prev + 1) % promotionalBanners.length);
-    }, 12000);
-
-    return () => clearInterval(interval);
-  }, [promotionalBanners.length]);
-
-  const nextBanner = () => {
-    setCurrentBannerIndex((prev) => (prev + 1) % promotionalBanners.length);
-  };
-
-  const previousBanner = () => {
-    setCurrentBannerIndex((prev) => (prev - 1 + promotionalBanners.length) % promotionalBanners.length);
-  };
-
-  const goToBanner = (index) => {
-    setCurrentBannerIndex(index);
-  };
-
-  // Get user initials for avatar
-  const getUserInitials = () => {
-    return `${userProfile.firstName.charAt(0)}${userProfile.lastName.charAt(0)}`.toUpperCase();
-  };
-
-  // Get level color based on tier
-  const getLevelColor = (tier) => {
-    const colors = {
-      bronze: '#cd7f32',
-      silver: '#c0c0c0',
-      gold: '#ffd700',
-      platinum: '#e5e4e2',
-      diamond: '#b9f2ff'
-    };
-    return colors[tier] || '#c0c0c0';
-  };
-
-  // Get level icon based on tier
-  const getLevelIcon = (tier) => {
-    switch (tier) {
-      case 'diamond': return <Crown className="w-3 h-3" />;
-      case 'platinum': return <Shield className="w-3 h-3" />;
-      case 'gold': return <Award className="w-3 h-3" />;
-      default: return <Star className="w-3 h-3" />;
-    }
-  };
-
-  // Check if venue is followed
-  const isVenueFollowed = (venueId) => {
-    return userProfile.followedVenues.includes(venueId);
-  };
-
-  // Handle venue follow/unfollow
-  const handleVenueFollow = (venueId, venueName) => {
-    setUserProfile(prev => {
-      const isCurrentlyFollowed = prev.followedVenues.includes(venueId);
-      
-      // Update venue follower count
-      setVenues(prevVenues =>
-        prevVenues.map(venue =>
-          venue.id === venueId
-            ? {
-                ...venue,
-                followersCount: isCurrentlyFollowed 
-                  ? (venue.followersCount || 100) - 1
-                  : (venue.followersCount || 100) + 1
-              }
-            : venue
-        )
-      );
-      
-      if (isCurrentlyFollowed) {
-        return {
-          ...prev,
-          followedVenues: prev.followedVenues.filter(id => id !== venueId),
-          totalFollows: prev.totalFollows - 1,
-          points: prev.points - 2
-        };
-      } else {
-        return {
-          ...prev,
-          followedVenues: [...prev.followedVenues, venueId],
-          totalFollows: prev.totalFollows + 1,
-          points: prev.points + 3
-        };
+    const handleVisibilityChange = () => {
+      if (!document.hidden && state.currentView === 'home') {
+        updateVenueData();
       }
-    });
-  };
-
-  // Get followed venues for display
-  const getFollowedVenues = () => {
-    return venues.filter(venue => userProfile.followedVenues.includes(venue.id));
-  };
-
-  // Enhanced Follow Notification Component
-  const FollowNotification = ({ show, message, type = 'follow' }) => {
-    if (!show) return null;
-    
-    return (
-      <div className={`follow-notification ${type}`}>
-        <div className="notification-content">
-          <Heart className={`notification-icon ${type === 'follow' ? 'filled' : 'outline'}`} />
-          <span className="notification-text">{message}</span>
-        </div>
-      </div>
-    );
-  };
-
-  // Enhanced Follow Button Component with Haptic Feedback
-  const EnhancedFollowButton = ({ venue, className = "", showTooltip = true, showCount = false }) => {
-    const [showNotification, setShowNotification] = useState(false);
-    const [notificationMessage, setNotificationMessage] = useState('');
-    const [notificationType, setNotificationType] = useState('follow');
-    const isFollowed = isVenueFollowed(venue.id);
-    
-    const handleFollow = (e) => {
-      e.stopPropagation();
-      
-      // Haptic feedback for mobile
-      if (navigator.vibrate) {
-        navigator.vibrate(isFollowed ? [50] : [100, 50, 100]);
-      }
-      
-      // Visual feedback
-      const message = isFollowed 
-        ? `Unfollowed ${venue.name}` 
-        : `Following ${venue.name}!`;
-      
-      setNotificationMessage(message);
-      setNotificationType(isFollowed ? 'unfollow' : 'follow');
-      setShowNotification(true);
-      
-      // Handle the follow action
-      handleVenueFollow(venue.id, venue.name);
-      
-      // Hide notification after 2 seconds
-      setTimeout(() => setShowNotification(false), 2000);
     };
 
-    return (
-      <>
-        <button
-          onClick={handleFollow}
-          className={`follow-button ${showCount ? 'enhanced' : ''} ${isFollowed ? 'followed' : 'not-followed'} ${className}`}
-          aria-label={isFollowed ? `Unfollow ${venue.name}` : `Follow ${venue.name}`}
-          title={showTooltip ? (isFollowed ? `Unfollow ${venue.name}` : `Follow ${venue.name}`) : ''}
-          data-followed={isFollowed}
-        >
-          <Heart className={`follow-icon ${isFollowed ? 'filled' : 'outline'}`} />
-          {showCount && <span className="follow-count">{venue.followersCount || 100}</span>}
-        </button>
-        
-        <FollowNotification 
-          show={showNotification} 
-          message={notificationMessage} 
-          type={notificationType} 
-        />
-      </>
-    );
-  };
-
-  // Followed Venues Filter Component
-  const FollowedVenuesFilter = ({ onFilter }) => {
-    const toggleFollowedFilter = () => {
-      const newFilter = venueFilter === 'all' ? 'followed' : 'all';
-      setVenueFilter(newFilter);
-      onFilter(newFilter);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-    
-    return (
-      <button
-        onClick={toggleFollowedFilter}
-        className={`filter-button ${venueFilter === 'followed' ? 'active' : ''}`}
-      >
-        <Heart className={`filter-icon ${venueFilter === 'followed' ? 'filled' : 'outline'}`} />
-        <span>Followed Only</span>
-        {venueFilter === 'followed' && <span className="filter-count">{getFollowedVenues().length}</span>}
-      </button>
-    );
+  }, [state.currentView, updateVenueData]);
+
+  const handleVenueClick = (venue) => {
+    actions.setSelectedVenue(venue);
+    actions.setCurrentView('details');
   };
 
-  // Follow Suggestions Component
-  const FollowSuggestions = () => {
-    const suggestedVenues = venues
-      .filter(venue => !userProfile.followedVenues.includes(venue.id))
-      .filter(venue => venue.rating >= 4.0)
-      .slice(0, 3);
-
-    if (suggestedVenues.length === 0) return null;
-
-    return (
-      <div className="follow-suggestions">
-        <h4 className="suggestions-title">
-          <Star className="suggestions-icon" />
-          Recommended for You
-        </h4>
-        <div className="suggestions-list">
-          {suggestedVenues.map(venue => (
-            <div key={venue.id} className="suggestion-item">
-              <div className="suggestion-info">
-                <h5 className="suggestion-name">{venue.name}</h5>
-                <div className="suggestion-rating">
-                  <StarRating rating={venue.rating} size="sm" />
-                  <span className="suggestion-reason">Highly rated</span>
-                </div>
-              </div>
-              <EnhancedFollowButton venue={venue} className="suggestion-follow" showTooltip={false} />
-            </div>
-          ))}
-        </div>
-      </div>
-    );
+  const handleVenueShare = (venue) => {
+    setShareVenue(venue);
+    setShowShareModal(true);
   };
 
-  // Venue Follow Stats Component
-  const VenueFollowStats = ({ venue }) => {
-    const isFollowed = isVenueFollowed(venue.id);
-    
-    return (
-      <div className="venue-follow-stats">
-        <div className="follow-stat">
-          <Heart className="stat-icon filled" />
-          <span className="stat-number">{(venue.followersCount || 100).toLocaleString()}</span>
-          <span className="stat-label">followers</span>
-        </div>
-        {isFollowed && (
-          <div className="follow-stat you-follow">
-            <Users className="stat-icon" />
-            <span className="stat-text">You follow this venue</span>
-          </div>
-        )}
-      </div>
-    );
+  const handleBackToHome = () => {
+    actions.setCurrentView('home');
+    actions.setSelectedVenue(null);
   };
 
-  // Enhanced Followed Venues List Component
-  const EnhancedFollowedVenuesList = () => {
-    const followedVenues = getFollowedVenues();
-    const [expandedVenue, setExpandedVenue] = useState(null);
-    
-    if (followedVenues.length === 0) {
-      return (
-        <div className="followed-venues-empty enhanced">
-          <div className="empty-illustration">
-            <Heart className="empty-heart-icon" />
-            <div className="empty-heart-pulse" />
-          </div>
-          <p className="empty-text">No venues followed yet</p>
-          <p className="empty-subtext">Follow your favorite venues to see them here!</p>
-          <button 
-            className="empty-action-btn"
-            onClick={() => setShowUserDropdown(false)}
-          >
-            Explore Venues
-          </button>
-        </div>
-      );
-    }
-
-    return (
-      <div className="followed-venues-list enhanced">
-        {followedVenues.map((venue) => (
-          <div
-            key={venue.id}
-            className={`followed-venue-item enhanced ${expandedVenue === venue.id ? 'expanded' : ''}`}
-          >
-            <div className="followed-venue-header">
-              <div className="followed-venue-info">
-                <h5 className="followed-venue-name">{venue.name}</h5>
-                <p className="followed-venue-type">{venue.type} • {venue.distance}</p>
-                <div className="followed-venue-status">
-                  <div className={getCrowdColor(venue.crowdLevel)}>
-                    <Users className="w-3 h-3 mr-1" />
-                    {getCrowdLabel(venue.crowdLevel)}
-                  </div>
-                  {venue.hasPromotion && (
-                    <div className="mini-promotion">
-                      <Gift className="w-3 h-3 mr-1" />
-                      <span>Promo</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              <div className="followed-venue-actions">
-                <button
-                  onClick={() => setExpandedVenue(expandedVenue === venue.id ? null : venue.id)}
-                  className="expand-btn"
-                  aria-label={expandedVenue === venue.id ? 'Collapse' : 'Expand'}
-                >
-                  <ChevronDown className={`expand-icon ${expandedVenue === venue.id ? 'rotated' : ''}`} />
-                </button>
-                <EnhancedFollowButton venue={venue} className="mini-follow" showTooltip={false} />
-              </div>
-            </div>
-            
-            {expandedVenue === venue.id && (
-              <div className="followed-venue-details">
-                <VenueFollowStats venue={venue} />
-                <div className="quick-actions">
-                  <button
-                    onClick={() => {
-                      setSelectedVenue(venue);
-                      setCurrentView('detail');
-                      setShowUserDropdown(false);
-                    }}
-                    className="quick-action-btn primary"
-                  >
-                    <ExternalLink className="w-3 h-3 mr-1" />
-                    View Details
-                  </button>
-                  <button
-                    onClick={() => getDirections(venue)}
-                    className="quick-action-btn secondary"
-                  >
-                    <Navigation className="w-3 h-3 mr-1" />
-                    Directions
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
-        
-        <div className="followed-venues-summary">
-          <div className="summary-stats">
-            <span className="stat">Following {followedVenues.length} venues</span>
-            <span className="stat">Avg rating: {(followedVenues.reduce((sum, v) => sum + v.rating, 0) / followedVenues.length || 0).toFixed(1)}</span>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Follow Analytics Component
-  const FollowAnalytics = () => {
-    const followedVenues = getFollowedVenues();
-    const avgRating = followedVenues.reduce((sum, v) => sum + v.rating, 0) / followedVenues.length || 0;
-    const mostFollowedType = followedVenues.reduce((acc, venue) => {
-      acc[venue.type] = (acc[venue.type] || 0) + 1;
-      return acc;
-    }, {});
-    const preferredType = Object.keys(mostFollowedType).reduce((a, b) => 
-      mostFollowedType[a] > mostFollowedType[b] ? a : b, 'None'
-    );
-
-    return (
-      <div className="follow-analytics">
-        <h5 className="analytics-title">Your Taste Profile</h5>
-        <div className="analytics-grid">
-          <div className="analytic-item">
-            <div className="analytic-number">{avgRating.toFixed(1)}</div>
-            <div className="analytic-label">Avg Rating</div>
-          </div>
-          <div className="analytic-item">
-            <div className="analytic-number">{preferredType}</div>
-            <div className="analytic-label">Favorite Type</div>
-          </div>
-          <div className="analytic-item">
-            <div className="analytic-number">{followedVenues.length}</div>
-            <div className="analytic-label">Following</div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Bulk Follow Actions Component
-  const BulkFollowActions = () => {
-    const [isProcessing, setIsProcessing] = useState(false);
-    
-    const followAllHighRated = async () => {
-      setIsProcessing(true);
-      const highRatedVenues = venues.filter(v => 
-        v.rating >= 4.5 && !userProfile.followedVenues.includes(v.id)
-      );
-      
-      for (const venue of highRatedVenues) {
-        await new Promise(resolve => setTimeout(resolve, 300));
-        handleVenueFollow(venue.id, venue.name);
-      }
-      
-      setIsProcessing(false);
-    };
-
-    return (
-      <div className="bulk-follow-actions">
-        <h5 className="bulk-title">Quick Actions</h5>
-        <div className="bulk-buttons">
-          <button
-            onClick={followAllHighRated}
-            disabled={isProcessing}
-            className="bulk-btn primary"
-          >
-            {isProcessing ? (
-              <>
-                <div className="spinner" />
-                <span>Following...</span>
-              </>
-            ) : (
-              <>
-                <Star className="w-4 h-4 mr-2" />
-                <span>Follow All 4.5+ Rated</span>
-              </>
-            )}
-          </button>
-        </div>
-      </div>
-    );
-  };
-
-  // Enhanced User Profile Component with Analytics
-  const UserProfileCard = () => (
-    <div className="user-profile-container" ref={dropdownRef}>
-      <button
-        onClick={() => setShowUserDropdown(!showUserDropdown)}
-        className="user-profile-trigger"
-        aria-label="User profile menu"
-      >
-        <div className="user-avatar-container">
-          {userProfile.avatar ? (
-            <img 
-              src={userProfile.avatar} 
-              alt={`${userProfile.firstName} ${userProfile.lastName}`}
-              className="user-avatar-image"
-            />
-          ) : (
-            <div className="user-avatar-initials">
-              {getUserInitials()}
-            </div>
-          )}
-          <div className="user-status-indicator" />
-        </div>
-        
-        <div className="user-info-container">
-          <div className="user-name-container">
-            <span className="user-display-name">
-              {userProfile.firstName} {userProfile.lastName}
-            </span>
-            <div className="user-level-badge" style={{ background: getLevelColor(userProfile.levelTier) }}>
-              {getLevelIcon(userProfile.levelTier)}
-              <span>{userProfile.level}</span>
-            </div>
-          </div>
-          <div className="user-stats-mini">
-            <span className="user-points">{userProfile.points.toLocaleString()} pts</span>
-            <span className="user-reports">{userProfile.totalReports} reports</span>
-          </div>
-        </div>
-
-        <ChevronDown className={`user-dropdown-arrow ${showUserDropdown ? 'rotated' : ''}`} />
-      </button>
-
-      {showUserDropdown && (
-        <div className="user-dropdown-menu">
-          <div className="user-dropdown-header">
-            <div className="user-dropdown-avatar">
-              {userProfile.avatar ? (
-                <img src={userProfile.avatar} alt="Profile" className="dropdown-avatar-img" />
-              ) : (
-                <div className="dropdown-avatar-initials">{getUserInitials()}</div>
-              )}
-            </div>
-            <div className="user-dropdown-info">
-              <h4 className="dropdown-user-name">{userProfile.firstName} {userProfile.lastName}</h4>
-              <p className="dropdown-user-username">@{userProfile.username}</p>
-              <div className="dropdown-user-level">
-                <div className="level-badge-full" style={{ background: getLevelColor(userProfile.levelTier) }}>
-                  {getLevelIcon(userProfile.levelTier)}
-                  <span>{userProfile.level}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="user-dropdown-stats">
-            <div className="stat-item">
-              <span className="stat-number">{userProfile.points.toLocaleString()}</span>
-              <span className="stat-label">Points</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-number">{userProfile.totalReports}</span>
-              <span className="stat-label">Reports</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-number">{userProfile.totalRatings}</span>
-              <span className="stat-label">Ratings</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-number">{userProfile.totalFollows}</span>
-              <span className="stat-label">Following</span>
-            </div>
-          </div>
-
-          <FollowAnalytics />
-
-          <div className="user-dropdown-section">
-            <h5 className="section-title">
-              <Heart className="section-icon" />
-              Followed Venues
-            </h5>
-            <EnhancedFollowedVenuesList />
-          </div>
-
-          <FollowSuggestions />
-          
-          <BulkFollowActions />
-
-          <div className="user-dropdown-menu-items">
-            <button className="dropdown-menu-item">
-              <User className="menu-icon" />
-              <span>View Profile</span>
-            </button>
-            <button className="dropdown-menu-item">
-              <Bell className="menu-icon" />
-              <span>Notifications</span>
-              <span className="notification-count">3</span>
-            </button>
-            <button className="dropdown-menu-item">
-              <Settings className="menu-icon" />
-              <span>Settings</span>
-            </button>
-            <div className="dropdown-divider" />
-            <button className="dropdown-menu-item danger">
-              <LogOut className="menu-icon" />
-              <span>Sign Out</span>
-            </button>
-          </div>
-
-          <div className="user-dropdown-footer">
-            <p className="member-since">Member since {userProfile.memberSince}</p>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-
-  // Working Promotional Banner Component
-  const PromotionalBanner = () => {
-    const currentBanner = promotionalBanners[currentBannerIndex];
-    const IconComponent = currentBanner.icon;
-
-    return (
-      <div className="promotional-banner-working">
-        <div 
-          className="promotional-banner-content"
-          style={{
-            background: currentBanner.bgColor,
-            borderColor: currentBanner.borderColor
-          }}
-        >
-          <button 
-            onClick={previousBanner}
-            className="banner-nav banner-nav-left"
-            aria-label="Previous promotion"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-
-          <div className="banner-main-content">
-            <IconComponent 
-              className="banner-icon-working" 
-              style={{ color: currentBanner.iconColor }}
-            />
-            <div className="banner-text-working">
-              <div className="banner-title-working">{currentBanner.title}</div>
-              <div className="banner-subtitle-working">{currentBanner.subtitle}</div>
-            </div>
-          </div>
-
-          <button 
-            onClick={nextBanner}
-            className="banner-nav banner-nav-right"
-            aria-label="Next promotion"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-
-        <div className="banner-indicators-working">
-          {promotionalBanners.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => goToBanner(index)}
-              className={`banner-indicator-working ${index === currentBannerIndex ? 'active' : ''}`}
-              aria-label={`Go to promotion ${index + 1}`}
-            />
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  // Houston area venues with follower counts
-  const [venues, setVenues] = useState([
-    {
-      id: 1,
-      name: "NYC Vibes",
-      type: "Lounge",
-      distance: "0.2 mi",
-      crowdLevel: 4,
-      waitTime: 15,
-      lastUpdate: "2 min ago",
-      vibe: ["Lively", "Hip-Hop"],
-      confidence: 95,
-      reports: 8,
-      lat: 29.7604,
-      lng: -95.3698,
-      address: "1234 Main Street, Houston, TX 77002",
-      city: "Houston",
-      postcode: "77002",
-      phone: "(713) 555-0123",
-      hours: "Open until 2:00 AM",
-      rating: 4.2,
-      totalRatings: 127,
-      ratingBreakdown: { 5: 48, 4: 39, 3: 25, 2: 12, 1: 3 },
-      isOpen: true,
-      trending: "stable",
-      hasPromotion: true,
-      promotionText: "Free Hookah for Ladies 6-10PM!",
-      followersCount: 342,
-      reviews: [
-        { id: 1, user: "Mike R.", rating: 5, comment: "Amazing vibe and music! Perfect for a night out.", date: "2 days ago", helpful: 12 },
-        { id: 2, user: "Sarah L.", rating: 4, comment: "Great atmosphere but can get really crowded.", date: "1 week ago", helpful: 8 },
-        { id: 3, user: "James T.", rating: 5, comment: "Best hip-hop venue in Houston! Love the energy.", date: "2 weeks ago", helpful: 15 }
-      ]
-    },
-    {
-      id: 2,
-      name: "Rumors",
-      type: "Nightclub",
-      distance: "0.4 mi",
-      crowdLevel: 2,
-      waitTime: 0,
-      lastUpdate: "5 min ago",
-      vibe: ["Chill", "R&B"],
-      confidence: 87,
-      reports: 12,
-      lat: 29.7595,
-      lng: -95.3697,
-      address: "5678 Downtown Boulevard, Houston, TX 77003",
-      city: "Houston",
-      postcode: "77003",
-      phone: "(713) 555-0456",
-      hours: "Open until 3:00 AM",
-      rating: 4.5,
-      totalRatings: 89,
-      ratingBreakdown: { 5: 42, 4: 28, 3: 12, 2: 5, 1: 2 },
-      isOpen: true,
-      trending: "stable",
-      hasPromotion: true,
-      promotionText: "R&B Night - 2-for-1 Cocktails!",
-      followersCount: 128,
-      reviews: [
-        { id: 1, user: "Alex P.", rating: 5, comment: "Smooth R&B vibes and great cocktails!", date: "3 days ago", helpful: 9 },
-        { id: 2, user: "Maria G.", rating: 4, comment: "Love the music selection, drinks are pricey though.", date: "5 days ago", helpful: 6 }
-      ]
-    },
-    {
-      id: 3,
-      name: "Classic",
-      type: "Bar & Grill",
-      distance: "0.7 mi",
-      crowdLevel: 5,
-      waitTime: 30,
-      lastUpdate: "1 min ago",
-      vibe: ["Packed", "Sports"],
-      confidence: 98,
-      reports: 23,
-      lat: 29.7586,
-      lng: -95.3696,
-      address: "9012 Sports Center Drive, Houston, TX 77004",
-      city: "Houston",
-      postcode: "77004",
-      phone: "(713) 555-0789",
-      hours: "Open until 1:00 AM",
-      rating: 4.1,
-      totalRatings: 203,
-      ratingBreakdown: { 5: 67, 4: 81, 3: 32, 2: 18, 1: 5 },
-      isOpen: true,
-      trending: "stable",
-      hasPromotion: true,
-      promotionText: "Big Game Tonight! 50¢ Wings!",
-      followersCount: 567,
-      reviews: [
-        { id: 1, user: "Tom B.", rating: 4, comment: "Great for watching games! Food is solid too.", date: "1 day ago", helpful: 14 },
-        { id: 2, user: "Lisa K.", rating: 5, comment: "Best sports bar in the area. Always lively!", date: "3 days ago", helpful: 11 },
-        { id: 3, user: "Dave M.", rating: 3, comment: "Can get too loud during big games.", date: "1 week ago", helpful: 7 }
-      ]
-    },
-    {
-      id: 4,
-      name: "Best Regards",
-      type: "Cocktail Bar",
-      distance: "0.3 mi",
-      crowdLevel: 3,
-      waitTime: 20,
-      lastUpdate: "8 min ago",
-      vibe: ["Moderate", "Date Night"],
-      confidence: 76,
-      reports: 5,
-      lat: 29.7577,
-      lng: -95.3695,
-      address: "3456 Uptown Plaza, Houston, TX 77005",
-      city: "Houston",
-      postcode: "77005",
-      phone: "(713) 555-0321",
-      hours: "Open until 12:00 AM",
-      rating: 4.7,
-      totalRatings: 156,
-      ratingBreakdown: { 5: 89, 4: 47, 3: 15, 2: 3, 1: 2 },
-      isOpen: true,
-      trending: "stable",
-      hasPromotion: true,
-      promotionText: "DJ Chin Tonight! 9PM-2AM",
-      followersCount: 234,
-      reviews: [
-        { id: 1, user: "Emma S.", rating: 5, comment: "Perfect date night spot! Cocktails are incredible.", date: "2 days ago", helpful: 18 },
-        { id: 2, user: "Ryan C.", rating: 5, comment: "Classy atmosphere, amazing bartender skills.", date: "4 days ago", helpful: 13 },
-        { id: 3, user: "Kate W.", rating: 4, comment: "Beautiful venue but a bit pricey for drinks.", date: "1 week ago", helpful: 9 }
-      ]
-    }
-  ]);
-
-  // Smart search and filter functionality
-  const filteredVenues = useMemo(() => {
-    let filtered = venues;
-    
-    // Apply search filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter(venue => {
-        return (
-          venue.name.toLowerCase().includes(query) ||
-          venue.city.toLowerCase().includes(query) ||
-          venue.postcode.includes(query) ||
-          venue.type.toLowerCase().includes(query) ||
-          venue.address.toLowerCase().includes(query)
-        );
-      });
-    }
-    
-    // Apply follow filter
-    if (venueFilter === 'followed') {
-      filtered = filtered.filter(venue => userProfile.followedVenues.includes(venue.id));
-    }
-    
-    return filtered;
-  }, [venues, searchQuery, venueFilter, userProfile.followedVenues]);
-
-  // Clear search
-  const clearSearch = () => {
+  const handleClearSearch = () => {
     setSearchQuery('');
-    setSearchFocused(false);
+    setVenueFilter('all');
   };
 
-  // Google Maps integration functions
-  const openGoogleMaps = (venue) => {
-    const address = encodeURIComponent(venue.address);
-    const url = `https://www.google.com/maps/search/?api=1&query=${address}`;
-    window.open(url, '_blank');
-  };
-
-  const getDirections = (venue) => {
-    const address = encodeURIComponent(venue.address);
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${address}`;
-    window.open(url, '_blank');
-  };
-
-  const getCrowdLabel = (level) => {
-    const labels = ["", "Empty", "Quiet", "Moderate", "Busy", "Packed"];
-    return labels[Math.round(level)] || "Unknown";
-  };
-
-  const getCrowdColor = (level) => {
-    if (level <= 2) return "badge badge-green";
-    if (level <= 3) return "badge badge-yellow";
-    return "badge badge-red";
-  };
-
-  // Search Bar Component
-  const SearchBar = () => (
-    <div className={`search-container ${searchFocused ? 'search-focused' : ''}`}>
-      <div className="search-wrapper">
-        <Search className="search-icon" />
-        <input
-          type="text"
-          placeholder="Search venues, cities, or postcodes..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          onFocus={() => setSearchFocused(true)}
-          onBlur={() => setSearchFocused(false)}
-          className="search-input"
+  return (
+    <div className="app-layout">
+      {state.currentView === 'home' && (
+        <Header
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          onClearSearch={handleClearSearch}
         />
-        {searchQuery && (
-          <button onClick={clearSearch} className="search-clear">
-            <X className="w-4 h-4" />
-          </button>
+      )}
+
+      <div className="content-frame">
+        {state.currentView === 'home' && (
+          <HomeView
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            venueFilter={venueFilter}
+            setVenueFilter={setVenueFilter}
+            onVenueClick={handleVenueClick}
+            onVenueShare={handleVenueShare}
+          />
+        )}
+
+        {state.currentView === 'details' && (
+          <VenueDetailsView
+            onBack={handleBackToHome}
+            onShare={handleVenueShare}
+          />
         )}
       </div>
-      {(searchQuery || venueFilter === 'followed') && (
-        <div className="search-results-info">
-          {filteredVenues.length === 0 ? (
-            <span className="text-muted">No venues found</span>
-          ) : (
-            <span className="text-muted">
-              {filteredVenues.length} venue{filteredVenues.length !== 1 ? 's' : ''} found
-            </span>
-          )}
+
+      {/* Notifications */}
+      {notifications.length > 0 && (
+        <div className="notification-container">
+          {notifications.map((notification) => (
+            <div
+              key={notification.id}
+              className={`notification notification-${notification.type}`}
+            >
+              <div className="notification-content">
+                <span className="notification-message">{notification.message}</span>
+                <button
+                  onClick={() => removeNotification(notification.id)}
+                  className="notification-close"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
+
+      <ShareModal
+        venue={shareVenue}
+        isOpen={showShareModal}
+        onClose={() => {
+          setShowShareModal(false);
+          setShareVenue(null);
+        }}
+      />
+
+      <RatingModal />
+      <ReportModal />
     </div>
   );
+}
 
-  // Star Rating Component
-  const StarRating = ({ rating, size = 'sm', showCount = false, totalRatings = 0, interactive = false, onRatingChange = null }) => {
-    const [hoverRating, setHoverRating] = useState(0);
-    
-    const starSize = size === 'lg' ? 'w-6 h-6' : size === 'md' ? 'w-5 h-5' : 'w-4 h-4';
-    
-    return (
-      <div className="flex items-center">
-        <div className="flex">
-          {[1, 2, 3, 4, 5].map((star) => (
-            <Star
-              key={star}
-              className={`${starSize} cursor-${interactive ? 'pointer' : 'default'} transition-colors ${
-                star <= (interactive ? (hoverRating || rating) : rating)
-                  ? 'fill-yellow-400 text-yellow-400'
-                  : 'text-gray-300'
-              }`}
-              onMouseEnter={() => interactive && setHoverRating(star)}
-              onMouseLeave={() => interactive && setHoverRating(0)}
-              onClick={() => interactive && onRatingChange && onRatingChange(star)}
-            />
-          ))}
-        </div>
-        {showCount && (
-          <span className="ml-2 text-sm text-muted">
-            {rating.toFixed(1)} ({totalRatings} {totalRatings === 1 ? 'review' : 'reviews'})
-          </span>
-        )}
-      </div>
-    );
-  };
-
-  // Rest of the components (Rating Modal, Reviews Modal, Report Modal, etc.) remain the same...
-  // [Including all the remaining components from the original code]
-
-  // Enhanced Venue Card Component
-  const VenueCard = ({ venue, onClick, showReportButton = true }) => {
-    const highlightText = (text, query) => {
-      if (!query.trim()) return text;
-      
-      const parts = text.split(new RegExp(`(${query})`, 'gi'));
-      return parts.map((part, index) => 
-        part.toLowerCase() === query.toLowerCase() ? (
-          <mark key={index} className="search-highlight">{part}</mark>
-        ) : part
-      );
-    };
-
-    const isFollowed = isVenueFollowed(venue.id);
-
-    return (
-      <div className={`card card-venue animate-fadeIn ${isFollowed ? 'venue-followed' : ''}`}>
-        <EnhancedFollowButton venue={venue} className="venue-follow-btn" showCount={true} />
-        
-        {venue.hasPromotion && (
-          <div className="venue-promotion-badge">
-            <Gift className="w-3 h-3 mr-1" />
-            <span className="text-xs font-semibold">{venue.promotionText}</span>
-          </div>
-        )}
-
-        <div className="flex justify-between items-start mb-3">
-          <div className="flex-1">
-            <div className="flex items-center mb-1">
-              <h3 className="text-lg font-bold text-primary mr-2">
-                {searchQuery ? highlightText(venue.name, searchQuery) : venue.name}
-              </h3>
-              {isFollowed && (
-                <div className="followed-indicator">
-                  <Heart className="w-4 h-4 text-red-500 fill-current" />
-                </div>
-              )}
-            </div>
-            <div className="flex items-center text-secondary text-sm mb-1">
-              <MapPin className="icon icon-sm mr-2" />
-              <span className="font-medium">{venue.type} • {venue.distance}</span>
-            </div>
-            <div className="flex items-center mb-2">
-              <StarRating 
-                rating={venue.rating} 
-                size="sm" 
-                showCount={true} 
-                totalRatings={venue.totalRatings}
-              />
-            </div>
-            <div className="text-xs text-muted">
-              {searchQuery ? highlightText(`${venue.city}, ${venue.postcode}`, searchQuery) : `${venue.city}, ${venue.postcode}`}
-            </div>
-          </div>
-          <div className="text-right">
-            <div className={getCrowdColor(venue.crowdLevel)}>
-              <Users className="icon icon-sm mr-1" />
-              {getCrowdLabel(venue.crowdLevel)}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-4 text-sm text-secondary">
-            <div className="flex items-center">
-              <Clock className="icon icon-sm mr-1" />
-              <span className="font-medium">{venue.waitTime > 0 ? `${venue.waitTime} min wait` : 'No wait'}</span>
-            </div>
-            <div className="flex items-center">
-              <TrendingUp className="icon icon-sm mr-1" />
-              <span className="font-medium">{venue.confidence}% confidence</span>
-            </div>
-          </div>
-          <span className="text-xs text-muted font-medium">{venue.lastUpdate}</span>
-        </div>
-
-        <div className="flex flex-wrap gap-2 mb-4">
-          {venue.vibe.map((tag, index) => (
-            <span key={index} className="badge badge-blue">
-              {tag}
-            </span>
-          ))}
-        </div>
-
-        <VenueFollowStats venue={venue} />
-
-        <div className="flex space-x-2 mt-4">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedVenue(venue);
-              setShowRatingModal(true);
-            }}
-            className="btn btn-warning flex-1"
-          >
-            Rate
-          </button>
-          {showReportButton && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedVenue(venue);
-                setShowReportModal(true);
-              }}
-              className="btn btn-primary flex-1"
-            >
-              Update
-            </button>
-          )}
-          <button
-            onClick={() => onClick(venue)}
-            className="btn btn-secondary flex-1 flex items-center justify-center"
-          >
-            Details
-            <ChevronRight className="icon icon-sm ml-2" />
-          </button>
-        </div>
-      </div>
-    );
-  };
-
-  // Enhanced Home View Component
-  const HomeView = () => {
-    const [sortBy, setSortBy] = useState('distance');
-    
-    const sortedVenues = [...filteredVenues].sort((a, b) => {
-      switch (sortBy) {
-        case 'rating':
-          return b.rating - a.rating;
-        case 'crowd':
-          return b.crowdLevel - a.crowdLevel;
-        case 'followers':
-          return (b.followersCount || 0) - (a.followersCount || 0);
-        default:
-          return parseFloat(a.distance) - parseFloat(b.distance);
-      }
-    });
-
-    return (
-      <div className="app-layout">
-        <div className="header-frame">
-          <div className="header-content">
-            <UserProfileCard />
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h1 className="app-title">nYtevibe</h1>
-                <p className="app-subtitle">Houston Area • Live Venue Tracker</p>
-              </div>
-            </div>
-            
-            <SearchBar />
-            <PromotionalBanner />
-          </div>
-        </div>
-
-        <div className="content-frame">
-          <div className="content-header">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-xl font-bold text-white">
-                {searchQuery ? `Search Results` : venueFilter === 'followed' ? 'Followed Venues' : 'Nearby Venues'}
-              </h2>
-              <div className="flex items-center space-x-2">
-                <FollowedVenuesFilter onFilter={setVenueFilter} />
-                <select 
-                  value={sortBy} 
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="form-input text-sm py-1 px-2 sort-dropdown"
-                >
-                  <option value="distance">Distance</option>
-                  <option value="rating">Rating</option>
-                  <option value="crowd">Crowd Level</option>
-                  <option value="followers">Popularity</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div className="venues-list">
-            {sortedVenues.length === 0 ? (
-              <div className="card text-center py-8">
-                <Search className="w-12 h-12 mx-auto text-muted mb-4" />
-                <h3 className="text-lg font-semibold text-primary mb-2">No venues found</h3>
-                <p className="text-muted">
-                  {venueFilter === 'followed' 
-                    ? "You haven't followed any venues yet. Start following your favorites!" 
-                    : searchQuery 
-                      ? `Try searching for a different venue name, city, or postcode.`
-                      : "No venues available."
-                  }
-                </p>
-                {(searchQuery || venueFilter === 'followed') && (
-                  <button
-                    onClick={() => {
-                      clearSearch();
-                      setVenueFilter('all');
-                    }}
-                    className="btn btn-primary mt-4"
-                  >
-                    Show All Venues
-                  </button>
-                )}
-              </div>
-            ) : (
-              sortedVenues.map((venue, index) => (
-                <div key={venue.id} style={{animationDelay: `${index * 0.1}s`}}>
-                  <VenueCard
-                    venue={venue}
-                    onClick={(venue) => {
-                      setSelectedVenue(venue);
-                      setCurrentView('detail');
-                    }}
-                  />
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // [Rest of the components remain the same - VenueDetail, modals, etc.]
-  
+function App() {
   return (
-    <div className="font-sans">
-      {currentView === 'home' && <HomeView />}
-      {currentView === 'detail' && selectedVenue && <VenueDetail venue={selectedVenue} />}
-      
-      {/* Modals remain the same */}
-    </div>
+    <AppProvider>
+      <AppContent />
+    </AppProvider>
   );
-};
+}
 
 export default App;
