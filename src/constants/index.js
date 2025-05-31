@@ -1,10 +1,18 @@
 export const EMOJI_OPTIONS = ['📍', '💕', '🏈', '🎉', '🍻', '☕', '🌙', '🎵', '🍽️', '🎭', '🏃', '💼', '💨', '🔥'];
 
 export const VIBE_OPTIONS = [
-  "Chill", "Lively", "Loud", "Dancing", "Sports", "Date Night", 
+  "Chill", "Lively", "Loud", "Dancing", "Sports", "Date Night",
   "Business", "Family", "Hip-Hop", "R&B", "Live Music", "Karaoke",
   "Hookah", "Rooftop", "VIP", "Happy Hour"
 ];
+
+export const UPDATE_INTERVALS = {
+  VENUE_DATA: 45000, // 45 seconds
+  NOTIFICATION_DURATION: 3000, // 3 seconds
+  PROMOTION_PULSE: 3000, // 3 seconds
+  FOLLOW_ANIMATION: 2000, // 2 seconds
+  BANNER_ROTATION: 4000 // 4 seconds
+};
 
 export const PROMOTIONAL_BANNERS = [
   {
@@ -13,9 +21,10 @@ export const PROMOTIONAL_BANNERS = [
     icon: 'MessageCircle',
     title: "Help your community!",
     subtitle: "Rate venues and report status to earn points",
-    bgColor: "rgba(59, 130, 246, 0.15)",
-    borderColor: "rgba(59, 130, 246, 0.3)",
-    iconColor: "#3b82f6"
+    bgColor: "linear-gradient(135deg, #3b82f6, #2563eb)",
+    borderColor: "#3b82f6",
+    iconColor: "#ffffff",
+    textColor: "#ffffff"
   },
   {
     id: 'nyc-promo',
@@ -24,9 +33,10 @@ export const PROMOTIONAL_BANNERS = [
     icon: 'Gift',
     title: "NYC Vibes says: Free Hookah for Ladies! 🎉",
     subtitle: "6:00 PM - 10:00 PM • Tonight Only • Limited Time",
-    bgColor: "rgba(236, 72, 153, 0.15)",
-    borderColor: "rgba(236, 72, 153, 0.3)",
-    iconColor: "#ec4899"
+    bgColor: "linear-gradient(135deg, #ec4899, #db2777)",
+    borderColor: "#ec4899",
+    iconColor: "#ffffff",
+    textColor: "#ffffff"
   },
   {
     id: 'red-sky-grand-opening',
@@ -35,9 +45,10 @@ export const PROMOTIONAL_BANNERS = [
     icon: 'Sparkles',
     title: "Red Sky: Grand Opening Special! 🔥",
     subtitle: "50% Off Premium Hookah • Live DJ • VIP Lounge Available",
-    bgColor: "rgba(239, 68, 68, 0.15)",
-    borderColor: "rgba(239, 68, 68, 0.3)",
-    iconColor: "#ef4444"
+    bgColor: "linear-gradient(135deg, #ef4444, #dc2626)",
+    borderColor: "#ef4444",
+    iconColor: "#ffffff",
+    textColor: "#ffffff"
   },
   {
     id: 'best-regards-event',
@@ -46,9 +57,10 @@ export const PROMOTIONAL_BANNERS = [
     icon: 'Volume2',
     title: "Best Regards Says: Guess who's here tonight! 🎵",
     subtitle: "#DJ Chin is spinning • 9:00 PM - 2:00 AM • Don't miss out!",
-    bgColor: "rgba(168, 85, 247, 0.15)",
-    borderColor: "rgba(168, 85, 247, 0.3)",
-    iconColor: "#a855f7"
+    bgColor: "linear-gradient(135deg, #a855f7, #9333ea)",
+    borderColor: "#a855f7",
+    iconColor: "#ffffff",
+    textColor: "#ffffff"
   },
   {
     id: 'rumors-special',
@@ -57,9 +69,10 @@ export const PROMOTIONAL_BANNERS = [
     icon: 'Calendar',
     title: "Rumors: R&B Night Special! 🎤",
     subtitle: "2-for-1 cocktails • Live R&B performances • 8:00 PM start",
-    bgColor: "rgba(34, 197, 94, 0.15)",
-    borderColor: "rgba(34, 197, 94, 0.3)",
-    iconColor: "#22c55e"
+    bgColor: "linear-gradient(135deg, #22c55e, #16a34a)",
+    borderColor: "#22c55e",
+    iconColor: "#ffffff",
+    textColor: "#ffffff"
   },
   {
     id: 'classic-game',
@@ -68,9 +81,10 @@ export const PROMOTIONAL_BANNERS = [
     icon: 'Volume2',
     title: "Classic Bar: Big Game Tonight! 🏈",
     subtitle: "Texans vs Cowboys • 50¢ wings • Free shots for TDs!",
-    bgColor: "rgba(251, 146, 60, 0.15)",
-    borderColor: "rgba(251, 146, 60, 0.3)",
-    iconColor: "#fb923c"
+    bgColor: "linear-gradient(135deg, #fb923c, #f97316)",
+    borderColor: "#fb923c",
+    iconColor: "#ffffff",
+    textColor: "#ffffff"
   },
   {
     id: 'social-new',
@@ -78,9 +92,10 @@ export const PROMOTIONAL_BANNERS = [
     icon: 'UserPlus',
     title: "Connect with friends! 👥",
     subtitle: "Share venues, create lists, and discover together",
-    bgColor: "rgba(168, 85, 247, 0.15)",
-    borderColor: "rgba(168, 85, 247, 0.3)",
-    iconColor: "#a855f7"
+    bgColor: "linear-gradient(135deg, #a855f7, #9333ea)",
+    borderColor: "#a855f7",
+    iconColor: "#ffffff",
+    textColor: "#ffffff"
   },
   {
     id: 'ai-recommendations',
@@ -88,18 +103,12 @@ export const PROMOTIONAL_BANNERS = [
     icon: 'Brain',
     title: "AI-Powered Recommendations! 🤖",
     subtitle: "Discover venues tailored to your taste profile",
-    bgColor: "rgba(34, 197, 94, 0.15)",
-    borderColor: "rgba(34, 197, 94, 0.3)",
-    iconColor: "#22c55e"
+    bgColor: "linear-gradient(135deg, #22c55e, #16a34a)",
+    borderColor: "#22c55e",
+    iconColor: "#ffffff",
+    textColor: "#ffffff"
   }
 ];
-
-export const UPDATE_INTERVALS = {
-  VENUE_DATA: 45000, // 45 seconds
-  NOTIFICATION_DURATION: 3000, // 3 seconds
-  PROMOTION_PULSE: 3000, // 3 seconds
-  FOLLOW_ANIMATION: 2000 // 2 seconds
-};
 
 export const POINT_SYSTEM = {
   FOLLOW_VENUE: 3,

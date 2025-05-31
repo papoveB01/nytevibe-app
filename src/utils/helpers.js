@@ -1,4 +1,4 @@
-// Utility functions for nYtevibe
+// Enhanced utility functions for nYtevibe v2.0
 
 export const getCrowdLabel = (level) => {
   const labels = ["", "Empty", "Quiet", "Moderate", "Busy", "Packed"];
@@ -23,7 +23,7 @@ export const formatTimestamp = (timestamp) => {
   const date = new Date(timestamp);
   const now = new Date();
   const diffInHours = (now - date) / (1000 * 60 * 60);
-  
+
   if (diffInHours < 24) {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   } else if (diffInHours < 24 * 7) {
@@ -74,7 +74,7 @@ export const getDirections = (venue) => {
 export const shareVenue = (venue, platform) => {
   const shareUrl = `https://nytevibe.com/venue/${venue.id}`;
   const shareText = `Check out ${venue.name} on nYtevibe! ${venue.type} • ${venue.rating}/5 stars`;
-  
+
   switch (platform) {
     case 'facebook':
       window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`);
@@ -92,4 +92,33 @@ export const shareVenue = (venue, platform) => {
       window.open(`https://wa.me/?text=${encodeURIComponent(`${shareText}\n${shareUrl}`)}`);
       break;
   }
+};
+
+// New v2.0 utilities
+export const calculateUserLevel = (points) => {
+  const levels = [
+    { name: 'Bronze Explorer', tier: 'bronze', minPoints: 0, maxPoints: 499 },
+    { name: 'Silver Scout', tier: 'silver', minPoints: 500, maxPoints: 999 },
+    { name: 'Gold Explorer', tier: 'gold', minPoints: 1000, maxPoints: 1999 },
+    { name: 'Platinum Pioneer', tier: 'platinum', minPoints: 2000, maxPoints: 4999 },
+    { name: 'Diamond Legend', tier: 'diamond', minPoints: 5000, maxPoints: 999999 }
+  ];
+  
+  return levels.find(level => points >= level.minPoints && points <= level.maxPoints) || levels[0];
+};
+
+export const generateUniqueId = () => {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+};
+
+export const debounce = (func, wait) => {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
 };

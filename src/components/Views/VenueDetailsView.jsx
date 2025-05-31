@@ -1,16 +1,25 @@
-import React from 'react';
-import { ArrowLeft, MapPin, Clock, Phone, Star, Users, Share2, Navigation, AlertTriangle, ThumbsUp } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { 
+  ArrowLeft, MapPin, Clock, Phone, Star, Users, Share2, Navigation, 
+  ExternalLink, Heart, Calendar, Globe, Wifi, CreditCard, Car,
+  Music, Volume2, Utensils, Coffee, Wine, ShoppingBag
+} from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import FollowButton from '../Follow/FollowButton';
-import FollowStats from '../Follow/FollowStats';
+import { useVenues } from '../../hooks/useVenues';
 import StarRating from '../Venue/StarRating';
-import Badge from '../UI/Badge';
-import Button from '../UI/Button';
 import { getCrowdLabel, getCrowdColor, openGoogleMaps, getDirections } from '../../utils/helpers';
 
 const VenueDetailsView = ({ onBack, onShare }) => {
   const { state, actions } = useApp();
-  const { selectedVenue: venue } = state;
+  const { selectedVenue: venue, userProfile } = state;
+  const { isVenueFollowed, toggleFollow } = useVenues();
+  const [activeTab, setActiveTab] = useState('overview');
+  const [showAllReviews, setShowAllReviews] = useState(false);
+
+  useEffect(() => {
+    // Auto-scroll to top when venue details open
+    window.scrollTo(0, 0);
+  }, [venue]);
 
   if (!venue) {
     return (
@@ -28,200 +37,435 @@ const VenueDetailsView = ({ onBack, onShare }) => {
     );
   }
 
-  const handleRateVenue = () => {
+  const isFollowed = isVenueFollowed(venue.id);
+
+  const handleFollow = () => {
+    toggleFollow(venue);
+  };
+
+  const handleShare = () => {
+    onShare?.(venue);
+  };
+
+  const handleRate = () => {
     actions.setSelectedVenue(venue);
     actions.setShowRatingModal(true);
   };
 
-  const handleReportStatus = () => {
+  const handleReport = () => {
     actions.setSelectedVenue(venue);
     actions.setShowReportModal(true);
   };
 
+  const displayedReviews = showAllReviews ? venue.reviews : venue.reviews?.slice(0, 3) || [];
+
+  const amenities = [
+    { icon: Wifi, label: 'Free WiFi', available: true },
+    { icon: Car, label: 'Parking', available: true },
+    { icon: CreditCard, label: 'Card Accepted', available: true },
+    { icon: Music, label: 'Live Music', available: venue.vibe.includes('Live Music') },
+    { icon: Utensils, label: 'Food Menu', available: venue.type.includes('Grill') || venue.type.includes('Restaurant') },
+    { icon: Coffee, label: 'Coffee', available: venue.type.includes('Cafe') || venue.type.includes('Coffee') },
+    { icon: Wine, label: 'Full Bar', available: venue.type.includes('Bar') || venue.type.includes('Lounge') },
+    { icon: ShoppingBag, label: 'VIP Service', available: venue.vibe.includes('VIP') }
+  ];
+
+  const renderStarBreakdown = () => {
+    const breakdown = venue.ratingBreakdown || {};
+    const total = venue.totalRatings || 1;
+
+    return (
+      <div className="rating-breakdown">
+        <h4>Rating Breakdown</h4>
+        {[5, 4, 3, 2, 1].map(rating => {
+          const count = breakdown[rating] || 0;
+          const percentage = (count / total) * 100;
+          
+          return (
+            <div key={rating} className="rating-row">
+              <span className="rating-label">{rating} ⭐</span>
+              <div className="rating-bar">
+                <div 
+                  className="rating-fill" 
+                  style={{ width: `${percentage}%` }}
+                ></div>
+              </div>
+              <span className="rating-count">({count})</span>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'overview':
+        return (
+          <div className="tab-content">
+            {/* Vibe Tags */}
+            <div className="section">
+              <h4>Vibe & Atmosphere</h4>
+              <div className="vibe-tags-large">
+                {venue.vibe.map((tag, index) => (
+                  <span key={index} className="vibe-tag">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Promotion */}
+            {venue.hasPromotion && (
+              <div className="section">
+                <div className="promotion-highlight">
+                  <div className="promotion-icon">🎉</div>
+                  <div className="promotion-content">
+                    <h4>Special Promotion</h4>
+                    <p>{venue.promotionText}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Amenities */}
+            <div className="section">
+              <h4>Amenities & Features</h4>
+              <div className="amenities-grid">
+                {amenities.map((amenity, index) => (
+                  <div 
+                    key={index} 
+                    className={`amenity-item ${amenity.available ? 'available' : 'unavailable'}`}
+                  >
+                    <amenity.icon className="amenity-icon" />
+                    <span>{amenity.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="section">
+              <div className="quick-actions">
+                <button 
+                  className="action-button primary"
+                  onClick={handleRate}
+                >
+                  <Star className="w-4 h-4" />
+                  Rate & Review
+                </button>
+                <button 
+                  className="action-button secondary"
+                  onClick={handleReport}
+                >
+                  <Users className="w-4 h-4" />
+                  Report Status
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'reviews':
+        return (
+          <div className="tab-content">
+            {/* Rating Summary */}
+            <div className="section">
+              <div className="rating-summary">
+                <div className="rating-overview">
+                  <div className="rating-score">
+                    <span className="score">{venue.rating.toFixed(1)}</span>
+                    <div className="rating-stars">
+                      <StarRating rating={venue.rating} size="lg" />
+                    </div>
+                    <span className="rating-label">Based on {venue.totalRatings} reviews</span>
+                  </div>
+                  {renderStarBreakdown()}
+                </div>
+              </div>
+            </div>
+
+            {/* Reviews List */}
+            <div className="section">
+              <div className="reviews-header">
+                <h4>Customer Reviews</h4>
+                <button 
+                  className="write-review-button"
+                  onClick={handleRate}
+                >
+                  Write a Review
+                </button>
+              </div>
+              
+              <div className="reviews-list">
+                {displayedReviews.map((review) => (
+                  <div key={review.id} className="review-card">
+                    <div className="review-header">
+                      <div className="review-author">
+                        <div className="author-avatar">
+                          {review.user.charAt(0)}
+                        </div>
+                        <div className="author-info">
+                          <span className="author-name">{review.user}</span>
+                          <div className="review-meta">
+                            <StarRating rating={review.rating} size="sm" />
+                            <span className="review-date">{review.date}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="review-helpful">
+                        <button className="helpful-button">
+                          👍 {review.helpful}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="review-content">
+                      <p>{review.comment}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {venue.reviews && venue.reviews.length > 3 && (
+                <div className="reviews-actions">
+                  <button 
+                    className="show-more-reviews"
+                    onClick={() => setShowAllReviews(!showAllReviews)}
+                  >
+                    {showAllReviews ? 'Show Less' : `Show All ${venue.reviews.length} Reviews`}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+
+      case 'info':
+        return (
+          <div className="tab-content">
+            {/* Contact Information */}
+            <div className="section">
+              <h4>Contact & Location</h4>
+              <div className="contact-info">
+                <div className="contact-item">
+                  <MapPin className="contact-icon" />
+                  <div className="contact-details">
+                    <span className="contact-label">Address</span>
+                    <span className="contact-value">{venue.address}</span>
+                  </div>
+                  <button 
+                    className="contact-action"
+                    onClick={() => openGoogleMaps(venue)}
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="contact-item">
+                  <Phone className="contact-icon" />
+                  <div className="contact-details">
+                    <span className="contact-label">Phone</span>
+                    <span className="contact-value">{venue.phone}</span>
+                  </div>
+                  <button 
+                    className="contact-action"
+                    onClick={() => window.open(`tel:${venue.phone}`)}
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="contact-item">
+                  <Clock className="contact-icon" />
+                  <div className="contact-details">
+                    <span className="contact-label">Hours</span>
+                    <span className="contact-value">{venue.hours}</span>
+                  </div>
+                </div>
+
+                <div className="contact-item">
+                  <Globe className="contact-icon" />
+                  <div className="contact-details">
+                    <span className="contact-label">Website</span>
+                    <span className="contact-value">www.{venue.name.toLowerCase().replace(/\s+/g, '')}.com</span>
+                  </div>
+                  <button className="contact-action">
+                    <ExternalLink className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Navigation Actions */}
+            <div className="section">
+              <h4>Get Directions</h4>
+              <div className="navigation-actions">
+                <button 
+                  className="nav-button maps"
+                  onClick={() => openGoogleMaps(venue)}
+                >
+                  <MapPin className="w-5 h-5" />
+                  <div>
+                    <span className="nav-title">View on Maps</span>
+                    <span className="nav-subtitle">See location & nearby places</span>
+                  </div>
+                </button>
+                
+                <button 
+                  className="nav-button directions"
+                  onClick={() => getDirections(venue)}
+                >
+                  <Navigation className="w-5 h-5" />
+                  <div>
+                    <span className="nav-title">Get Directions</span>
+                    <span className="nav-subtitle">Turn-by-turn navigation</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Venue Statistics */}
+            <div className="section">
+              <h4>Venue Statistics</h4>
+              <div className="venue-stats">
+                <div className="stat-card">
+                  <div className="stat-number">{venue.followersCount}</div>
+                  <div className="stat-label">Followers</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-number">{venue.reports}</div>
+                  <div className="stat-label">Reports</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-number">{venue.confidence}%</div>
+                  <div className="stat-label">Confidence</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-number">{venue.totalRatings}</div>
+                  <div className="stat-label">Reviews</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="venue-details-view">
+      {/* Header */}
       <div className="details-header">
         <button onClick={onBack} className="back-button">
           <ArrowLeft className="w-5 h-5" />
+          <span>Back</span>
         </button>
-        <h2>{venue.name}</h2>
-        <FollowButton venue={venue} size="md" />
+        
+        <div className="header-actions">
+          <button 
+            className={`follow-button-header ${isFollowed ? 'following' : ''}`}
+            onClick={handleFollow}
+          >
+            <Heart className={`w-4 h-4 ${isFollowed ? 'fill-current' : ''}`} />
+            <span>{isFollowed ? 'Following' : 'Follow'}</span>
+          </button>
+          
+          <button className="share-button-header" onClick={handleShare}>
+            <Share2 className="w-4 h-4" />
+            <span>Share</span>
+          </button>
+        </div>
       </div>
 
-      <div className="details-content">
-        <div className="venue-header-section">
+      {/* Hero Section */}
+      <div className="details-hero">
+        <div className="hero-content">
           <div className="venue-title-section">
-            <h1>{venue.name}</h1>
+            <h1 className="venue-title">{venue.name}</h1>
             <div className="venue-subtitle">
-              <span>{venue.type}</span>
-              <span className="separator">•</span>
-              <span>{venue.distance}</span>
-              <span className="separator">•</span>
-              <span className={getCrowdColor(venue.crowdLevel)}>
+              <span className="venue-type">{venue.type}</span>
+              <span className="venue-separator">•</span>
+              <span className="venue-address">{venue.address}</span>
+            </div>
+            <div className="venue-rating-section">
+              <StarRating 
+                rating={venue.rating} 
+                size="lg" 
+                showCount={true} 
+                totalRatings={venue.totalRatings} 
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Status Cards */}
+      <div className="status-cards-section">
+        <div className="status-cards">
+          <div className="status-card crowd">
+            <div className="status-icon-wrapper">
+              <Users className="status-card-icon" />
+            </div>
+            <div className="status-info">
+              <span className="status-label">Crowd Level</span>
+              <span className={`status-value ${getCrowdColor(venue.crowdLevel).split(' ').pop()}`}>
                 {getCrowdLabel(venue.crowdLevel)}
               </span>
-            </div>
-            <StarRating 
-              rating={venue.rating} 
-              size="lg" 
-              showCount={true} 
-              totalRatings={venue.totalRatings}
-            />
-          </div>
-        </div>
-
-        <FollowStats venue={venue} />
-
-        {venue.hasPromotion && (
-          <div className="promotion-section">
-            <div className="promotion-card">
-              <h3>🎉 Special Promotion</h3>
-              <p>{venue.promotionText}</p>
+              <span className="status-meta">Updated {venue.lastUpdate}</span>
             </div>
           </div>
-        )}
 
-        <div className="venue-info-section">
-          <h3>Information</h3>
-          <div className="info-grid">
-            <div className="info-item">
-              <MapPin className="info-icon" />
-              <div>
-                <div className="info-label">Address</div>
-                <div className="info-value">{venue.address}</div>
-              </div>
+          <div className="status-card wait">
+            <div className="status-icon-wrapper">
+              <Clock className="status-card-icon" />
             </div>
-            
-            <div className="info-item">
-              <Phone className="info-icon" />
-              <div>
-                <div className="info-label">Phone</div>
-                <div className="info-value">{venue.phone}</div>
-              </div>
+            <div className="status-info">
+              <span className="status-label">Wait Time</span>
+              <span className="status-value">
+                {venue.waitTime > 0 ? `${venue.waitTime} min` : 'No wait'}
+              </span>
+              <span className="status-meta">{venue.confidence}% confidence</span>
             </div>
-            
-            <div className="info-item">
-              <Clock className="info-icon" />
-              <div>
-                <div className="info-label">Hours</div>
-                <div className="info-value">{venue.hours}</div>
-              </div>
-            </div>
-            
-            <div className="info-item">
-              <Users className="info-icon" />
-              <div>
-                <div className="info-label">Current Status</div>
-                <div className="info-value">
-                  <span className={getCrowdColor(venue.crowdLevel)}>
-                    {getCrowdLabel(venue.crowdLevel)}
-                  </span>
-                  {venue.waitTime > 0 && (
-                    <span className="ml-2 text-gray-600">• {venue.waitTime} min wait</span>
-                  )}
-                </div>
-              </div>
-            </div>
+          </div>
 
-            <div className="info-item">
-              <Clock className="info-icon" />
-              <div>
-                <div className="info-label">Last Updated</div>
-                <div className="info-value text-gray-600">{venue.lastUpdate}</div>
-              </div>
+          <div className="status-card followers">
+            <div className="status-icon-wrapper">
+              <Heart className="status-card-icon" />
+            </div>
+            <div className="status-info">
+              <span className="status-label">Followers</span>
+              <span className="status-value">{venue.followersCount}</span>
+              <span className="status-meta">{isFollowed ? 'You follow this' : 'Join the community'}</span>
             </div>
           </div>
         </div>
+      </div>
 
-        <div className="venue-vibe-section">
-          <h3>Vibe</h3>
-          <div className="vibe-tags">
-            {venue.vibe.map((tag, index) => (
-              <Badge key={index} variant="primary">
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        </div>
-
-        {/* Navigation & Share Actions */}
-        <div className="action-buttons-section">
-          <Button onClick={() => openGoogleMaps(venue)}>
-            <MapPin className="w-4 h-4" />
-            View on Maps
-          </Button>
-          <Button variant="secondary" onClick={() => getDirections(venue)}>
-            <Navigation className="w-4 h-4" />
-            Get Directions
-          </Button>
-          <Button variant="secondary" onClick={() => onShare(venue)}>
-            <Share2 className="w-4 h-4" />
-            Share
-          </Button>
-        </div>
-
-        {/* Community Actions */}
-        <div className="community-actions-section">
-          <h3>Help the Community</h3>
-          <p className="community-subtitle">Share your experience and help others know what to expect!</p>
-          
-          <div className="action-buttons-section">
-            <Button 
-              variant="warning" 
-              onClick={handleRateVenue}
-              className="community-action-btn"
+      {/* Tab Navigation */}
+      <div className="tab-navigation">
+        <div className="tab-buttons">
+          {[
+            { id: 'overview', label: 'Overview' },
+            { id: 'reviews', label: 'Reviews', count: venue.reviews?.length },
+            { id: 'info', label: 'Info' }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              className={`tab-button ${activeTab === tab.id ? 'active' : ''}`}
+              onClick={() => setActiveTab(tab.id)}
             >
-              <Star className="w-4 h-4" />
-              Rate Venue
-              <span className="action-points">+5 pts</span>
-            </Button>
-            <Button 
-              variant="primary" 
-              onClick={handleReportStatus}
-              className="community-action-btn report-btn"
-            >
-              <AlertTriangle className="w-4 h-4" />
-              Report Status
-              <span className="action-points">+10 pts</span>
-            </Button>
-          </div>
-          
-          <div className="community-stats">
-            <div className="stat-box">
-              <Users className="w-4 h-4 text-blue-500" />
-              <span className="stat-number">{venue.reports}</span>
-              <span className="stat-label">recent reports</span>
-            </div>
-            <div className="stat-box">
-              <ThumbsUp className="w-4 h-4 text-green-500" />
-              <span className="stat-number">{venue.confidence}%</span>
-              <span className="stat-label">confidence</span>
-            </div>
-          </div>
+              {tab.label}
+              {tab.count && <span className="tab-count">({tab.count})</span>}
+            </button>
+          ))}
         </div>
+      </div>
 
-        {venue.reviews && venue.reviews.length > 0 && (
-          <div className="reviews-section">
-            <h3>Recent Reviews</h3>
-            <div className="reviews-list">
-              {venue.reviews.map((review) => (
-                <div key={review.id} className="review-card">
-                  <div className="review-header">
-                    <div className="review-user">{review.user}</div>
-                    <div className="review-rating">
-                      <StarRating rating={review.rating} size="sm" />
-                    </div>
-                  </div>
-                  <div className="review-comment">{review.comment}</div>
-                  <div className="review-footer">
-                    <span className="review-date">{review.date}</span>
-                    <span className="review-helpful">👍 {review.helpful} helpful</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+      {/* Tab Content */}
+      <div className="tab-content-wrapper">
+        {renderTabContent()}
       </div>
     </div>
   );

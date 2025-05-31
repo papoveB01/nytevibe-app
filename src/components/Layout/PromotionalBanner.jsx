@@ -15,24 +15,35 @@ const PromotionalBanner = ({ banner, onClick }) => {
   const IconComponent = iconMap[banner.icon];
 
   return (
-    <div 
+    <div
       className="promotional-banner"
       style={{
         background: banner.bgColor,
-        borderLeftColor: banner.borderColor
+        borderColor: banner.borderColor,
+        color: banner.textColor || '#1f2937'
       }}
       onClick={onClick}
     >
       <div className="banner-content">
         {IconComponent && (
-          <IconComponent 
-            className="banner-icon" 
+          <IconComponent
+            className="banner-icon"
             style={{ color: banner.iconColor }}
           />
         )}
         <div className="banner-text">
-          <div className="banner-title">{banner.title}</div>
-          <div className="banner-subtitle">{banner.subtitle}</div>
+          <div
+            className="banner-title"
+            style={{ color: banner.textColor || '#1f2937' }}
+          >
+            {banner.title}
+          </div>
+          <div
+            className="banner-subtitle"
+            style={{ color: banner.textColor ? `${banner.textColor}CC` : '#6b7280' }}
+          >
+            {banner.subtitle}
+          </div>
         </div>
       </div>
     </div>

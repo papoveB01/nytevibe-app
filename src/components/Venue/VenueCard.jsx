@@ -1,27 +1,18 @@
 import React, { useState } from 'react';
 import { MapPin, Users, Clock, Star, TrendingUp, Share2, ChevronRight, Gift, Heart, Zap } from 'lucide-react';
-import FollowButton from '../Follow/FollowButton';
-import FollowStats from '../Follow/FollowStats';
-import StarRating from './StarRating';
-import Badge from '../UI/Badge';
 import { useVenues } from '../../hooks/useVenues';
 import { useApp } from '../../context/AppContext';
 import { getCrowdLabel, getCrowdColor, getTrendingIcon } from '../../utils/helpers';
 
-const VenueCard = ({ 
-  venue, 
-  onClick, 
-  onShare,
-  searchQuery = ''
-}) => {
-  const { isVenueFollowed } = useVenues();
+const VenueCard = ({ venue, onShare, searchQuery = '' }) => {
+  const { isVenueFollowed, toggleFollow } = useVenues();
   const { actions } = useApp();
   const [showPromoTooltip, setShowPromoTooltip] = useState(false);
-  
+
   const highlightText = (text, query) => {
     if (!query.trim()) return text;
     const parts = text.split(new RegExp(`(${query})`, 'gi'));
-    return parts.map((part, index) => 
+    return parts.map((part, index) =>
       part.toLowerCase() === query.toLowerCase() ? (
         <mark key={index} className="search-highlight">{part}</mark>
       ) : part
@@ -33,6 +24,16 @@ const VenueCard = ({
   const handleDetails = () => {
     actions.setSelectedVenue(venue);
     actions.setCurrentView('details');
+  };
+
+  const handleFollow = (e) => {
+    e.stopPropagation();
+    toggleFollow(venue);
+  };
+
+  const handleShare = (e) => {
+    e.stopPropagation();
+    onShare?.(venue);
   };
 
   const getPromoIcon = (text) => {
@@ -48,16 +49,24 @@ const VenueCard = ({
     return <Gift className="w-3 h-3" />;
   };
 
+  const renderCrowdDots = (level) => {
+    return Array.from({ length: 5 }, (_, i) => (
+      <div
+        key={i}
+        className={`crowd-dot ${i < level ? 'filled' : ''}`}
+      />
+    ));
+  };
+
   return (
     <div className={`venue-card-container ${isFollowed ? 'venue-followed' : ''}`}>
       {venue.hasPromotion && (
-        <div 
+        <div
           className="venue-promotion-sleek"
           onMouseEnter={() => setShowPromoTooltip(true)}
           onMouseLeave={() => setShowPromoTooltip(false)}
         >
           {getPromoIcon(venue.promotionText)}
-          
           {showPromoTooltip && (
             <div className="promotion-tooltip">
               <div className="tooltip-content">
@@ -89,27 +98,35 @@ const VenueCard = ({
           </div>
           
           <div className="venue-rating-row">
-            <StarRating 
-              rating={venue.rating} 
-              size="sm" 
-              showCount={true} 
-              totalRatings={venue.totalRatings}
-            />
+            <div className="star-rating">
+              {Array.from({ length: 5 }, (_, i) => (
+                <Star
+                  key={i}
+                  className={`w-4 h-4 ${i < Math.floor(venue.rating) ? 'fill-current text-yellow-400' : 'text-gray-300'}`}
+                />
+              ))}
+              <span className="rating-count">
+                {venue.rating.toFixed(1)} ({venue.totalRatings})
+              </span>
+            </div>
           </div>
           
           <div className="venue-address">
             {searchQuery ? highlightText(`${venue.city}, ${venue.postcode}`, searchQuery) : `${venue.city}, ${venue.postcode}`}
           </div>
         </div>
-        
+
         <div className="venue-actions-section">
           <div className="top-actions">
-            <FollowButton venue={venue} size="md" showCount={false} />
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onShare?.(venue);
-              }}
+              className={`follow-button ${isFollowed ? 'following' : ''}`}
+              onClick={handleFollow}
+              title={isFollowed ? 'Unfollow venue' : 'Follow venue'}
+            >
+              <Heart className={`w-5 h-5 ${isFollowed ? 'fill-current' : ''}`} />
+            </button>
+            <button
+              onClick={handleShare}
               className="share-button"
               title="Share venue"
             >
@@ -125,13 +142,6 @@ const VenueCard = ({
           </div>
         </div>
       </div>
-
-      {venue.hasPromotion && venue.promotionText.toLowerCase().includes('grand opening') && (
-        <div className="promotion-strip">
-          <Zap className="w-3 h-3" />
-          <span className="strip-text">Grand Opening Special</span>
-        </div>
-      )}
 
       <div className="venue-status-section">
         <div className="status-items">
@@ -151,18 +161,35 @@ const VenueCard = ({
 
       <div className="venue-vibe-section">
         {venue.vibe.map((tag, index) => (
-          <Badge key={index} variant="primary">
+          <span key={index} className="badge badge-blue">
             {tag}
-          </Badge>
+          </span>
         ))}
       </div>
 
-      <FollowStats venue={venue} />
+      <div className="venue-follow-stats">
+        <div className="follow-stat">
+          <Users className="stat-icon" />
+          <span className="stat-number">{venue.followersCount}</span>
+          <span className="stat-label">followers</span>
+        </div>
+        <div className="follow-stat">
+          <TrendingUp className="stat-icon" />
+          <span className="stat-number">{venue.reports}</span>
+          <span className="stat-label">reports</span>
+        </div>
+        {isFollowed && (
+          <div className="follow-stat you-follow">
+            <Heart className="stat-icon" />
+            <span className="stat-text">You follow this venue</span>
+          </div>
+        )}
+      </div>
 
       <div className="venue-action-buttons-single">
         <button
           onClick={handleDetails}
-          className="action-btn details-btn-full"
+          className="details-btn-full"
         >
           View Details
           <ChevronRight className="details-icon" />

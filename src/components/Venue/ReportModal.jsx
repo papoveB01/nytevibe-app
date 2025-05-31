@@ -1,208 +1,215 @@
 import React, { useState } from 'react';
-import { Users, Clock, AlertTriangle, CheckCircle, X } from 'lucide-react';
+import { X, Users, Clock, AlertTriangle } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import Modal from '../UI/Modal';
-import Button from '../UI/Button';
-import { getCrowdLabel, getCrowdColor } from '../../utils/helpers';
+import { getCrowdLabel } from '../../utils/helpers';
 
 const ReportModal = () => {
   const { state, actions } = useApp();
   const [crowdLevel, setCrowdLevel] = useState(3);
   const [waitTime, setWaitTime] = useState(0);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [reportType, setReportType] = useState('status'); // 'status' or 'issue'
+  const [reportType, setReportType] = useState('status');
+  const [issueDescription, setIssueDescription] = useState('');
 
-  const venue = state.selectedVenue;
-
-  const handleSubmit = async () => {
-    if (!venue) return;
-
-    setIsSubmitting(true);
-    
-    // Simulate API call
-    setTimeout(() => {
+  const handleSubmit = () => {
+    if (state.selectedVenue) {
       if (reportType === 'status') {
-        actions.reportVenue(venue.id, { crowdLevel, waitTime });
         actions.addNotification({
           type: 'success',
-          message: `Thanks! Venue status updated successfully. You earned 10 points!`,
-          duration: 4000
+          message: `✅ Status updated! +10 points earned`
         });
       } else {
         actions.addNotification({
           type: 'success',
-          message: `Thanks for reporting! We'll review this issue shortly.`,
-          duration: 4000
+          message: `🚨 Issue reported! +10 points earned`
         });
       }
       
-      setIsSubmitting(false);
-      handleClose();
-    }, 1000);
+      actions.setShowReportModal(false);
+      resetForm();
+    }
+  };
+
+  const resetForm = () => {
+    setCrowdLevel(3);
+    setWaitTime(0);
+    setReportType('status');
+    setIssueDescription('');
   };
 
   const handleClose = () => {
     actions.setShowReportModal(false);
-    setCrowdLevel(3);
-    setWaitTime(0);
-    setReportType('status');
-    setIsSubmitting(false);
+    resetForm();
   };
 
-  if (!venue) return null;
+  const crowdOptions = [
+    { value: 1, label: 'Empty', color: '#10b981', description: 'Very few people' },
+    { value: 2, label: 'Quiet', color: '#10b981', description: 'Light crowd' },
+    { value: 3, label: 'Moderate', color: '#f59e0b', description: 'Normal crowd' },
+    { value: 4, label: 'Busy', color: '#ef4444', description: 'Getting crowded' },
+    { value: 5, label: 'Packed', color: '#ef4444', description: 'Very crowded' }
+  ];
+
+  const issueTypes = [
+    'Venue is closed',
+    'Wrong information',
+    'Safety concern',
+    'Cleanliness issue',
+    'Poor service',
+    'Other'
+  ];
+
+  if (!state.showReportModal) return null;
 
   return (
-    <Modal
-      isOpen={state.showReportModal}
-      onClose={handleClose}
-      title="Report Venue Status"
-      maxWidth="max-w-lg"
-    >
-      <div className="report-modal-content">
-        <div className="venue-info-header">
-          <h4 className="venue-name">{venue.name}</h4>
-          <p className="venue-location">{venue.type} • {venue.distance}</p>
+    <div className="modal-overlay" onClick={handleClose}>
+      <div className="modal-content report-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h3 className="modal-title">
+            Report Status for {state.selectedVenue?.name || 'Venue'}
+          </h3>
+          <button onClick={handleClose} className="modal-close">
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
-        <div className="report-type-selector">
-          <h5>What would you like to report?</h5>
-          <div className="report-type-buttons">
-            <button
-              onClick={() => setReportType('status')}
-              className={`report-type-btn ${reportType === 'status' ? 'active' : ''}`}
-            >
-              <Users className="w-4 h-4" />
-              <span>Update Status</span>
-              <span className="points-badge">+10 pts</span>
-            </button>
-            <button
-              onClick={() => setReportType('issue')}
-              className={`report-type-btn ${reportType === 'issue' ? 'active' : ''}`}
-            >
-              <AlertTriangle className="w-4 h-4" />
-              <span>Report Issue</span>
-            </button>
-          </div>
-        </div>
-
-        {reportType === 'status' && (
-          <div className="status-report-section">
-            <div className="form-group">
-              <label className="form-label">
-                <Users className="w-4 h-4" />
-                How busy is it right now?
-              </label>
-              <div className="crowd-level-selector">
-                {[1, 2, 3, 4, 5].map((level) => (
-                  <button
-                    key={level}
-                    onClick={() => setCrowdLevel(level)}
-                    className={`crowd-level-btn ${crowdLevel === level ? 'active' : ''}`}
-                    data-level={level}
-                  >
-                    <div className={`crowd-indicator ${getCrowdColor(level).split(' ')[1]}`}></div>
-                    <span>{getCrowdLabel(level)}</span>
-                  </button>
-                ))}
-              </div>
+        <div className="modal-body">
+          {/* Report Type Selection */}
+          <div className="report-type-section">
+            <label className="section-label">What would you like to report?</label>
+            <div className="report-type-options">
+              <button
+                className={`report-type-button ${reportType === 'status' ? 'active' : ''}`}
+                onClick={() => setReportType('status')}
+              >
+                <Users className="w-5 h-5" />
+                <div>
+                  <span className="type-title">Update Status</span>
+                  <span className="type-description">Current crowd & wait time</span>
+                </div>
+              </button>
+              
+              <button
+                className={`report-type-button ${reportType === 'issue' ? 'active' : ''}`}
+                onClick={() => setReportType('issue')}
+              >
+                <AlertTriangle className="w-5 h-5" />
+                <div>
+                  <span className="type-title">Report Issue</span>
+                  <span className="type-description">Problem or concern</span>
+                </div>
+              </button>
             </div>
+          </div>
 
-            <div className="form-group">
-              <label className="form-label">
-                <Clock className="w-4 h-4" />
-                Current wait time (minutes)
-              </label>
-              <div className="wait-time-selector">
-                <input
-                  type="range"
-                  min="0"
-                  max="60"
-                  value={waitTime}
-                  onChange={(e) => setWaitTime(Number(e.target.value))}
-                  className="wait-time-slider"
-                />
-                <div className="wait-time-display">
-                  <span className="wait-time-value">{waitTime}</span>
-                  <span className="wait-time-unit">minutes</span>
+          {reportType === 'status' ? (
+            <div className="status-report-content">
+              {/* Crowd Level */}
+              <div className="input-section">
+                <label className="input-label">
+                  <Users className="w-4 h-4" />
+                  Crowd Level
+                </label>
+                <div className="crowd-selector">
+                  {crowdOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      className={`crowd-option ${crowdLevel === option.value ? 'selected' : ''}`}
+                      onClick={() => setCrowdLevel(option.value)}
+                      style={{ 
+                        borderColor: crowdLevel === option.value ? option.color : '#e5e7eb',
+                        backgroundColor: crowdLevel === option.value ? `${option.color}10` : 'white'
+                      }}
+                    >
+                      <span className="crowd-label">{option.label}</span>
+                      <span className="crowd-description">{option.description}</span>
+                    </button>
+                  ))}
                 </div>
               </div>
-              <div className="wait-time-presets">
-                {[0, 5, 10, 15, 30].map((time) => (
-                  <button
-                    key={time}
-                    onClick={() => setWaitTime(time)}
-                    className={`preset-btn ${waitTime === time ? 'active' : ''}`}
-                  >
-                    {time === 0 ? 'No wait' : `${time}m`}
-                  </button>
-                ))}
+
+              {/* Wait Time */}
+              <div className="input-section">
+                <label className="input-label">
+                  <Clock className="w-4 h-4" />
+                  Wait Time (minutes)
+                </label>
+                <div className="wait-time-input">
+                  <input
+                    type="range"
+                    min="0"
+                    max="120"
+                    value={waitTime}
+                    onChange={(e) => setWaitTime(Number(e.target.value))}
+                    className="wait-time-slider"
+                  />
+                  <div className="wait-time-display">
+                    <span className="wait-time-value">
+                      {waitTime === 0 ? 'No wait' : `${waitTime} minutes`}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="issue-report-content">
+              {/* Issue Type */}
+              <div className="input-section">
+                <label className="input-label">Issue Type</label>
+                <select 
+                  className="issue-select"
+                  value={issueDescription}
+                  onChange={(e) => setIssueDescription(e.target.value)}
+                >
+                  <option value="">Select an issue type...</option>
+                  {issueTypes.map((issue, index) => (
+                    <option key={index} value={issue}>{issue}</option>
+                  ))}
+                </select>
+              </div>
 
-        {reportType === 'issue' && (
-          <div className="issue-report-section">
-            <div className="form-group">
-              <label className="form-label">What's the issue?</label>
-              <div className="issue-options">
-                <button className="issue-option-btn">
-                  <X className="w-4 h-4" />
-                  <span>Venue is closed</span>
-                </button>
-                <button className="issue-option-btn">
-                  <AlertTriangle className="w-4 h-4" />
-                  <span>Wrong information</span>
-                </button>
-                <button className="issue-option-btn">
-                  <AlertTriangle className="w-4 h-4" />
-                  <span>Safety concern</span>
-                </button>
-                <button className="issue-option-btn">
-                  <AlertTriangle className="w-4 h-4" />
-                  <span>Other issue</span>
-                </button>
+              {/* Additional Details */}
+              <div className="input-section">
+                <label className="input-label">
+                  Additional Details <span className="optional">(Optional)</span>
+                </label>
+                <textarea
+                  className="issue-textarea"
+                  rows={4}
+                  placeholder="Please provide more details about the issue..."
+                  maxLength={300}
+                />
+                <div className="character-count">0/300</div>
               </div>
             </div>
-            <div className="form-group">
-              <label className="form-label">Additional details (optional)</label>
-              <textarea
-                className="form-textarea"
-                rows={3}
-                placeholder="Describe the issue..."
-              />
-            </div>
+          )}
+
+          <div className="modal-actions">
+            <button 
+              onClick={handleSubmit}
+              className="submit-button"
+            >
+              {reportType === 'status' ? (
+                <>
+                  <Users className="w-4 h-4" />
+                  Update Status (+10 points)
+                </>
+              ) : (
+                <>
+                  <AlertTriangle className="w-4 h-4" />
+                  Report Issue (+10 points)
+                </>
+              )}
+            </button>
+            <button 
+              onClick={handleClose}
+              className="cancel-button"
+            >
+              Cancel
+            </button>
           </div>
-        )}
-
-        <div className="modal-actions">
-          <Button 
-            onClick={handleSubmit} 
-            disabled={isSubmitting}
-            className="submit-btn"
-          >
-            {isSubmitting ? (
-              <>
-                <div className="spinner"></div>
-                Submitting...
-              </>
-            ) : (
-              <>
-                <CheckCircle className="w-4 h-4" />
-                {reportType === 'status' ? 'Update Status' : 'Report Issue'}
-              </>
-            )}
-          </Button>
-          <Button variant="secondary" onClick={handleClose} disabled={isSubmitting}>
-            Cancel
-          </Button>
-        </div>
-
-        <div className="report-help-text">
-          <p>Your reports help keep venue information accurate and help other users make better decisions!</p>
         </div>
       </div>
-    </Modal>
+    </div>
   );
 };
 
