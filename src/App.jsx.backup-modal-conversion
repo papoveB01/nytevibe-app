@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import Header from './components/Layout/Header';
+import LandingView from './components/Views/LandingView';
+import LoginView from './components/Views/LoginView';
 import HomeView from './components/Views/HomeView';
 import VenueDetailsView from './components/Views/VenueDetailsView';
 import ShareModal from './components/Social/ShareModal';
 import RatingModal from './components/Venue/RatingModal';
 import ReportModal from './components/Venue/ReportModal';
-import UserProfileModal from './components/User/UserProfileModal'; // NEW: Import UserProfileModal
 import { useVenues } from './hooks/useVenues';
 import { useNotifications } from './hooks/useNotifications';
 import './App.css';
@@ -18,14 +19,46 @@ function AppContent() {
   const { updateVenueData } = useVenues();
   const { notifications, removeNotification } = useNotifications();
 
-  // Auto-update venue data every 45 seconds
+  // Auto-update venue data every 45 seconds (only when authenticated and not on landing/login page)
   useEffect(() => {
-    const interval = setInterval(() => {
-      updateVenueData();
-    }, 45000);
+    if (state.isAuthenticated && !['landing', 'login'].includes(state.currentView)) {
+      const interval = setInterval(() => {
+        updateVenueData();
+      }, 45000);
+      return () => clearInterval(interval);
+    }
+  }, [updateVenueData, state.currentView, state.isAuthenticated]);
 
-    return () => clearInterval(interval);
-  }, [updateVenueData]);
+  const handleSelectUserType = (userType) => {
+    actions.setUserType(userType);
+    
+    if (userType === 'user') {
+      // Users need to login first
+      actions.setCurrentView('login');
+    } else {
+      // Businesses go directly to home (no login required for demo)
+      actions.setCurrentView('home');
+      actions.addNotification({
+        type: 'success',
+        message: '🏢 Welcome to nYtevibe Business! Start showcasing your venue.',
+        duration: 4000
+      });
+    }
+  };
+
+  const handleLogin = (userData) => {
+    actions.loginUser(userData);
+    actions.addNotification({
+      type: 'success',
+      message: `🎉 Welcome back, ${userData.firstName}! Start discovering Houston's best nightlife.`,
+      duration: 4000
+    });
+  };
+
+  const handleBackToLanding = () => {
+    actions.setCurrentView('landing');
+    actions.setUserType(null);
+  };
 
   const handleVenueClick = (venue) => {
     actions.setSelectedVenue(venue);
@@ -47,9 +80,12 @@ function AppContent() {
     setVenueFilter('all');
   };
 
+  const showHeader = !['landing', 'login'].includes(state.currentView);
+
   return (
     <div className="app-layout">
-      {state.currentView === 'home' && (
+      {/* Show header only when not on landing or login page */}
+      {showHeader && (
         <Header
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
@@ -58,6 +94,17 @@ function AppContent() {
       )}
 
       <div className="content-frame">
+        {state.currentView === 'landing' && (
+          <LandingView onSelectUserType={handleSelectUserType} />
+        )}
+
+        {state.currentView === 'login' && (
+          <LoginView 
+            onBack={handleBackToLanding}
+            onLogin={handleLogin}
+          />
+        )}
+
         {state.currentView === 'home' && (
           <HomeView
             searchQuery={searchQuery}
@@ -103,7 +150,6 @@ function AppContent() {
       <ShareModal />
       <RatingModal />
       <ReportModal />
-      <UserProfileModal /> {/* NEW: Include UserProfileModal */}
     </div>
   );
 }

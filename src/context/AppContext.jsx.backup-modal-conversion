@@ -3,6 +3,12 @@ import React, { createContext, useContext, useReducer, useCallback } from 'react
 const AppContext = createContext();
 
 const initialState = {
+  // Landing and authentication state
+  currentView: 'landing', // 'landing' | 'login' | 'home' | 'details'
+  userType: null, // 'user' | 'business'
+  isAuthenticated: false,
+  authenticatedUser: null,
+  
   userProfile: {
     id: 'usr_12345',
     firstName: 'Papove',
@@ -265,12 +271,10 @@ const initialState = {
   ],
 
   notifications: [],
-  currentView: 'home',
   selectedVenue: null,
   showRatingModal: false,
   showReportModal: false,
   showShareModal: false,
-  showUserProfileModal: false, // NEW: User profile modal state
   shareVenue: null,
   friends: [
     {
@@ -307,25 +311,42 @@ const appReducer = (state, action) => {
   switch (action.type) {
     case 'SET_CURRENT_VIEW':
       return { ...state, currentView: action.payload };
-
+    
+    case 'SET_USER_TYPE':
+      return { ...state, userType: action.payload };
+    
+    case 'LOGIN_SUCCESS':
+      return { 
+        ...state, 
+        isAuthenticated: true, 
+        authenticatedUser: action.payload,
+        currentView: 'home'
+      };
+    
+    case 'LOGOUT':
+      return { 
+        ...state, 
+        isAuthenticated: false, 
+        authenticatedUser: null,
+        currentView: 'landing',
+        userType: null
+      };
+    
     case 'SET_SELECTED_VENUE':
       return { ...state, selectedVenue: action.payload };
-
+    
     case 'SET_SHOW_RATING_MODAL':
       return { ...state, showRatingModal: action.payload };
-
+    
     case 'SET_SHOW_REPORT_MODAL':
       return { ...state, showReportModal: action.payload };
-
+    
     case 'SET_SHOW_SHARE_MODAL':
       return { ...state, showShareModal: action.payload };
-
-    case 'SET_SHOW_USER_PROFILE_MODAL': // NEW: User profile modal action
-      return { ...state, showUserProfileModal: action.payload };
-
+    
     case 'SET_SHARE_VENUE':
       return { ...state, shareVenue: action.payload };
-
+    
     case 'UPDATE_VENUE_DATA':
       return {
         ...state,
@@ -456,6 +477,18 @@ export const AppProvider = ({ children }) => {
       dispatch({ type: 'SET_CURRENT_VIEW', payload: view });
     }, []),
 
+    setUserType: useCallback((userType) => {
+      dispatch({ type: 'SET_USER_TYPE', payload: userType });
+    }, []),
+
+    loginUser: useCallback((userData) => {
+      dispatch({ type: 'LOGIN_SUCCESS', payload: userData });
+    }, []),
+
+    logoutUser: useCallback(() => {
+      dispatch({ type: 'LOGOUT' });
+    }, []),
+
     setSelectedVenue: useCallback((venue) => {
       dispatch({ type: 'SET_SELECTED_VENUE', payload: venue });
     }, []),
@@ -470,10 +503,6 @@ export const AppProvider = ({ children }) => {
 
     setShowShareModal: useCallback((show) => {
       dispatch({ type: 'SET_SHOW_SHARE_MODAL', payload: show });
-    }, []),
-
-    setShowUserProfileModal: useCallback((show) => { // NEW: User profile modal action
-      dispatch({ type: 'SET_SHOW_USER_PROFILE_MODAL', payload: show });
     }, []),
 
     setShareVenue: useCallback((venue) => {
