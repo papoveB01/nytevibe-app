@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
-import WelcomeLandingPage from './views/Landing/WelcomeLandingPage';
 import Header from './components/Layout/Header';
+import LandingView from './components/Views/LandingView';
+import LoginView from './components/Views/LoginView';
 import HomeView from './components/Views/HomeView';
 import VenueDetailsView from './components/Views/VenueDetailsView';
 import ShareModal from './components/Social/ShareModal';
@@ -9,7 +10,6 @@ import RatingModal from './components/Venue/RatingModal';
 import ReportModal from './components/Venue/ReportModal';
 import { useVenues } from './hooks/useVenues';
 import { useNotifications } from './hooks/useNotifications';
-import { UPDATE_INTERVALS } from './constants';
 import './App.css';
 
 function AppContent() {
@@ -19,42 +19,55 @@ function AppContent() {
   const { updateVenueData } = useVenues();
   const { notifications, removeNotification } = useNotifications();
 
-  // Real-time updates for user mode
+  // Auto-update venue data every 45 seconds (only when authenticated and not on landing/login page)
   useEffect(() => {
-    let interval;
-    if (state.currentMode === 'user' && state.currentView === 'home' && !document.hidden) {
-      interval = setInterval(() => {
+    if (state.isAuthenticated && !['landing', 'login'].includes(state.currentView)) {
+      const interval = setInterval(() => {
         updateVenueData();
-      }, UPDATE_INTERVALS.VENUE_DATA);
+      }, 45000);
+      return () => clearInterval(interval);
     }
+  }, [updateVenueData, state.currentView, state.isAuthenticated]);
 
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [state.currentMode, state.currentView, updateVenueData]);
+  const handleSelectUserType = (userType) => {
+    actions.setUserType(userType);
+    
+    if (userType === 'user') {
+      // Users need to login first
+      actions.setCurrentView('login');
+    } else {
+      // Businesses go directly to home (no login required for demo)
+      actions.setCurrentView('home');
+      actions.addNotification({
+        type: 'success',
+        message: '🏢 Welcome to nYtevibe Business! Start showcasing your venue.',
+        duration: 4000
+      });
+    }
+  };
 
-  // Pause updates when tab is hidden
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden && state.currentMode === 'user' && state.currentView === 'home') {
-        updateVenueData();
-      }
-    };
+  const handleLogin = (userData) => {
+    actions.loginUser(userData);
+    actions.addNotification({
+      type: 'success',
+      message: `🎉 Welcome back, ${userData.firstName}! Start discovering Houston's best nightlife.`,
+      duration: 4000
+    });
+  };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [state.currentMode, state.currentView, updateVenueData]);
+  const handleBackToLanding = () => {
+    actions.setCurrentView('landing');
+    actions.setUserType(null);
+  };
+
+  const handleVenueClick = (venue) => {
+    actions.setSelectedVenue(venue);
+    actions.setCurrentView('details');
+  };
 
   const handleVenueShare = (venue) => {
     actions.setShareVenue(venue);
     actions.setShowShareModal(true);
-  };
-
-  const handleClearSearch = () => {
-    setSearchQuery('');
-    setVenueFilter('all');
   };
 
   const handleBackToHome = () => {
@@ -62,16 +75,17 @@ function AppContent() {
     actions.setSelectedVenue(null);
   };
 
-  // Show landing page first
-  if (state.currentView === 'landing' || !state.currentMode) {
-    return <WelcomeLandingPage />;
-  }
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    setVenueFilter('all');
+  };
 
-  // Render based on selected mode and view
+  const showHeader = !['landing', 'login'].includes(state.currentView);
+
   return (
     <div className="app-layout">
-      {/* Header for customer mode home view */}
-      {state.currentMode === 'user' && state.currentView === 'home' && (
+      {/* Show header only when not on landing or login page */}
+      {showHeader && (
         <Header
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
@@ -79,64 +93,34 @@ function AppContent() {
         />
       )}
 
-      {/* Main content */}
       <div className="content-frame">
-        {/* Customer Mode Views */}
-        {state.currentMode === 'user' && state.currentView === 'home' && (
+        {state.currentView === 'landing' && (
+          <LandingView onSelectUserType={handleSelectUserType} />
+        )}
+
+        {state.currentView === 'login' && (
+          <LoginView 
+            onBack={handleBackToLanding}
+            onLogin={handleLogin}
+          />
+        )}
+
+        {state.currentView === 'home' && (
           <HomeView
             searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
             venueFilter={venueFilter}
             setVenueFilter={setVenueFilter}
+            onVenueClick={handleVenueClick}
             onVenueShare={handleVenueShare}
           />
         )}
 
-        {state.currentMode === 'user' && state.currentView === 'details' && (
+        {state.currentView === 'details' && (
           <VenueDetailsView
             onBack={handleBackToHome}
             onShare={handleVenueShare}
           />
-        )}
-
-        {/* Venue Owner Mode */}
-        {state.currentMode === 'venue_owner' && (
-          <div className="venue-owner-dashboard">
-            <div style={{ padding: '40px', textAlign: 'center', color: 'white' }}>
-              <h2>🏪 Business Dashboard</h2>
-              <p>Venue owner interface coming soon...</p>
-              <button 
-                onClick={() => actions.setCurrentMode('user')}
-                style={{ 
-                  padding: '12px 24px', 
-                  margin: '20px 10px',
-                  background: '#3b82f6', 
-                  color: 'white', 
-                  border: 'none', 
-                  borderRadius: '8px',
-                  cursor: 'pointer'
-                }}
-              >
-                Switch to Customer View
-              </button>
-              <button 
-                onClick={() => {
-                  actions.setCurrentView('landing');
-                  actions.setCurrentMode(null);
-                }}
-                style={{ 
-                  padding: '12px 24px', 
-                  margin: '20px 10px',
-                  background: '#6b7280', 
-                  color: 'white', 
-                  border: 'none', 
-                  borderRadius: '8px',
-                  cursor: 'pointer'
-                }}
-              >
-                Back to Landing
-              </button>
-            </div>
-          </div>
         )}
       </div>
 
@@ -163,30 +147,9 @@ function AppContent() {
       )}
 
       {/* Modals */}
-      <ShareModal
-        venue={state.shareVenue}
-        isOpen={state.showShareModal}
-        onClose={() => {
-          actions.setShowShareModal(false);
-          actions.setShareVenue(null);
-        }}
-      />
-
+      <ShareModal />
       <RatingModal />
       <ReportModal />
-
-      {/* Return to landing button for customer mode */}
-      {state.currentMode === 'user' && (
-        <button 
-          onClick={() => {
-            actions.setCurrentView('landing');
-            actions.setCurrentMode(null);
-          }}
-          className="back-to-landing-button"
-        >
-          ← Back to Landing
-        </button>
-      )}
     </div>
   );
 }

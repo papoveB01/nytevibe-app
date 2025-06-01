@@ -1,54 +1,41 @@
-import { useCallback } from 'react';
 import { useApp } from '../context/AppContext';
 
 export const useVenues = () => {
   const { state, actions } = useApp();
 
-  const updateVenueData = useCallback(() => {
-    actions.updateVenueData();
-  }, [actions]);
-
-  const isVenueFollowed = useCallback((venueId) => {
+  const isVenueFollowed = (venueId) => {
     return state.userProfile.followedVenues.includes(venueId);
-  }, [state.userProfile.followedVenues]);
+  };
 
-  const followVenue = useCallback((venue) => {
-    if (!isVenueFollowed(venue.id)) {
-      actions.followVenue(venue.id, venue.name);
-      actions.addNotification({
-        type: 'follow',
-        message: `Following ${venue.name} (+3 points!)`,
-        duration: 3000
-      });
-    }
-  }, [actions, isVenueFollowed]);
-
-  const unfollowVenue = useCallback((venue) => {
-    if (isVenueFollowed(venue.id)) {
+  const toggleFollow = (venue) => {
+    const isCurrentlyFollowed = isVenueFollowed(venue.id);
+    
+    if (isCurrentlyFollowed) {
       actions.unfollowVenue(venue.id, venue.name);
       actions.addNotification({
-        type: 'unfollow',
-        message: `Unfollowed ${venue.name}`,
-        duration: 3000
+        type: 'default',
+        message: `💔 Unfollowed ${venue.name} (-2 points)`
+      });
+    } else {
+      actions.followVenue(venue.id, venue.name);
+      actions.addNotification({
+        type: 'success',
+        message: `❤️ Following ${venue.name} (+3 points)`
       });
     }
-  }, [actions, isVenueFollowed]);
+  };
 
-  const toggleFollow = useCallback((venue) => {
-    if (isVenueFollowed(venue.id)) {
-      unfollowVenue(venue);
-    } else {
-      followVenue(venue);
-    }
-  }, [isVenueFollowed, followVenue, unfollowVenue]);
+  const updateVenueData = () => {
+    actions.updateVenueData();
+  };
 
-  const getFilteredVenues = useCallback((searchQuery, filter) => {
-    let filtered = state.venues;
+  const getFilteredVenues = (searchQuery, filter) => {
+    let filteredVenues = state.venues;
 
-    // Apply search filter
+    // Apply text search
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(venue =>
+      filteredVenues = filteredVenues.filter(venue =>
         venue.name.toLowerCase().includes(query) ||
         venue.type.toLowerCase().includes(query) ||
         venue.city.toLowerCase().includes(query) ||
@@ -56,36 +43,36 @@ export const useVenues = () => {
       );
     }
 
-    // Apply category filter
+    // Apply filters
     switch (filter) {
-      case 'followed':
-        filtered = filtered.filter(venue => isVenueFollowed(venue.id));
+      case 'following':
+        filteredVenues = filteredVenues.filter(venue => 
+          state.userProfile.followedVenues.includes(venue.id)
+        );
         break;
       case 'nearby':
-        filtered = filtered.filter(venue => parseFloat(venue.distance) <= 0.5);
+        filteredVenues = filteredVenues.filter(venue => 
+          parseFloat(venue.distance) <= 0.5
+        );
         break;
       case 'open':
-        filtered = filtered.filter(venue => venue.isOpen);
+        filteredVenues = filteredVenues.filter(venue => venue.isOpen);
         break;
       case 'promotions':
-        filtered = filtered.filter(venue => venue.hasPromotion);
+        filteredVenues = filteredVenues.filter(venue => venue.hasPromotion);
         break;
       default:
-        // 'all' - no additional filtering
         break;
     }
 
-    return filtered;
-  }, [state.venues, isVenueFollowed]);
+    return filteredVenues;
+  };
 
   return {
     venues: state.venues,
-    selectedVenue: state.selectedVenue,
-    updateVenueData,
     isVenueFollowed,
-    followVenue,
-    unfollowVenue,
     toggleFollow,
+    updateVenueData,
     getFilteredVenues
   };
 };

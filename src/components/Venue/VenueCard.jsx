@@ -1,11 +1,18 @@
 import React, { useState } from 'react';
 import { MapPin, Users, Clock, Star, TrendingUp, Share2, ChevronRight, Gift, Heart, Zap } from 'lucide-react';
-import { useVenues } from '../../hooks/useVenues';
+import FollowButton from '../Follow/FollowButton';
+import FollowStats from '../Follow/FollowStats';
+import StarRating from './StarRating';
+import Badge from '../UI/Badge';
 import { useApp } from '../../context/AppContext';
 import { getCrowdLabel, getCrowdColor, getTrendingIcon } from '../../utils/helpers';
 
-const VenueCard = ({ venue, onShare, searchQuery = '' }) => {
-  const { isVenueFollowed, toggleFollow } = useVenues();
+const VenueCard = ({
+  venue,
+  onClick,
+  onShare,
+  searchQuery = ''
+}) => {
   const { actions } = useApp();
   const [showPromoTooltip, setShowPromoTooltip] = useState(false);
 
@@ -19,21 +26,15 @@ const VenueCard = ({ venue, onShare, searchQuery = '' }) => {
     );
   };
 
-  const isFollowed = isVenueFollowed(venue.id);
-
   const handleDetails = () => {
     actions.setSelectedVenue(venue);
     actions.setCurrentView('details');
   };
 
-  const handleFollow = (e) => {
-    e.stopPropagation();
-    toggleFollow(venue);
-  };
-
   const handleShare = (e) => {
     e.stopPropagation();
-    onShare?.(venue);
+    actions.setShareVenue(venue);
+    actions.setShowShareModal(true);
   };
 
   const getPromoIcon = (text) => {
@@ -49,17 +50,8 @@ const VenueCard = ({ venue, onShare, searchQuery = '' }) => {
     return <Gift className="w-3 h-3" />;
   };
 
-  const renderCrowdDots = (level) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <div
-        key={i}
-        className={`crowd-dot ${i < level ? 'filled' : ''}`}
-      />
-    ));
-  };
-
   return (
-    <div className={`venue-card-container ${isFollowed ? 'venue-followed' : ''}`}>
+    <div className="venue-card-container">
       {venue.hasPromotion && (
         <div
           className="venue-promotion-sleek"
@@ -85,32 +77,22 @@ const VenueCard = ({ venue, onShare, searchQuery = '' }) => {
               {searchQuery ? highlightText(venue.name, searchQuery) : venue.name}
             </h3>
             <span className="trending-icon">{getTrendingIcon(venue.trending)}</span>
-            {isFollowed && (
-              <div className="followed-indicator">
-                <Heart className="w-4 h-4 text-red-500 fill-current" />
-              </div>
-            )}
           </div>
-          
+
           <div className="venue-location-row">
             <MapPin className="location-icon" />
             <span className="location-text">{venue.type} • {venue.distance}</span>
           </div>
-          
+
           <div className="venue-rating-row">
-            <div className="star-rating">
-              {Array.from({ length: 5 }, (_, i) => (
-                <Star
-                  key={i}
-                  className={`w-4 h-4 ${i < Math.floor(venue.rating) ? 'fill-current text-yellow-400' : 'text-gray-300'}`}
-                />
-              ))}
-              <span className="rating-count">
-                {venue.rating.toFixed(1)} ({venue.totalRatings})
-              </span>
-            </div>
+            <StarRating
+              rating={venue.rating}
+              size="sm"
+              showCount={true}
+              totalRatings={venue.totalRatings}
+            />
           </div>
-          
+
           <div className="venue-address">
             {searchQuery ? highlightText(`${venue.city}, ${venue.postcode}`, searchQuery) : `${venue.city}, ${venue.postcode}`}
           </div>
@@ -118,13 +100,7 @@ const VenueCard = ({ venue, onShare, searchQuery = '' }) => {
 
         <div className="venue-actions-section">
           <div className="top-actions">
-            <button
-              className={`follow-button ${isFollowed ? 'following' : ''}`}
-              onClick={handleFollow}
-              title={isFollowed ? 'Unfollow venue' : 'Follow venue'}
-            >
-              <Heart className={`w-5 h-5 ${isFollowed ? 'fill-current' : ''}`} />
-            </button>
+            <FollowButton venue={venue} size="md" showCount={false} />
             <button
               onClick={handleShare}
               className="share-button"
@@ -133,7 +109,7 @@ const VenueCard = ({ venue, onShare, searchQuery = '' }) => {
               <Share2 className="w-4 h-4" />
             </button>
           </div>
-          
+
           <div className="crowd-status">
             <div className={getCrowdColor(venue.crowdLevel)}>
               <Users className="crowd-icon" />
@@ -161,35 +137,18 @@ const VenueCard = ({ venue, onShare, searchQuery = '' }) => {
 
       <div className="venue-vibe-section">
         {venue.vibe.map((tag, index) => (
-          <span key={index} className="badge badge-blue">
+          <Badge key={index} variant="primary">
             {tag}
-          </span>
+          </Badge>
         ))}
       </div>
 
-      <div className="venue-follow-stats">
-        <div className="follow-stat">
-          <Users className="stat-icon" />
-          <span className="stat-number">{venue.followersCount}</span>
-          <span className="stat-label">followers</span>
-        </div>
-        <div className="follow-stat">
-          <TrendingUp className="stat-icon" />
-          <span className="stat-number">{venue.reports}</span>
-          <span className="stat-label">reports</span>
-        </div>
-        {isFollowed && (
-          <div className="follow-stat you-follow">
-            <Heart className="stat-icon" />
-            <span className="stat-text">You follow this venue</span>
-          </div>
-        )}
-      </div>
+      <FollowStats venue={venue} />
 
       <div className="venue-action-buttons-single">
         <button
           onClick={handleDetails}
-          className="details-btn-full"
+          className="action-btn details-btn-full"
         >
           View Details
           <ChevronRight className="details-icon" />

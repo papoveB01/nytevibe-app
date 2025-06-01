@@ -1,14 +1,22 @@
 import React from 'react';
 import { X } from 'lucide-react';
 
-const Modal = ({ isOpen, onClose, title, children, maxWidth = 'max-w-md' }) => {
+const Modal = ({ 
+  isOpen, 
+  onClose, 
+  title, 
+  children, 
+  className = '',
+  ...props 
+}) => {
   if (!isOpen) return null;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div 
-        className={`modal-content ${maxWidth}`}
+        className={`modal-content ${className}`} 
         onClick={(e) => e.stopPropagation()}
+        {...props}
       >
         <div className="modal-header">
           <h3 className="modal-title">{title}</h3>

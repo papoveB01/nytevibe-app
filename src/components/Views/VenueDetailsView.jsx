@@ -1,23 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  ArrowLeft, MapPin, Clock, Phone, Star, Users, Share2, Navigation, 
+import {
+  ArrowLeft, MapPin, Clock, Phone, Star, Users, Share2, Navigation,
   ExternalLink, Heart, Calendar, Globe, Wifi, CreditCard, Car,
   Music, Volume2, Utensils, Coffee, Wine, ShoppingBag
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useVenues } from '../../hooks/useVenues';
 import StarRating from '../Venue/StarRating';
+import FollowButton from '../Follow/FollowButton';
+import FollowStats from '../Follow/FollowStats';
 import { getCrowdLabel, getCrowdColor, openGoogleMaps, getDirections } from '../../utils/helpers';
 
 const VenueDetailsView = ({ onBack, onShare }) => {
   const { state, actions } = useApp();
-  const { selectedVenue: venue, userProfile } = state;
-  const { isVenueFollowed, toggleFollow } = useVenues();
+  const { selectedVenue: venue } = state;
+  const { isVenueFollowed } = useVenues();
   const [activeTab, setActiveTab] = useState('overview');
   const [showAllReviews, setShowAllReviews] = useState(false);
 
   useEffect(() => {
-    // Auto-scroll to top when venue details open
     window.scrollTo(0, 0);
   }, [venue]);
 
@@ -27,36 +28,15 @@ const VenueDetailsView = ({ onBack, onShare }) => {
         <div className="details-header">
           <button onClick={onBack} className="back-button">
             <ArrowLeft className="w-5 h-5" />
+            <span>Back</span>
           </button>
           <h2>Venue Not Found</h2>
-        </div>
-        <div className="details-content">
-          <p>The selected venue could not be found.</p>
         </div>
       </div>
     );
   }
 
   const isFollowed = isVenueFollowed(venue.id);
-
-  const handleFollow = () => {
-    toggleFollow(venue);
-  };
-
-  const handleShare = () => {
-    onShare?.(venue);
-  };
-
-  const handleRate = () => {
-    actions.setSelectedVenue(venue);
-    actions.setShowRatingModal(true);
-  };
-
-  const handleReport = () => {
-    actions.setSelectedVenue(venue);
-    actions.setShowReportModal(true);
-  };
-
   const displayedReviews = showAllReviews ? venue.reviews : venue.reviews?.slice(0, 3) || [];
 
   const amenities = [
@@ -70,6 +50,61 @@ const VenueDetailsView = ({ onBack, onShare }) => {
     { icon: ShoppingBag, label: 'VIP Service', available: venue.vibe.includes('VIP') }
   ];
 
+  const handleShare = () => {
+    actions.setShareVenue(venue);
+    actions.setShowShareModal(true);
+  };
+
+  const handleRate = () => {
+    actions.setSelectedVenue(venue);
+    actions.setShowRatingModal(true);
+    actions.addNotification({
+      type: 'default',
+      message: `⭐ Opening rating form for ${venue.name}...`
+    });
+  };
+
+  const handleReport = () => {
+    actions.setSelectedVenue(venue);
+    actions.setShowReportModal(true);
+    actions.addNotification({
+      type: 'default',
+      message: `📊 Opening status report for ${venue.name}...`
+    });
+  };
+
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+    actions.addNotification({
+      type: 'default',
+      message: `📑 Switched to ${tabId.charAt(0).toUpperCase() + tabId.slice(1)} tab`
+    });
+  };
+
+  const handleCall = () => {
+    window.open(`tel:${venue.phone}`);
+    actions.addNotification({
+      type: 'success',
+      message: `📞 Calling ${venue.name}...`
+    });
+  };
+
+  const handleDirections = () => {
+    getDirections(venue);
+    actions.addNotification({
+      type: 'success',
+      message: `🗺️ Opening directions to ${venue.name}...`
+    });
+  };
+
+  const handleMaps = () => {
+    openGoogleMaps(venue);
+    actions.addNotification({
+      type: 'success',
+      message: `📍 Opening ${venue.name} on Google Maps...`
+    });
+  };
+
   const renderStarBreakdown = () => {
     const breakdown = venue.ratingBreakdown || {};
     const total = venue.totalRatings || 1;
@@ -80,13 +115,12 @@ const VenueDetailsView = ({ onBack, onShare }) => {
         {[5, 4, 3, 2, 1].map(rating => {
           const count = breakdown[rating] || 0;
           const percentage = (count / total) * 100;
-          
           return (
             <div key={rating} className="rating-row">
               <span className="rating-label">{rating} ⭐</span>
               <div className="rating-bar">
-                <div 
-                  className="rating-fill" 
+                <div
+                  className="rating-fill"
                   style={{ width: `${percentage}%` }}
                 ></div>
               </div>
@@ -133,8 +167,8 @@ const VenueDetailsView = ({ onBack, onShare }) => {
               <h4>Amenities & Features</h4>
               <div className="amenities-grid">
                 {amenities.map((amenity, index) => (
-                  <div 
-                    key={index} 
+                  <div
+                    key={index}
                     className={`amenity-item ${amenity.available ? 'available' : 'unavailable'}`}
                   >
                     <amenity.icon className="amenity-icon" />
@@ -144,17 +178,17 @@ const VenueDetailsView = ({ onBack, onShare }) => {
               </div>
             </div>
 
-            {/* Quick Actions */}
+            {/* Quick Actions - Modal Triggers */}
             <div className="section">
               <div className="quick-actions">
-                <button 
+                <button
                   className="action-button primary"
                   onClick={handleRate}
                 >
                   <Star className="w-4 h-4" />
                   Rate & Review
                 </button>
-                <button 
+                <button
                   className="action-button secondary"
                   onClick={handleReport}
                 >
@@ -189,14 +223,13 @@ const VenueDetailsView = ({ onBack, onShare }) => {
             <div className="section">
               <div className="reviews-header">
                 <h4>Customer Reviews</h4>
-                <button 
+                <button
                   className="write-review-button"
                   onClick={handleRate}
                 >
                   Write a Review
                 </button>
               </div>
-              
               <div className="reviews-list">
                 {displayedReviews.map((review) => (
                   <div key={review.id} className="review-card">
@@ -225,10 +258,9 @@ const VenueDetailsView = ({ onBack, onShare }) => {
                   </div>
                 ))}
               </div>
-
               {venue.reviews && venue.reviews.length > 3 && (
                 <div className="reviews-actions">
-                  <button 
+                  <button
                     className="show-more-reviews"
                     onClick={() => setShowAllReviews(!showAllReviews)}
                   >
@@ -253,28 +285,26 @@ const VenueDetailsView = ({ onBack, onShare }) => {
                     <span className="contact-label">Address</span>
                     <span className="contact-value">{venue.address}</span>
                   </div>
-                  <button 
+                  <button
                     className="contact-action"
-                    onClick={() => openGoogleMaps(venue)}
+                    onClick={handleMaps}
                   >
                     <ExternalLink className="w-4 h-4" />
                   </button>
                 </div>
-
                 <div className="contact-item">
                   <Phone className="contact-icon" />
                   <div className="contact-details">
                     <span className="contact-label">Phone</span>
                     <span className="contact-value">{venue.phone}</span>
                   </div>
-                  <button 
+                  <button
                     className="contact-action"
-                    onClick={() => window.open(`tel:${venue.phone}`)}
+                    onClick={handleCall}
                   >
                     <ExternalLink className="w-4 h-4" />
                   </button>
                 </div>
-
                 <div className="contact-item">
                   <Clock className="contact-icon" />
                   <div className="contact-details">
@@ -282,7 +312,6 @@ const VenueDetailsView = ({ onBack, onShare }) => {
                     <span className="contact-value">{venue.hours}</span>
                   </div>
                 </div>
-
                 <div className="contact-item">
                   <Globe className="contact-icon" />
                   <div className="contact-details">
@@ -300,9 +329,9 @@ const VenueDetailsView = ({ onBack, onShare }) => {
             <div className="section">
               <h4>Get Directions</h4>
               <div className="navigation-actions">
-                <button 
+                <button
                   className="nav-button maps"
-                  onClick={() => openGoogleMaps(venue)}
+                  onClick={handleMaps}
                 >
                   <MapPin className="w-5 h-5" />
                   <div>
@@ -310,10 +339,9 @@ const VenueDetailsView = ({ onBack, onShare }) => {
                     <span className="nav-subtitle">See location & nearby places</span>
                   </div>
                 </button>
-                
-                <button 
+                <button
                   className="nav-button directions"
-                  onClick={() => getDirections(venue)}
+                  onClick={handleDirections}
                 >
                   <Navigation className="w-5 h-5" />
                   <div>
@@ -362,16 +390,8 @@ const VenueDetailsView = ({ onBack, onShare }) => {
           <ArrowLeft className="w-5 h-5" />
           <span>Back</span>
         </button>
-        
         <div className="header-actions">
-          <button 
-            className={`follow-button-header ${isFollowed ? 'following' : ''}`}
-            onClick={handleFollow}
-          >
-            <Heart className={`w-4 h-4 ${isFollowed ? 'fill-current' : ''}`} />
-            <span>{isFollowed ? 'Following' : 'Follow'}</span>
-          </button>
-          
+          <FollowButton venue={venue} size="md" />
           <button className="share-button-header" onClick={handleShare}>
             <Share2 className="w-4 h-4" />
             <span>Share</span>
@@ -390,11 +410,11 @@ const VenueDetailsView = ({ onBack, onShare }) => {
               <span className="venue-address">{venue.address}</span>
             </div>
             <div className="venue-rating-section">
-              <StarRating 
-                rating={venue.rating} 
-                size="lg" 
-                showCount={true} 
-                totalRatings={venue.totalRatings} 
+              <StarRating
+                rating={venue.rating}
+                size="lg"
+                showCount={true}
+                totalRatings={venue.totalRatings}
               />
             </div>
           </div>
@@ -416,7 +436,6 @@ const VenueDetailsView = ({ onBack, onShare }) => {
               <span className="status-meta">Updated {venue.lastUpdate}</span>
             </div>
           </div>
-
           <div className="status-card wait">
             <div className="status-icon-wrapper">
               <Clock className="status-card-icon" />
@@ -429,7 +448,6 @@ const VenueDetailsView = ({ onBack, onShare }) => {
               <span className="status-meta">{venue.confidence}% confidence</span>
             </div>
           </div>
-
           <div className="status-card followers">
             <div className="status-icon-wrapper">
               <Heart className="status-card-icon" />
@@ -443,6 +461,9 @@ const VenueDetailsView = ({ onBack, onShare }) => {
         </div>
       </div>
 
+      {/* Follow Stats */}
+      <FollowStats venue={venue} />
+
       {/* Tab Navigation */}
       <div className="tab-navigation">
         <div className="tab-buttons">
@@ -454,7 +475,7 @@ const VenueDetailsView = ({ onBack, onShare }) => {
             <button
               key={tab.id}
               className={`tab-button ${activeTab === tab.id ? 'active' : ''}`}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => handleTabChange(tab.id)}
             >
               {tab.label}
               {tab.count && <span className="tab-count">({tab.count})</span>}

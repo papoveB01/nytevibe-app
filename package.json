@@ -1,37 +1,17 @@
 {
   "name": "nytevibe",
   "private": true,
-  "version": "1.0.0",
+  "version": "2.0.1",
   "type": "module",
-  "description": "Real-time venue tracker for nightlife enthusiasts",
-  "keywords": [
-    "nightlife",
-    "venues",
-    "real-time",
-    "Houston",
-    "bars",
-    "clubs"
-  ],
-  "author": "nYtevibe Team",
-  "license": "MIT",
   "scripts": {
-    "dev": "vite --host",
+    "dev": "vite",
     "build": "vite build",
-    "build:dev": "vite build --mode development",
-    "build:prod": "vite build --mode production",
-    "preview": "vite preview",
-    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-    "lint:fix": "eslint . --ext js,jsx --fix",
-    "format": "prettier --write \"src/**/*.{js,jsx,css,md}\"",
-    "component": "echo 'Usage: npm run component <ComponentName>' && read -p 'Component name: ' name && mkdir -p src/components/${name} && touch src/components/${name}/${name}.jsx",
-    "hook": "echo 'Usage: npm run hook <hookName>' && read -p 'Hook name: ' name && touch src/hooks/${name}.js",
-    "test:components": "echo 'Component testing setup needed'",
-    "analyze:bundle": "npm run build && npx webpack-bundle-analyzer dist/assets/*.js"
+    "preview": "vite preview"
   },
   "dependencies": {
-    "lucide-react": "^0.263.1",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "lucide-react": "^0.263.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.15",

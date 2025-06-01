@@ -4,9 +4,9 @@ const Button = ({
   children, 
   variant = 'primary', 
   size = 'md', 
-  className = '', 
-  onClick,
+  onClick, 
   disabled = false,
+  className = '',
   ...props 
 }) => {
   const baseClasses = 'btn';
@@ -15,19 +15,18 @@ const Button = ({
     secondary: 'btn-secondary',
     warning: 'btn-warning'
   };
-  
   const sizeClasses = {
-    sm: 'text-sm px-3 py-1.5',
-    md: 'text-sm px-4 py-2',
-    lg: 'text-base px-6 py-3'
+    sm: 'btn-sm',
+    md: 'btn-md',
+    lg: 'btn-lg'
   };
 
   const classes = [
     baseClasses,
     variantClasses[variant],
     sizeClasses[size],
-    className,
-    disabled && 'opacity-50 cursor-not-allowed'
+    disabled ? 'btn-disabled' : '',
+    className
   ].filter(Boolean).join(' ');
 
   return (

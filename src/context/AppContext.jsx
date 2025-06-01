@@ -3,6 +3,12 @@ import React, { createContext, useContext, useReducer, useCallback } from 'react
 const AppContext = createContext();
 
 const initialState = {
+  // Landing and authentication state
+  currentView: 'landing', // 'landing' | 'login' | 'home' | 'details'
+  userType: null, // 'user' | 'business'
+  isAuthenticated: false,
+  authenticatedUser: null,
+  
   userProfile: {
     id: 'usr_12345',
     firstName: 'Papove',
@@ -69,6 +75,7 @@ const initialState = {
       }
     ]
   },
+
   venues: [
     {
       id: 1,
@@ -257,19 +264,18 @@ const initialState = {
       reviews: [
         { id: 1, user: "Ahmed K.", rating: 5, comment: "Best hookah in Houston! Premium quality and great atmosphere.", date: "1 day ago", helpful: 22 },
         { id: 2, user: "Jessica M.", rating: 4, comment: "Love the VIP lounge area. Great for groups and celebrations.", date: "2 days ago", helpful: 18 },
-        { id: 3, user: "Papove B.", rating: 5, comment: "Finally, a quality hookah spot! Clean, modern, and excellent service.", date: "3 days ago", helpful: 15 }
+        { id: 3, user: "Papove B.", rating: 5, comment: "Finally, a quality hookah spot! Clean, modern, and excellent service.", date: "3 days ago", helpful: 15 },
+        { id: 4, user: "Layla S.", rating: 4, comment: "Beautiful interior design and wide selection of flavors. A bit pricey but worth it.", date: "5 days ago", helpful: 12 }
       ]
     }
   ],
+
   notifications: [],
-  currentView: 'landing',
-  currentMode: null, // 'user' | 'venue_owner' | null
   selectedVenue: null,
   showRatingModal: false,
   showReportModal: false,
   showShareModal: false,
   shareVenue: null,
-  isTransitioning: false,
   friends: [
     {
       id: 'usr_98765',
@@ -288,6 +294,15 @@ const initialState = {
       mutualFollows: 1,
       isOnline: false,
       lastSeen: '2 hours ago'
+    },
+    {
+      id: 'usr_11111',
+      name: 'Lisa Rodriguez',
+      username: 'lisa_nightlife',
+      avatar: null,
+      mutualFollows: 3,
+      isOnline: true,
+      lastSeen: 'now'
     }
   ]
 };
@@ -297,8 +312,25 @@ const appReducer = (state, action) => {
     case 'SET_CURRENT_VIEW':
       return { ...state, currentView: action.payload };
     
-    case 'SET_CURRENT_MODE':
-      return { ...state, currentMode: action.payload };
+    case 'SET_USER_TYPE':
+      return { ...state, userType: action.payload };
+    
+    case 'LOGIN_SUCCESS':
+      return { 
+        ...state, 
+        isAuthenticated: true, 
+        authenticatedUser: action.payload,
+        currentView: 'home'
+      };
+    
+    case 'LOGOUT':
+      return { 
+        ...state, 
+        isAuthenticated: false, 
+        authenticatedUser: null,
+        currentView: 'landing',
+        userType: null
+      };
     
     case 'SET_SELECTED_VENUE':
       return { ...state, selectedVenue: action.payload };
@@ -310,7 +342,7 @@ const appReducer = (state, action) => {
       return { ...state, showReportModal: action.payload };
     
     case 'SET_SHOW_SHARE_MODAL':
-      return { ...state, showShareModal: action.payload, shareVenue: action.payload ? state.shareVenue : null };
+      return { ...state, showShareModal: action.payload };
     
     case 'SET_SHARE_VENUE':
       return { ...state, shareVenue: action.payload };
@@ -326,7 +358,7 @@ const appReducer = (state, action) => {
           confidence: Math.max(70, Math.min(98, venue.confidence + Math.floor((Math.random() - 0.5) * 10)))
         }))
       };
-    
+
     case 'FOLLOW_VENUE':
       const { venueId, venueName } = action.payload;
       const newFollowedVenues = [...state.userProfile.followedVenues];
@@ -347,7 +379,7 @@ const appReducer = (state, action) => {
             : venue
         )
       };
-    
+
     case 'UNFOLLOW_VENUE':
       const unfollowVenueId = action.payload.venueId;
       const filteredFollowedVenues = state.userProfile.followedVenues.filter(id => id !== unfollowVenueId);
@@ -365,7 +397,54 @@ const appReducer = (state, action) => {
             : venue
         )
       };
-    
+
+    case 'REPORT_VENUE':
+      const { venueId: reportVenueId, reportData } = action.payload;
+      return {
+        ...state,
+        venues: state.venues.map(venue => {
+          if (venue.id === reportVenueId) {
+            return {
+              ...venue,
+              crowdLevel: reportData.crowdLevel || venue.crowdLevel,
+              waitTime: reportData.waitTime !== undefined ? reportData.waitTime : venue.waitTime,
+              reports: venue.reports + 1,
+              lastUpdate: "Just now",
+              confidence: Math.min(98, venue.confidence + 5)
+            };
+          }
+          return venue;
+        }),
+        userProfile: {
+          ...state.userProfile,
+          points: state.userProfile.points + 10,
+          totalReports: state.userProfile.totalReports + 1
+        }
+      };
+
+    case 'RATE_VENUE':
+      const { venueId: rateVenueId, rating, comment } = action.payload;
+      return {
+        ...state,
+        venues: state.venues.map(venue => {
+          if (venue.id === rateVenueId) {
+            const newTotalRatings = venue.totalRatings + 1;
+            const newRating = ((venue.rating * venue.totalRatings) + rating) / newTotalRatings;
+            return {
+              ...venue,
+              rating: Math.round(newRating * 10) / 10,
+              totalRatings: newTotalRatings
+            };
+          }
+          return venue;
+        }),
+        userProfile: {
+          ...state.userProfile,
+          points: state.userProfile.points + 5,
+          totalRatings: state.userProfile.totalRatings + 1
+        }
+      };
+
     case 'ADD_NOTIFICATION':
       const notification = {
         id: Date.now(),
@@ -378,13 +457,13 @@ const appReducer = (state, action) => {
         ...state,
         notifications: [notification, ...state.notifications]
       };
-    
+
     case 'REMOVE_NOTIFICATION':
       return {
         ...state,
         notifications: state.notifications.filter(n => n.id !== action.payload)
       };
-    
+
     default:
       return state;
   }
@@ -398,8 +477,16 @@ export const AppProvider = ({ children }) => {
       dispatch({ type: 'SET_CURRENT_VIEW', payload: view });
     }, []),
 
-    setCurrentMode: useCallback((mode) => {
-      dispatch({ type: 'SET_CURRENT_MODE', payload: mode });
+    setUserType: useCallback((userType) => {
+      dispatch({ type: 'SET_USER_TYPE', payload: userType });
+    }, []),
+
+    loginUser: useCallback((userData) => {
+      dispatch({ type: 'LOGIN_SUCCESS', payload: userData });
+    }, []),
+
+    logoutUser: useCallback(() => {
+      dispatch({ type: 'LOGOUT' });
     }, []),
 
     setSelectedVenue: useCallback((venue) => {
@@ -432,6 +519,14 @@ export const AppProvider = ({ children }) => {
 
     unfollowVenue: useCallback((venueId, venueName) => {
       dispatch({ type: 'UNFOLLOW_VENUE', payload: { venueId, venueName } });
+    }, []),
+
+    reportVenue: useCallback((venueId, reportData) => {
+      dispatch({ type: 'REPORT_VENUE', payload: { venueId, reportData } });
+    }, []),
+
+    rateVenue: useCallback((venueId, rating, comment) => {
+      dispatch({ type: 'RATE_VENUE', payload: { venueId, rating, comment } });
     }, []),
 
     addNotification: useCallback((notification) => {

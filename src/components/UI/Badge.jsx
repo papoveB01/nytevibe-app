@@ -1,15 +1,28 @@
 import React from 'react';
 
-const Badge = ({ children, variant = 'primary', className = '' }) => {
+const Badge = ({ 
+  children, 
+  variant = 'primary', 
+  size = 'md',
+  className = '',
+  ...props 
+}) => {
+  const baseClasses = 'badge';
   const variantClasses = {
-    primary: 'badge badge-blue',
-    green: 'badge badge-green',
-    yellow: 'badge badge-yellow',
-    red: 'badge badge-red'
+    primary: 'badge-blue',
+    success: 'badge-green',
+    warning: 'badge-yellow',
+    danger: 'badge-red'
   };
 
+  const classes = [
+    baseClasses,
+    variantClasses[variant],
+    className
+  ].filter(Boolean).join(' ');
+
   return (
-    <span className={`${variantClasses[variant]} ${className}`}>
+    <span className={classes} {...props}>
       {children}
     </span>
   );

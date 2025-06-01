@@ -1,26 +1,27 @@
-import React, { useState } from 'react';
-import { useApp } from '../../context/AppContext';
-import SearchSection from '../Search/SearchSection';
+import React from 'react';
 import UserProfile from '../User/UserProfile';
+import SearchBar from './SearchBar';
 
 const Header = ({ searchQuery, setSearchQuery, onClearSearch }) => {
-  const { state } = useApp();
-
   return (
     <div className="header-frame">
       <div className="header-content">
-        <div className="header-top-row">
-          <div className="logo-section">
+        <div className="header-top">
+          <div className="header-left">
             <h1 className="app-title">nYtevibe</h1>
-            <p className="app-subtitle">Discover real-time venue vibes in Houston</p>
+            <p className="app-subtitle">Houston Nightlife Discovery</p>
           </div>
-          <UserProfile />
+          <div className="header-right">
+            <UserProfile />
+          </div>
         </div>
-        <SearchSection 
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          onClearSearch={onClearSearch}
-        />
+        <div className="header-bottom">
+          <SearchBar
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            onClearSearch={onClearSearch}
+          />
+        </div>
       </div>
     </div>
   );

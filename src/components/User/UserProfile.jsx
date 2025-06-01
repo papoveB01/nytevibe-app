@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import { getUserInitials, getLevelIcon } from '../../utils/helpers';
-import './UserProfile.css';
 
 const UserProfile = () => {
   const { state, actions } = useApp();
@@ -9,7 +8,6 @@ const UserProfile = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -21,25 +19,12 @@ const UserProfile = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Close dropdown on escape key
-  useEffect(() => {
-    const handleEscape = (event) => {
-      if (event.key === 'Escape') {
-        setIsDropdownOpen(false);
-      }
-    };
-
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, []);
-
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
 
   const handleMenuAction = (action) => {
     setIsDropdownOpen(false);
-    
     switch (action) {
       case 'profile':
         actions.addNotification({
@@ -77,15 +62,6 @@ const UserProfile = () => {
           message: '🆘 Opening Help & Support...'
         });
         break;
-      case 'signout':
-        if (window.confirm('🚪 Are you sure you want to sign out?')) {
-          actions.addNotification({
-            type: 'default',
-            message: '👋 Signing out... See you next time!'
-          });
-          // Add actual sign out logic here
-        }
-        break;
       default:
         break;
     }
@@ -96,7 +72,7 @@ const UserProfile = () => {
 
   return (
     <div className="user-badge-container" ref={dropdownRef}>
-      <div 
+      <div
         className={`user-badge ${isDropdownOpen ? 'open' : ''}`}
         onClick={toggleDropdown}
       >
@@ -116,7 +92,6 @@ const UserProfile = () => {
       </div>
 
       <div className={`user-dropdown ${isDropdownOpen ? 'open' : ''}`}>
-        {/* Profile Details Header */}
         <div className="dropdown-header">
           <div className="dropdown-profile">
             <div className="dropdown-avatar">{initials}</div>
@@ -133,7 +108,6 @@ const UserProfile = () => {
             </div>
           </div>
 
-          {/* User Stats */}
           <div className="dropdown-stats">
             <div className="dropdown-stat">
               <div className="dropdown-stat-number">{userProfile.points.toLocaleString()}</div>
@@ -154,7 +128,6 @@ const UserProfile = () => {
           </div>
         </div>
 
-        {/* Menu Items */}
         <div className="dropdown-menu">
           <button className="dropdown-item" onClick={() => handleMenuAction('profile')}>
             <svg className="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -162,7 +135,7 @@ const UserProfile = () => {
             </svg>
             View Full Profile
           </button>
-          
+
           <button className="dropdown-item" onClick={() => handleMenuAction('edit')}>
             <svg className="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
@@ -200,19 +173,9 @@ const UserProfile = () => {
             </svg>
             Help & Support
           </button>
-
-          <div className="dropdown-divider"></div>
-
-          <button className="dropdown-item danger" onClick={() => handleMenuAction('signout')}>
-            <svg className="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-            </svg>
-            Sign Out
-          </button>
         </div>
       </div>
 
-      {/* Overlay */}
       {isDropdownOpen && <div className="dropdown-overlay" onClick={() => setIsDropdownOpen(false)} />}
     </div>
   );

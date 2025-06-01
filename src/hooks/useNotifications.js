@@ -5,20 +5,28 @@ export const useNotifications = () => {
   const { state, actions } = useApp();
 
   useEffect(() => {
-    const timers = state.notifications.map(notification => {
-      return setTimeout(() => {
-        actions.removeNotification(notification.id);
-      }, notification.duration);
-    });
+    state.notifications.forEach(notification => {
+      if (notification.duration && notification.duration > 0) {
+        const timer = setTimeout(() => {
+          actions.removeNotification(notification.id);
+        }, notification.duration);
 
-    return () => {
-      timers.forEach(timer => clearTimeout(timer));
-    };
+        return () => clearTimeout(timer);
+      }
+    });
   }, [state.notifications, actions]);
+
+  const addNotification = (notification) => {
+    actions.addNotification(notification);
+  };
+
+  const removeNotification = (id) => {
+    actions.removeNotification(id);
+  };
 
   return {
     notifications: state.notifications,
-    addNotification: actions.addNotification,
-    removeNotification: actions.removeNotification
+    addNotification,
+    removeNotification
   };
 };
