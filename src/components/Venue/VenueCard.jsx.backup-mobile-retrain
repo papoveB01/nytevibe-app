@@ -1,0 +1,98 @@
+import React from 'react';
+import { MapPin, Clock, Users, Star, TrendingUp } from 'lucide-react';
+import { useApp } from '../../context/AppContext';
+import { getCrowdLabel, getCrowdColor } from '../../utils/helpers';
+import StarRating from './StarRating';
+import FollowButton from '../Follow/FollowButton';
+
+const VenueCard = ({ venue, onClick }) => {
+  const { actions } = useApp();
+
+  const handleDetailsClick = () => {
+    actions.setSelectedVenue(venue);
+    onClick?.(venue);
+  };
+
+  return (
+    <div className="venue-card-container">
+      <div className="venue-card-header-fixed">
+        <div className="venue-info-section">
+          <h3 className="venue-name">{venue.name}</h3>
+          <div className="venue-meta">
+            <span className="venue-type">{venue.type}</span>
+            <span className="venue-separator">•</span>
+            <span className="venue-address">{venue.address}</span>
+          </div>
+          <div className="venue-rating">
+            <StarRating rating={venue.rating} size="sm" />
+            <span className="rating-count">({venue.totalRatings})</span>
+          </div>
+        </div>
+        <div className="venue-actions-section">
+          <FollowButton venue={venue} size="sm" />
+        </div>
+      </div>
+
+      <div className="venue-status-section">
+        <div className="status-items">
+          <div className="status-item crowd">
+            <Users className="status-icon" />
+            <span className={`status-text ${getCrowdColor(venue.crowdLevel)}`}>
+              {getCrowdLabel(venue.crowdLevel)}
+            </span>
+          </div>
+          <div className="status-item wait">
+            <Clock className="status-icon" />
+            <span className="status-text">
+              {venue.waitTime > 0 ? `${venue.waitTime} min wait` : 'No wait'}
+            </span>
+          </div>
+        </div>
+        <div className="status-meta">
+          <span className="last-update">Updated {venue.lastUpdate}</span>
+          <span className="confidence">{venue.confidence}% confidence</span>
+        </div>
+      </div>
+
+      <div className="venue-vibe-section">
+        {venue.vibe.slice(0, 3).map((tag, index) => (
+          <span key={index} className="vibe-tag">
+            {tag}
+          </span>
+        ))}
+        {venue.vibe.length > 3 && (
+          <span className="vibe-tag more">+{venue.vibe.length - 3}</span>
+        )}
+      </div>
+
+      {venue.hasPromotion && (
+        <div className="venue-promotion">
+          <span className="promotion-icon">🎉</span>
+          <span className="promotion-text">{venue.promotionText}</span>
+        </div>
+      )}
+
+      <div className="venue-card-footer">
+        <div className="venue-stats">
+          <div className="stat-item">
+            <span className="stat-number">{venue.followersCount}</span>
+            <span className="stat-label">followers</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-number">{venue.reports}</span>
+            <span className="stat-label">reports</span>
+          </div>
+        </div>
+        <button
+          onClick={handleDetailsClick}
+          className="details-btn-full"
+        >
+          <span>View Details</span>
+          <TrendingUp className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default VenueCard;

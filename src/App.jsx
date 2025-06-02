@@ -1,40 +1,81 @@
 import React, { useState, useEffect } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
-import Header from './components/Layout/Header';
+import { useVenues } from './hooks/useVenues';
+
+// Views (LandingView removed)
+import LoginView from './components/Views/LoginView';
 import HomeView from './components/Views/HomeView';
 import VenueDetailsView from './components/Views/VenueDetailsView';
-import ShareModal from './components/Social/ShareModal';
-import RatingModal from './components/Venue/RatingModal';
-import ReportModal from './components/Venue/ReportModal';
-import UserProfileModal from './components/User/UserProfileModal'; // NEW: Import UserProfileModal
-import { useVenues } from './hooks/useVenues';
-import { useNotifications } from './hooks/useNotifications';
+
+// Components
+import Header from './components/Header';
+import Notifications from './components/Notifications';
+
+// Modals
+import RatingModal from './components/Modals/RatingModal';
+import ReportModal from './components/Modals/ReportModal';
+import ShareModal from './components/Modals/ShareModal';
+import UserProfileModal from './components/User/UserProfileModal';
+
 import './App.css';
 
 function AppContent() {
   const { state, actions } = useApp();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [venueFilter, setVenueFilter] = useState('all');
   const { updateVenueData } = useVenues();
-  const { notifications, removeNotification } = useNotifications();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
 
-  // Auto-update venue data every 45 seconds
+  // Mobile detection
   useEffect(() => {
-    const interval = setInterval(() => {
-      updateVenueData();
-    }, 45000);
+    const checkMobile = () => {
+      const mobile = window.innerWidth <= 768 || 
+        /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      setIsMobile(mobile);
+    };
 
-    return () => clearInterval(interval);
-  }, [updateVenueData]);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
-  const handleVenueClick = (venue) => {
-    actions.setSelectedVenue(venue);
-    actions.setCurrentView('details');
+  // Update search query in context
+  useEffect(() => {
+    actions.setSearchQuery(searchQuery);
+  }, [searchQuery, actions]);
+
+  // Auto-update venue data periodically when authenticated
+  useEffect(() => {
+    if (state.isAuthenticated && state.currentView !== 'login') {
+      const interval = setInterval(() => {
+        updateVenueData();
+      }, 45000);
+
+      return () => clearInterval(interval);
+    }
+  }, [updateVenueData, state.currentView, state.isAuthenticated]);
+
+  // Initialize app to login view if not authenticated
+  useEffect(() => {
+    if (!state.isAuthenticated && state.currentView !== 'login') {
+      actions.setCurrentView('login');
+    }
+  }, [state.isAuthenticated, state.currentView, actions]);
+
+  const handleLogin = (userData) => {
+    // Default to user type for everyone
+    actions.setUserType('user');
+    actions.loginUser(userData);
+    actions.addNotification({
+      type: 'success',
+      message: `🎉 Welcome to nYtevibe, ${userData.firstName}!`,
+      important: true,
+      duration: 3000
+    });
   };
 
-  const handleVenueShare = (venue) => {
-    actions.setShareVenue(venue);
-    actions.setShowShareModal(true);
+  const handleVenueSelect = (venue) => {
+    actions.setSelectedVenue(venue);
+    actions.setCurrentView('details');
   };
 
   const handleBackToHome = () => {
@@ -44,66 +85,46 @@ function AppContent() {
 
   const handleClearSearch = () => {
     setSearchQuery('');
-    setVenueFilter('all');
   };
 
+  // Determine if header should be shown (not on login page)
+  const showHeader = state.currentView !== 'login';
+
   return (
-    <div className="app-layout">
-      {state.currentView === 'home' && (
+    <div className={`app ${isMobile ? 'mobile' : 'desktop'}`}>
+      {/* Header */}
+      {showHeader && (
         <Header
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           onClearSearch={handleClearSearch}
+          isMobile={isMobile}
         />
       )}
 
-      <div className="content-frame">
+      {/* Main Content */}
+      <main className={`main-content ${isMobile ? 'mobile-main' : ''}`}>
+        {state.currentView === 'login' && (
+          <LoginView onLogin={handleLogin} />
+        )}
+        
         {state.currentView === 'home' && (
-          <HomeView
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            venueFilter={venueFilter}
-            setVenueFilter={setVenueFilter}
-            onVenueClick={handleVenueClick}
-            onVenueShare={handleVenueShare}
-          />
+          <HomeView onVenueSelect={handleVenueSelect} />
         )}
-
+        
         {state.currentView === 'details' && (
-          <VenueDetailsView
-            onBack={handleBackToHome}
-            onShare={handleVenueShare}
-          />
+          <VenueDetailsView onBack={handleBackToHome} />
         )}
-      </div>
-
-      {/* Notifications */}
-      {notifications.length > 0 && (
-        <div className="notification-container">
-          {notifications.map((notification) => (
-            <div
-              key={notification.id}
-              className={`notification notification-${notification.type}`}
-            >
-              <div className="notification-content">
-                <span className="notification-message">{notification.message}</span>
-                <button
-                  onClick={() => removeNotification(notification.id)}
-                  className="notification-close"
-                >
-                  ×
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      </main>
 
       {/* Modals */}
-      <ShareModal />
       <RatingModal />
       <ReportModal />
-      <UserProfileModal /> {/* NEW: Include UserProfileModal */}
+      <ShareModal />
+      <UserProfileModal />
+
+      {/* Notifications */}
+      <Notifications />
     </div>
   );
 }

@@ -1,0 +1,343 @@
+import React, { createContext, useContext, useReducer, useCallback } from 'react';
+
+const AppContext = createContext();
+
+// Initial state
+const initialState = {
+  // Authentication state
+  isAuthenticated: false,
+  user: null,
+  
+  // View management
+  currentView: 'login-landing', // Start with login landing
+  selectedVenue: null,
+  
+  // Modal states
+  showShareModal: false,
+  showRatingModal: false,
+  showReportModal: false,
+  showUserProfileModal: false,
+  shareVenue: null,
+  
+  // User profile data (from existing system)
+  userProfile: {
+    id: 'demo_user',
+    username: 'demouser',
+    firstName: 'Demo',
+    lastName: 'User',
+    email: 'demo@nytevibe.com',
+    level: 3,
+    points: 1250,
+    badges: ['Explorer', 'Reviewer'],
+    followedVenues: [],
+    totalReports: 15,
+    totalRatings: 8,
+    following: 12
+  },
+  
+  // App data
+  venues: [
+    {
+      id: 1,
+      name: "Skyline Rooftop Lounge",
+      type: "Upscale Rooftop Bar",
+      address: "1200 McKinney St, Houston, TX",
+      crowdLevel: 3,
+      waitTime: 15,
+      rating: 4.5,
+      totalRatings: 234,
+      lastUpdate: "5 min ago",
+      confidence: 92,
+      vibe: ["Upscale", "City Views", "Craft Cocktails", "Date Night"],
+      followersCount: 1248,
+      reports: 45,
+      hasPromotion: true,
+      promotionText: "Happy Hour: 50% off craft cocktails until 7 PM!",
+      phone: "(713) 555-0123",
+      hours: "5:00 PM - 2:00 AM",
+      reviews: [
+        {
+          id: 1,
+          user: "Sarah M.",
+          rating: 5,
+          comment: "Absolutely stunning views of downtown! The cocktails are expertly crafted and the atmosphere is perfect for a special night out.",
+          date: "2 days ago",
+          helpful: 12
+        },
+        {
+          id: 2,
+          user: "Mike R.",
+          rating: 4,
+          comment: "Great rooftop experience. Gets crowded on weekends but worth the wait. Try the signature martini!",
+          date: "1 week ago",
+          helpful: 8
+        }
+      ]
+    },
+    {
+      id: 2,
+      name: "Neon Underground",
+      type: "Electronic Dance Club",
+      address: "945 Washington Ave, Houston, TX",
+      crowdLevel: 4,
+      waitTime: 25,
+      rating: 4.2,
+      totalRatings: 189,
+      lastUpdate: "2 min ago",
+      confidence: 88,
+      vibe: ["EDM", "Underground", "Late Night", "Dancing"],
+      followersCount: 892,
+      reports: 67,
+      hasPromotion: false,
+      phone: "(713) 555-0456",
+      hours: "9:00 PM - 4:00 AM",
+      reviews: [
+        {
+          id: 3,
+          user: "Alex K.",
+          rating: 5,
+          comment: "Best EDM venue in Houston! Sound system is incredible and the DJs are always on point.",
+          date: "3 days ago",
+          helpful: 15
+        }
+      ]
+    },
+    {
+      id: 3,
+      name: "Whiskey & Oak",
+      type: "Whiskey Lounge",
+      address: "1823 Westheimer Rd, Houston, TX",
+      crowdLevel: 2,
+      waitTime: 0,
+      rating: 4.7,
+      totalRatings: 156,
+      lastUpdate: "8 min ago",
+      confidence: 85,
+      vibe: ["Whiskey", "Cozy", "Speakeasy", "Intimate"],
+      followersCount: 567,
+      reports: 28,
+      hasPromotion: true,
+      promotionText: "Whiskey Wednesday: $2 off all premium whiskeys",
+      phone: "(713) 555-0789",
+      hours: "6:00 PM - 1:00 AM",
+      reviews: [
+        {
+          id: 4,
+          user: "Jennifer L.",
+          rating: 5,
+          comment: "Hidden gem! Extensive whiskey selection and knowledgeable bartenders. Perfect for whiskey enthusiasts.",
+          date: "5 days ago",
+          helpful: 9
+        }
+      ]
+    }
+  ],
+  
+  // Search state
+  searchQuery: '',
+  activeFilter: 'all',
+  
+  // Notifications
+  notifications: [],
+  
+  // App metadata
+  lastDataUpdate: new Date().toLocaleTimeString()
+};
+
+// Reducer function
+const appReducer = (state, action) => {
+  switch (action.type) {
+    // Authentication actions
+    case 'LOGIN_SUCCESS':
+      return {
+        ...state,
+        isAuthenticated: true,
+        user: action.payload,
+        userProfile: {
+          ...state.userProfile,
+          ...action.payload
+        },
+        currentView: 'home'
+      };
+      
+    case 'LOGOUT':
+      return {
+        ...state,
+        isAuthenticated: false,
+        user: null,
+        currentView: 'login-landing'
+      };
+    
+    // View management
+    case 'SET_CURRENT_VIEW':
+      return { ...state, currentView: action.payload };
+      
+    case 'SET_SELECTED_VENUE':
+      return { ...state, selectedVenue: action.payload };
+    
+    // Modal management
+    case 'SET_SHOW_SHARE_MODAL':
+      return { ...state, showShareModal: action.payload };
+      
+    case 'SET_SHOW_RATING_MODAL':
+      return { ...state, showRatingModal: action.payload };
+      
+    case 'SET_SHOW_REPORT_MODAL':
+      return { ...state, showReportModal: action.payload };
+      
+    case 'SET_SHOW_USER_PROFILE_MODAL':
+      return { ...state, showUserProfileModal: action.payload };
+      
+    case 'SET_SHARE_VENUE':
+      return { ...state, shareVenue: action.payload };
+    
+    // Search and filtering
+    case 'SET_SEARCH_QUERY':
+      return { ...state, searchQuery: action.payload };
+      
+    case 'SET_ACTIVE_FILTER':
+      return { ...state, activeFilter: action.payload };
+    
+    // Notifications
+    case 'ADD_NOTIFICATION':
+      return {
+        ...state,
+        notifications: [...state.notifications, { ...action.payload, id: Date.now() }]
+      };
+      
+    case 'REMOVE_NOTIFICATION':
+      return {
+        ...state,
+        notifications: state.notifications.filter(notification => notification.id !== action.payload)
+      };
+    
+    // Venue interactions
+    case 'FOLLOW_VENUE':
+      return {
+        ...state,
+        userProfile: {
+          ...state.userProfile,
+          followedVenues: [...state.userProfile.followedVenues, action.payload]
+        },
+        venues: state.venues.map(venue => 
+          venue.id === action.payload 
+            ? { ...venue, followersCount: venue.followersCount + 1 }
+            : venue
+        )
+      };
+      
+    case 'UNFOLLOW_VENUE':
+      return {
+        ...state,
+        userProfile: {
+          ...state.userProfile,
+          followedVenues: state.userProfile.followedVenues.filter(id => id !== action.payload)
+        },
+        venues: state.venues.map(venue => 
+          venue.id === action.payload 
+            ? { ...venue, followersCount: venue.followersCount - 1 }
+            : venue
+        )
+      };
+    
+    default:
+      return state;
+  }
+};
+
+// Context provider component
+export const AppProvider = ({ children }) => {
+  const [state, dispatch] = useReducer(appReducer, initialState);
+  
+  // Action creators
+  const actions = {
+    // Authentication actions
+    loginUser: useCallback((userData) => {
+      dispatch({ type: 'LOGIN_SUCCESS', payload: userData });
+    }, []),
+    
+    logoutUser: useCallback(() => {
+      dispatch({ type: 'LOGOUT' });
+    }, []),
+    
+    // View management
+    setCurrentView: useCallback((view) => {
+      dispatch({ type: 'SET_CURRENT_VIEW', payload: view });
+    }, []),
+    
+    setSelectedVenue: useCallback((venue) => {
+      dispatch({ type: 'SET_SELECTED_VENUE', payload: venue });
+    }, []),
+    
+    // Modal management
+    setShowShareModal: useCallback((show) => {
+      dispatch({ type: 'SET_SHOW_SHARE_MODAL', payload: show });
+    }, []),
+    
+    setShowRatingModal: useCallback((show) => {
+      dispatch({ type: 'SET_SHOW_RATING_MODAL', payload: show });
+    }, []),
+    
+    setShowReportModal: useCallback((show) => {
+      dispatch({ type: 'SET_SHOW_REPORT_MODAL', payload: show });
+    }, []),
+    
+    setShowUserProfileModal: useCallback((show) => {
+      dispatch({ type: 'SET_SHOW_USER_PROFILE_MODAL', payload: show });
+    }, []),
+    
+    setShareVenue: useCallback((venue) => {
+      dispatch({ type: 'SET_SHARE_VENUE', payload: venue });
+    }, []),
+    
+    // Search and filtering
+    setSearchQuery: useCallback((query) => {
+      dispatch({ type: 'SET_SEARCH_QUERY', payload: query });
+    }, []),
+    
+    setActiveFilter: useCallback((filter) => {
+      dispatch({ type: 'SET_ACTIVE_FILTER', payload: filter });
+    }, []),
+    
+    // Notifications
+    addNotification: useCallback((notification) => {
+      dispatch({ type: 'ADD_NOTIFICATION', payload: notification });
+      
+      // Auto-dismiss notification after duration
+      const duration = notification.duration || 3000;
+      setTimeout(() => {
+        dispatch({ type: 'REMOVE_NOTIFICATION', payload: notification.id || Date.now() });
+      }, duration);
+    }, []),
+    
+    removeNotification: useCallback((id) => {
+      dispatch({ type: 'REMOVE_NOTIFICATION', payload: id });
+    }, []),
+    
+    // Venue interactions
+    followVenue: useCallback((venueId) => {
+      dispatch({ type: 'FOLLOW_VENUE', payload: venueId });
+    }, []),
+    
+    unfollowVenue: useCallback((venueId) => {
+      dispatch({ type: 'UNFOLLOW_VENUE', payload: venueId });
+    }, [])
+  };
+  
+  return (
+    <AppContext.Provider value={{ state, actions }}>
+      {children}
+    </AppContext.Provider>
+  );
+};
+
+// Custom hook to use the context
+export const useApp = () => {
+  const context = useContext(AppContext);
+  if (!context) {
+    throw new Error('useApp must be used within an AppProvider');
+  }
+  return context;
+};
+
+export default AppContext;

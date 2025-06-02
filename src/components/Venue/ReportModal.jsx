@@ -2,46 +2,40 @@ import React, { useState } from 'react';
 import { X, Users, Clock, AlertTriangle } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import Modal from '../UI/Modal';
-
 const ReportModal = () => {
   const { state, actions } = useApp();
   const [crowdLevel, setCrowdLevel] = useState(3);
   const [waitTime, setWaitTime] = useState(0);
   const [reportType, setReportType] = useState('status');
   const [issueDescription, setIssueDescription] = useState('');
-
   const handleSubmit = () => {
     if (state.selectedVenue) {
       if (reportType === 'status') {
         actions.reportVenue(state.selectedVenue.id, { crowdLevel, waitTime });
         actions.addNotification({
           type: 'success',
-          message: `✅ Status updated! +10 points earned`
+          message: ` ✅  Status updated! +10 points earned`
         });
       } else {
         actions.addNotification({
           type: 'success',
-          message: `🚨 Issue reported! +10 points earned`
+          message: ` 🚨  Issue reported! +10 points earned`
         });
       }
-
       actions.setShowReportModal(false);
       resetForm();
     }
   };
-
   const resetForm = () => {
     setCrowdLevel(3);
     setWaitTime(0);
     setReportType('status');
     setIssueDescription('');
   };
-
   const handleClose = () => {
     actions.setShowReportModal(false);
     resetForm();
   };
-
   const crowdOptions = [
     { value: 1, label: 'Empty', color: '#10b981', description: 'Very few people' },
     { value: 2, label: 'Quiet', color: '#10b981', description: 'Light crowd' },
@@ -49,7 +43,6 @@ const ReportModal = () => {
     { value: 4, label: 'Busy', color: '#ef4444', description: 'Getting crowded' },
     { value: 5, label: 'Packed', color: '#ef4444', description: 'Very crowded' }
   ];
-
   const issueTypes = [
     'Venue is closed',
     'Wrong information',
@@ -58,7 +51,6 @@ const ReportModal = () => {
     'Poor service',
     'Other'
   ];
-
   return (
     <Modal
       isOpen={state.showReportModal}
@@ -80,7 +72,6 @@ const ReportModal = () => {
               <span className="type-description">Current crowd & wait time</span>
             </div>
           </button>
-
           <button
             className={`report-type-button ${reportType === 'issue' ? 'active' : ''}`}
             onClick={() => setReportType('issue')}
@@ -93,7 +84,6 @@ const ReportModal = () => {
           </button>
         </div>
       </div>
-
       {reportType === 'status' ? (
         <div className="status-report-content">
           {/* Crowd Level */}
@@ -119,7 +109,6 @@ const ReportModal = () => {
               ))}
             </div>
           </div>
-
           {/* Wait Time */}
           <div className="input-section">
             <label className="input-label">
@@ -159,7 +148,6 @@ const ReportModal = () => {
               ))}
             </select>
           </div>
-
           {/* Additional Details */}
           <div className="input-section">
             <label className="input-label">
@@ -175,7 +163,6 @@ const ReportModal = () => {
           </div>
         </div>
       )}
-
       <div className="modal-actions">
         <button
           onClick={handleSubmit}
@@ -203,5 +190,4 @@ const ReportModal = () => {
     </Modal>
   );
 };
-
 export default ReportModal;

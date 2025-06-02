@@ -1,0 +1,84 @@
+// Safe helper functions with proper error handling
+
+export const getCrowdLabel = (level) => {
+  const levels = ['Unknown', 'Quiet', 'Moderate', 'Busy', 'Very Busy', 'Packed'];
+  const numLevel = parseInt(level) || 0;
+  return levels[numLevel] || levels[0];
+};
+
+export const getCrowdColor = (level) => {
+  const colors = [
+    'text-gray-500',
+    'text-green-600',
+    'text-yellow-600', 
+    'text-orange-600',
+    'text-red-600',
+    'text-purple-600'
+  ];
+  const numLevel = parseInt(level) || 0;
+  return colors[numLevel] || colors[0];
+};
+
+export const formatTime = (minutes) => {
+  const numMinutes = parseInt(minutes) || 0;
+  if (numMinutes === 0) return 'No wait';
+  if (numMinutes < 60) return `${numMinutes}m`;
+  const hours = Math.floor(numMinutes / 60);
+  const remainingMinutes = numMinutes % 60;
+  return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
+};
+
+export const safeString = (str, fallback = '') => {
+  if (typeof str === 'string') {
+    return str.trim();
+  }
+  return fallback;
+};
+
+export const safeArray = (arr, fallback = []) => {
+  return Array.isArray(arr) ? arr : fallback;
+};
+
+export const safeNumber = (num, fallback = 0) => {
+  const parsed = parseFloat(num);
+  return isNaN(parsed) ? fallback : parsed;
+};
+
+export const openGoogleMaps = (venue) => {
+  if (!venue) return;
+  
+  const address = safeString(venue.address);
+  const name = safeString(venue.name);
+  
+  if (address) {
+    const encodedAddress = encodeURIComponent(address);
+    const url = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+    window.open(url, '_blank');
+  } else if (name) {
+    const encodedName = encodeURIComponent(name);
+    const url = `https://www.google.com/maps/search/?api=1&query=${encodedName}+Houston+TX`;
+    window.open(url, '_blank');
+  }
+};
+
+export const getDirections = (venue) => {
+  if (!venue) return;
+  
+  const address = safeString(venue.address);
+  
+  if (address) {
+    const encodedAddress = encodeURIComponent(address);
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`;
+    window.open(url, '_blank');
+  }
+};
+
+export const formatRating = (rating, decimals = 1) => {
+  const numRating = safeNumber(rating, 0);
+  return numRating.toFixed(decimals);
+};
+
+export const pluralize = (count, singular, plural) => {
+  const numCount = safeNumber(count, 0);
+  return numCount === 1 ? singular : (plural || `${singular}s`);
+};

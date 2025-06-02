@@ -1,0 +1,191 @@
+import React, { useState } from 'react';
+import { Eye, EyeOff, User, Lock, Zap, Star, Clock, Users } from 'lucide-react';
+
+const LoginView = ({ onLogin }) => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const demoCredentials = {
+    username: 'demouser',
+    password: 'demopass'
+  };
+
+  const fillDemoCredentials = () => {
+    setUsername(demoCredentials.username);
+    setPassword(demoCredentials.password);
+    setError('');
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setIsLoading(true);
+
+    // Simulate realistic API call delay
+    setTimeout(() => {
+      if (username === demoCredentials.username && password === demoCredentials.password) {
+        onLogin({
+          id: 'usr_demo',
+          username: username,
+          firstName: 'Demo',
+          lastName: 'User'
+        });
+      } else {
+        setError('Invalid username or password. Try: demouser / demopass');
+      }
+      setIsLoading(false);
+    }, 1000);
+  };
+
+  const features = [
+    { icon: Star, text: "Rate and review Houston's hottest venues" },
+    { icon: Clock, text: "Get real-time crowd levels and wait times" },
+    { icon: Users, text: "Connect with fellow nightlife enthusiasts" },
+    { icon: Zap, text: "Discover trending spots before they blow up" }
+  ];
+
+  return (
+    <div className="login-page">
+      <div className="login-background">
+        <div className="login-gradient"></div>
+      </div>
+      
+      <div className="login-container">
+        <div className="login-card">
+          <div className="login-card-header">
+            <div className="login-logo">
+              <div className="logo-icon">
+                <Zap className="w-10 h-10 text-white" />
+              </div>
+              <h2 className="login-title">Welcome to nYtevibe</h2>
+              <p className="login-subtitle">Houston's Premier Nightlife Discovery Platform</p>
+            </div>
+          </div>
+
+          <div className="demo-banner">
+            <div className="demo-content">
+              <div className="demo-info">
+                <h4 className="demo-title">Demo Account Available</h4>
+                <p className="demo-description">
+                  Try nYtevibe with our demo account. Click below to auto-fill credentials.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={fillDemoCredentials}
+                className="demo-fill-button"
+              >
+                Fill Demo
+              </button>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="login-form">
+            {error && (
+              <div className="error-banner">
+                <span className="error-icon">⚠️</span>
+                <span className="error-text">{error}</span>
+              </div>
+            )}
+
+            <div className="form-group">
+              <label htmlFor="username" className="form-label">Username</label>
+              <div className="input-wrapper">
+                <User className="input-icon" />
+                <input
+                  id="username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="form-input"
+                  placeholder="Enter your username"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="password" className="form-label">Password</label>
+              <div className="input-wrapper">
+                <Lock className="input-icon" />
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="form-input"
+                  placeholder="Enter your password"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="password-toggle"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className={`login-button ${isLoading ? 'loading' : ''}`}
+            >
+              {isLoading ? (
+                <>
+                  <div className="loading-spinner"></div>
+                  Signing In...
+                </>
+              ) : (
+                <>
+                  <User className="w-4 h-4" />
+                  Enter nYtevibe
+                </>
+              )}
+            </button>
+          </form>
+
+          <div className="login-card-footer">
+            <p className="footer-text">
+              New to nYtevibe?{' '}
+              <button className="footer-link">Create Account</button>
+            </p>
+          </div>
+        </div>
+
+        <div className="login-features">
+          <h3 className="features-title">Discover Houston's Nightlife</h3>
+          <ul className="features-list">
+            {features.map((feature, index) => (
+              <li key={index} className="feature-item">
+                <feature.icon className="w-4 h-4 text-blue-400" />
+                <span>{feature.text}</span>
+              </li>
+            ))}
+          </ul>
+          
+          <div className="platform-stats">
+            <div className="stat-highlight">
+              <span className="stat-number">50+</span>
+              <span className="stat-label">Venues</span>
+            </div>
+            <div className="stat-highlight">
+              <span className="stat-number">1K+</span>
+              <span className="stat-label">Users</span>
+            </div>
+            <div className="stat-highlight">
+              <span className="stat-number">5K+</span>
+              <span className="stat-label">Reviews</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default LoginView;

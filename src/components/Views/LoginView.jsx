@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Eye, EyeOff, Lock, User, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, User, Lock, Zap, Star, Clock, Users } from 'lucide-react';
 
-const LoginView = ({ onBack, onLogin }) => {
+const LoginView = ({ onLogin }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -13,12 +13,18 @@ const LoginView = ({ onBack, onLogin }) => {
     password: 'demopass'
   };
 
+  const fillDemoCredentials = () => {
+    setUsername(demoCredentials.username);
+    setPassword(demoCredentials.password);
+    setError('');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
 
-    // Simulate API call delay
+    // Simulate realistic API call delay
     setTimeout(() => {
       if (username === demoCredentials.username && password === demoCredentials.password) {
         onLogin({
@@ -34,172 +40,148 @@ const LoginView = ({ onBack, onLogin }) => {
     }, 1000);
   };
 
-  const handleForgotPassword = () => {
-    alert('Demo: Use credentials - Username: demouser, Password: demopass');
-  };
-
-  const handleSignup = () => {
-    alert('Demo: Use existing credentials - Username: demouser, Password: demopass');
-  };
-
-  const fillDemoCredentials = () => {
-    setUsername(demoCredentials.username);
-    setPassword(demoCredentials.password);
-    setError('');
-  };
+  const features = [
+    { icon: Star, text: "Rate and review the hottest venues worldwide" },
+    { icon: Clock, text: "Get real-time crowd levels and wait times" },
+    { icon: Users, text: "Connect with fellow nightlife enthusiasts globally" },
+    { icon: Zap, text: "Discover trending spots in your city and beyond" }
+  ];
 
   return (
     <div className="login-page">
       <div className="login-background">
         <div className="login-gradient"></div>
       </div>
-
+      
       <div className="login-container">
-        {/* Header */}
-        <div className="login-header">
-          <button onClick={onBack} className="back-button-login">
-            <ArrowLeft className="w-5 h-5" />
-            <span>Back to Landing</span>
-          </button>
-        </div>
-
-        {/* Login Card */}
         <div className="login-card">
           <div className="login-card-header">
             <div className="login-logo">
               <div className="logo-icon">
-                <User className="w-8 h-8" />
+                <Zap className="w-10 h-10 text-white" />
               </div>
-              <h1 className="login-title">Welcome Back</h1>
-              <p className="login-subtitle">Sign in to discover Houston's nightlife</p>
+              <h2 className="login-title">Welcome to nYtevibe</h2>
+              <p className="login-subtitle">Global Nightlife Discovery Platform</p>
             </div>
           </div>
 
-          <div className="login-card-body">
-            {/* Demo Credentials Banner */}
-            <div className="demo-banner">
-              <div className="demo-content">
-                <div className="demo-icon">
-                  <AlertCircle className="w-4 h-4" />
-                </div>
-                <div className="demo-text">
-                  <strong>Demo Mode:</strong> Username: demouser, Password: demopass
-                </div>
-                <button 
-                  onClick={fillDemoCredentials}
-                  className="demo-fill-button"
+          <div className="demo-banner">
+            <div className="demo-content">
+              <div className="demo-info">
+                <h4 className="demo-title">Demo Account Available</h4>
+                <p className="demo-description">
+                  Try nYtevibe with our demo account. Click below to auto-fill credentials.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={fillDemoCredentials}
+                className="demo-fill-button"
+              >
+                Fill Demo
+              </button>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="login-form">
+            {error && (
+              <div className="error-banner">
+                <span className="error-icon">⚠️</span>
+                <span className="error-text">{error}</span>
+              </div>
+            )}
+
+            <div className="form-group">
+              <label htmlFor="username" className="form-label">Username</label>
+              <div className="input-wrapper">
+                <User className="input-icon" />
+                <input
+                  id="username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="form-input"
+                  placeholder="Enter your username"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="password" className="form-label">Password</label>
+              <div className="input-wrapper">
+                <Lock className="input-icon" />
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="form-input"
+                  placeholder="Enter your password"
+                  required
+                />
+                <button
                   type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="password-toggle"
                 >
-                  Fill Demo
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
 
-            {/* Login Form */}
-            <form onSubmit={handleSubmit} className="login-form">
-              {error && (
-                <div className="error-banner">
-                  <AlertCircle className="w-4 h-4" />
-                  <span>{error}</span>
-                </div>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className={`login-button ${isLoading ? 'loading' : ''}`}
+            >
+              {isLoading ? (
+                <>
+                  <div className="loading-spinner"></div>
+                  Signing In...
+                </>
+              ) : (
+                <>
+                  <User className="w-4 h-4" />
+                  Enter nYtevibe
+                </>
               )}
-
-              <div className="form-group">
-                <label htmlFor="username" className="form-label">
-                  Username
-                </label>
-                <div className="input-wrapper">
-                  <User className="input-icon" />
-                  <input
-                    id="username"
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="form-input"
-                    placeholder="Enter your username"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="password" className="form-label">
-                  Password
-                </label>
-                <div className="input-wrapper">
-                  <Lock className="input-icon" />
-                  <input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="form-input"
-                    placeholder="Enter your password"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="password-toggle"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="w-4 h-4" />
-                    ) : (
-                      <Eye className="w-4 h-4" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              <div className="form-actions">
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className={`login-button ${isLoading ? 'loading' : ''}`}
-                >
-                  {isLoading ? (
-                    <>
-                      <div className="loading-spinner"></div>
-                      Signing In...
-                    </>
-                  ) : (
-                    'Sign In'
-                  )}
-                </button>
-              </div>
-
-              <div className="form-links">
-                <button
-                  type="button"
-                  onClick={handleForgotPassword}
-                  className="forgot-password-link"
-                >
-                  Forgot Password?
-                </button>
-              </div>
-            </form>
-          </div>
+            </button>
+          </form>
 
           <div className="login-card-footer">
-            <p className="signup-text">
+            <p className="footer-text">
               New to nYtevibe?{' '}
-              <button onClick={handleSignup} className="signup-link">
-                Sign up here
-              </button>
+              <button className="footer-link">Create Account</button>
             </p>
           </div>
         </div>
 
-        {/* Features Preview */}
         <div className="login-features">
-          <h3 className="features-title">What you'll get:</h3>
+          <h3 className="features-title">Discover Nightlife Worldwide</h3>
           <ul className="features-list">
-            <li>🌟 Discover trending venues in real-time</li>
-            <li>💖 Save and follow your favorite spots</li>
-            <li>⭐ Rate and review venues</li>
-            <li>🎯 Get personalized recommendations</li>
-            <li>📊 Earn points for community contributions</li>
+            {features.map((feature, index) => (
+              <li key={index} className="feature-item">
+                <feature.icon className="w-4 h-4 text-blue-400" />
+                <span>{feature.text}</span>
+              </li>
+            ))}
           </ul>
+          
+          <div className="platform-stats">
+            <div className="stat-highlight">
+              <span className="stat-number">10K+</span>
+              <span className="stat-label">Venues</span>
+            </div>
+            <div className="stat-highlight">
+              <span className="stat-number">50K+</span>
+              <span className="stat-label">Users</span>
+            </div>
+            <div className="stat-highlight">
+              <span className="stat-number">200+</span>
+              <span className="stat-label">Cities</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

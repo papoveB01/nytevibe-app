@@ -1,13 +1,12 @@
 import React from 'react';
-
-const Button = ({ 
-  children, 
-  variant = 'primary', 
-  size = 'md', 
-  onClick, 
+const Button = ({
+  children,
+  variant = 'primary',
+  size = 'md',
+  onClick,
   disabled = false,
   className = '',
-  ...props 
+  ...props
 }) => {
   const baseClasses = 'btn';
   const variantClasses = {
@@ -20,7 +19,6 @@ const Button = ({
     md: 'btn-md',
     lg: 'btn-lg'
   };
-
   const classes = [
     baseClasses,
     variantClasses[variant],
@@ -28,7 +26,6 @@ const Button = ({
     disabled ? 'btn-disabled' : '',
     className
   ].filter(Boolean).join(' ');
-
   return (
     <button
       className={classes}
@@ -40,5 +37,4 @@ const Button = ({
     </button>
   );
 };
-
 export default Button;

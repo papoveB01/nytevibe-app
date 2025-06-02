@@ -1,0 +1,406 @@
+import React, { createContext, useContext, useReducer, useCallback } from 'react';
+
+const AppContext = createContext();
+
+const initialState = {
+  // Navigation
+  currentView: 'landing',
+  searchQuery: '',
+  
+  // Authentication
+  userType: null,
+  isAuthenticated: false,
+  authenticatedUser: null,
+  
+  // Modals
+  showRatingModal: false,
+  showReportModal: false,
+  showShareModal: false,
+  showUserProfileModal: false,
+  selectedVenue: null,
+  shareVenue: null,
+  
+  // User Profile
+  userProfile: {
+    id: 'usr_demo',
+    firstName: 'Demo',
+    lastName: 'User',
+    username: 'demouser',
+    email: 'demo@nytevibe.com',
+    level: 'Explorer',
+    points: 2847,
+    joinDate: 'March 2024',
+    totalReports: 23,
+    totalRatings: 15,
+    followingCount: 42,
+    followersCount: 67,
+    venueListsCount: 8,
+    favoriteVenues: []
+  },
+  
+  // Venues Data
+  venues: [
+    {
+      id: 'venue_1',
+      name: 'SkyBar Houston',
+      type: 'Rooftop Lounge',
+      address: '1600 Lamar St, Houston, TX',
+      phone: '(713) 555-0123',
+      hours: '5:00 PM - 2:00 AM',
+      rating: 4.5,
+      totalRatings: 289,
+      ratingBreakdown: { 5: 180, 4: 65, 3: 30, 2: 10, 1: 4 },
+      crowdLevel: 75,
+      waitTime: 15,
+      lastUpdate: '2 min ago',
+      confidence: 95,
+      followersCount: 1247,
+      reports: 89,
+      vibe: ['Upscale', 'City Views', 'Cocktails', 'Date Night'],
+      hasPromotion: true,
+      promotionText: 'Happy Hour: 50% off craft cocktails until 7 PM!',
+      reviews: [
+        {
+          id: 'review_1',
+          user: 'Sarah M.',
+          rating: 5,
+          date: '2 days ago',
+          comment: 'Amazing rooftop views of downtown Houston! The cocktails are expertly crafted and the atmosphere is perfect for a special night out.',
+          helpful: 12
+        },
+        {
+          id: 'review_2',
+          user: 'Mike R.',
+          rating: 4,
+          date: '1 week ago',
+          comment: 'Great spot for drinks with friends. Can get busy on weekends but the view makes it worth the wait.',
+          helpful: 8
+        },
+        {
+          id: 'review_3',
+          user: 'Jennifer L.',
+          rating: 5,
+          date: '2 weeks ago',
+          comment: 'Perfect for a date night! Staff is attentive and the sunset views are breathtaking.',
+          helpful: 15
+        }
+      ]
+    },
+    {
+      id: 'venue_2',
+      name: 'The Underground',
+      type: 'Dance Club',
+      address: '2314 Main St, Houston, TX',
+      phone: '(713) 555-0456',
+      hours: '9:00 PM - 3:00 AM',
+      rating: 4.2,
+      totalRatings: 567,
+      ratingBreakdown: { 5: 280, 4: 150, 3: 90, 2: 35, 1: 12 },
+      crowdLevel: 90,
+      waitTime: 25,
+      lastUpdate: '1 min ago',
+      confidence: 92,
+      followersCount: 2156,
+      reports: 156,
+      vibe: ['Electronic', 'High Energy', 'Late Night', 'Dancing'],
+      hasPromotion: false,
+      promotionText: '',
+      reviews: [
+        {
+          id: 'review_4',
+          user: 'Alex T.',
+          rating: 5,
+          date: '3 days ago',
+          comment: 'Best EDM club in Houston! Sound system is incredible and the DJs always bring the energy.',
+          helpful: 24
+        },
+        {
+          id: 'review_5',
+          user: 'Maria G.',
+          rating: 4,
+          date: '1 week ago',
+          comment: 'Love the underground vibe! Gets very crowded but that adds to the energy.',
+          helpful: 18
+        }
+      ]
+    },
+    {
+      id: 'venue_3',
+      name: 'Whiskey & Wine',
+      type: 'Bar & Grill',
+      address: '4201 Washington Ave, Houston, TX',
+      phone: '(713) 555-0789',
+      hours: '4:00 PM - 12:00 AM',
+      rating: 4.3,
+      totalRatings: 423,
+      ratingBreakdown: { 5: 200, 4: 120, 3: 70, 2: 25, 1: 8 },
+      crowdLevel: 45,
+      waitTime: 0,
+      lastUpdate: '5 min ago',
+      confidence: 88,
+      followersCount: 892,
+      reports: 67,
+      vibe: ['Casual', 'Sports Bar', 'Craft Beer', 'Wings'],
+      hasPromotion: true,
+      promotionText: 'Monday Night Football: $0.50 wings and $3 beer specials!',
+      reviews: [
+        {
+          id: 'review_6',
+          user: 'Chris P.',
+          rating: 4,
+          date: '1 day ago',
+          comment: 'Great place to watch the game with friends. Wings are delicious and beer selection is solid.',
+          helpful: 9
+        }
+      ]
+    },
+    {
+      id: 'venue_4',
+      name: 'Luna Tapas',
+      type: 'Wine Bar',
+      address: '1953 Montrose Blvd, Houston, TX',
+      phone: '(713) 555-0321',
+      hours: '5:00 PM - 11:00 PM',
+      rating: 4.7,
+      totalRatings: 198,
+      ratingBreakdown: { 5: 140, 4: 35, 3: 15, 2: 6, 1: 2 },
+      crowdLevel: 35,
+      waitTime: 0,
+      lastUpdate: '3 min ago',
+      confidence: 91,
+      followersCount: 578,
+      reports: 34,
+      vibe: ['Intimate', 'Wine Selection', 'Small Plates', 'Romantic'],
+      hasPromotion: false,
+      promotionText: '',
+      reviews: [
+        {
+          id: 'review_7',
+          user: 'Diana K.',
+          rating: 5,
+          date: '4 days ago',
+          comment: 'Cozy atmosphere with an excellent wine selection. Perfect for a quiet evening.',
+          helpful: 14
+        }
+      ]
+    },
+    {
+      id: 'venue_5',
+      name: 'Neon Nights',
+      type: 'Karaoke Lounge',
+      address: '3847 Richmond Ave, Houston, TX',
+      phone: '(713) 555-0654',
+      hours: '7:00 PM - 2:00 AM',
+      rating: 4.1,
+      totalRatings: 334,
+      ratingBreakdown: { 5: 150, 4: 100, 3: 60, 2: 20, 1: 4 },
+      crowdLevel: 60,
+      waitTime: 10,
+      lastUpdate: '4 min ago',
+      confidence: 87,
+      followersCount: 743,
+      reports: 78,
+      vibe: ['Karaoke', 'Fun', 'Group Friendly', 'Themed Drinks'],
+      hasPromotion: true,
+      promotionText: 'Karaoke Competition Tonight: Winner gets $100 bar tab!',
+      reviews: [
+        {
+          id: 'review_8',
+          user: 'Tommy L.',
+          rating: 4,
+          date: '2 days ago',
+          comment: 'So much fun! Private rooms are great for groups and the song selection is huge.',
+          helpful: 11
+        }
+      ]
+    }
+  ],
+  
+  // Notifications
+  notifications: []
+};
+
+const appReducer = (state, action) => {
+  switch (action.type) {
+    case 'SET_CURRENT_VIEW':
+      return { ...state, currentView: action.payload };
+    
+    case 'SET_SEARCH_QUERY':
+      return { ...state, searchQuery: action.payload };
+    
+    case 'SET_USER_TYPE':
+      return { ...state, userType: action.payload };
+    
+    case 'LOGIN_SUCCESS':
+      return {
+        ...state,
+        isAuthenticated: true,
+        authenticatedUser: action.payload,
+        currentView: 'home'
+      };
+    
+    case 'LOGOUT':
+      return {
+        ...state,
+        isAuthenticated: false,
+        authenticatedUser: null,
+        currentView: 'landing',
+        userType: null
+      };
+    
+    case 'SET_SHOW_RATING_MODAL':
+      return { ...state, showRatingModal: action.payload };
+    
+    case 'SET_SHOW_REPORT_MODAL':
+      return { ...state, showReportModal: action.payload };
+    
+    case 'SET_SHOW_SHARE_MODAL':
+      return { ...state, showShareModal: action.payload };
+    
+    case 'SET_SHOW_USER_PROFILE_MODAL':
+      return { ...state, showUserProfileModal: action.payload };
+    
+    case 'SET_SELECTED_VENUE':
+      return { ...state, selectedVenue: action.payload };
+    
+    case 'SET_SHARE_VENUE':
+      return { ...state, shareVenue: action.payload };
+    
+    case 'ADD_NOTIFICATION':
+      const newNotification = {
+        id: Date.now(),
+        ...action.payload,
+        timestamp: new Date().toISOString()
+      };
+      return {
+        ...state,
+        notifications: [newNotification, ...state.notifications.slice(0, 4)]
+      };
+    
+    case 'REMOVE_NOTIFICATION':
+      return {
+        ...state,
+        notifications: state.notifications.filter(n => n.id !== action.payload)
+      };
+    
+    case 'TOGGLE_VENUE_FOLLOW':
+      const venueId = action.payload;
+      const isCurrentlyFollowed = state.userProfile.favoriteVenues.includes(venueId);
+      const updatedFavorites = isCurrentlyFollowed
+        ? state.userProfile.favoriteVenues.filter(id => id !== venueId)
+        : [...state.userProfile.favoriteVenues, venueId];
+      
+      return {
+        ...state,
+        userProfile: {
+          ...state.userProfile,
+          favoriteVenues: updatedFavorites
+        },
+        venues: state.venues.map(venue =>
+          venue.id === venueId
+            ? {
+                ...venue,
+                followersCount: isCurrentlyFollowed
+                  ? venue.followersCount - 1
+                  : venue.followersCount + 1
+              }
+            : venue
+        )
+      };
+    
+    case 'UPDATE_VENUE_DATA':
+      return {
+        ...state,
+        venues: state.venues.map(venue => ({
+          ...venue,
+          crowdLevel: Math.max(10, Math.min(100, venue.crowdLevel + (Math.random() - 0.5) * 20)),
+          waitTime: Math.max(0, venue.waitTime + Math.floor((Math.random() - 0.5) * 10)),
+          lastUpdate: 'Just now',
+          confidence: Math.max(75, Math.min(98, venue.confidence + (Math.random() - 0.5) * 10))
+        }))
+      };
+    
+    default:
+      return state;
+  }
+};
+
+export const AppProvider = ({ children }) => {
+  const [state, dispatch] = useReducer(appReducer, initialState);
+  
+  const actions = {
+    setCurrentView: useCallback((view) => {
+      dispatch({ type: 'SET_CURRENT_VIEW', payload: view });
+    }, []),
+    
+    setSearchQuery: useCallback((query) => {
+      dispatch({ type: 'SET_SEARCH_QUERY', payload: query });
+    }, []),
+    
+    setUserType: useCallback((userType) => {
+      dispatch({ type: 'SET_USER_TYPE', payload: userType });
+    }, []),
+    
+    loginUser: useCallback((userData) => {
+      dispatch({ type: 'LOGIN_SUCCESS', payload: userData });
+    }, []),
+    
+    logoutUser: useCallback(() => {
+      dispatch({ type: 'LOGOUT' });
+    }, []),
+    
+    setShowRatingModal: useCallback((show) => {
+      dispatch({ type: 'SET_SHOW_RATING_MODAL', payload: show });
+    }, []),
+    
+    setShowReportModal: useCallback((show) => {
+      dispatch({ type: 'SET_SHOW_REPORT_MODAL', payload: show });
+    }, []),
+    
+    setShowShareModal: useCallback((show) => {
+      dispatch({ type: 'SET_SHOW_SHARE_MODAL', payload: show });
+    }, []),
+    
+    setShowUserProfileModal: useCallback((show) => {
+      dispatch({ type: 'SET_SHOW_USER_PROFILE_MODAL', payload: show });
+    }, []),
+    
+    setSelectedVenue: useCallback((venue) => {
+      dispatch({ type: 'SET_SELECTED_VENUE', payload: venue });
+    }, []),
+    
+    setShareVenue: useCallback((venue) => {
+      dispatch({ type: 'SET_SHARE_VENUE', payload: venue });
+    }, []),
+    
+    addNotification: useCallback((notification) => {
+      dispatch({ type: 'ADD_NOTIFICATION', payload: notification });
+    }, []),
+    
+    removeNotification: useCallback((id) => {
+      dispatch({ type: 'REMOVE_NOTIFICATION', payload: id });
+    }, []),
+    
+    toggleVenueFollow: useCallback((venueId) => {
+      dispatch({ type: 'TOGGLE_VENUE_FOLLOW', payload: venueId });
+    }, []),
+    
+    updateVenueData: useCallback(() => {
+      dispatch({ type: 'UPDATE_VENUE_DATA' });
+    }, [])
+  };
+  
+  return (
+    <AppContext.Provider value={{ state, actions }}>
+      {children}
+    </AppContext.Provider>
+  );
+};
+
+export const useApp = () => {
+  const context = useContext(AppContext);
+  if (!context) {
+    throw new Error('useApp must be used within an AppProvider');
+  }
+  return context;
+};

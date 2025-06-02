@@ -1,6 +1,5 @@
 import React from 'react';
 import { MessageCircle, Gift, Sparkles, Volume2, Calendar, UserPlus, Brain } from 'lucide-react';
-
 const iconMap = {
   MessageCircle,
   Gift,
@@ -10,10 +9,8 @@ const iconMap = {
   UserPlus,
   Brain
 };
-
 const PromotionalBanner = ({ banner, onClick }) => {
   const IconComponent = iconMap[banner.icon];
-
   return (
     <div
       className="promotional-banner"
@@ -49,5 +46,4 @@ const PromotionalBanner = ({ banner, onClick }) => {
     </div>
   );
 };
-
 export default PromotionalBanner;

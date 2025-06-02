@@ -1,6 +1,5 @@
 import React from 'react';
 import { Search, X } from 'lucide-react';
-
 const SearchBar = ({ searchQuery, setSearchQuery, onClearSearch }) => {
   return (
     <div className="search-bar-container">
@@ -26,5 +25,4 @@ const SearchBar = ({ searchQuery, setSearchQuery, onClearSearch }) => {
     </div>
   );
 };
-
 export default SearchBar;

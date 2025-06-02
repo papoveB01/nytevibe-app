@@ -3,39 +3,32 @@ import { X, Facebook, Twitter, Instagram, Copy, MessageCircle, ExternalLink } fr
 import { shareVenue } from '../../utils/helpers';
 import { useApp } from '../../context/AppContext';
 import Modal from '../UI/Modal';
-
 const ShareModal = () => {
   const { state, actions } = useApp();
   const venue = state.shareVenue;
-
   const handleShare = (platform) => {
     shareVenue(venue, platform);
-    
     let message = '';
     switch (platform) {
       case 'copy':
-        message = '📋 Link copied to clipboard!';
+        message = ' 📋  Link copied to clipboard!';
         break;
       case 'instagram':
-        message = '📋 Link copied to clipboard! Share on Instagram.';
+        message = ' 📋  Link copied to clipboard! Share on Instagram.';
         break;
       default:
-        message = `📤 Shared ${venue.name} on ${platform}!`;
+        message = ` 📤  Shared ${venue.name} on ${platform}!`;
     }
-    
     actions.addNotification({
       type: 'success',
       message
     });
-    
     actions.setShowShareModal(false);
   };
-
   const handleClose = () => {
     actions.setShowShareModal(false);
     actions.setShareVenue(null);
   };
-
   const shareOptions = [
     {
       platform: 'facebook',
@@ -73,9 +66,7 @@ const ShareModal = () => {
       bgColor: 'bg-gray-50 hover:bg-gray-100'
     }
   ];
-
   if (!venue || !state.showShareModal) return null;
-
   return (
     <Modal
       isOpen={state.showShareModal}
@@ -87,12 +78,11 @@ const ShareModal = () => {
         <div className="share-venue-info">
           <h4 className="share-venue-name">{venue.name}</h4>
           <p className="share-venue-details">
-            {venue.type} • ⭐ {venue.rating}/5 ({venue.totalRatings} reviews)
+            {venue.type} •  ⭐  {venue.rating}/5 ({venue.totalRatings} reviews)
           </p>
           <p className="share-venue-address">{venue.address}</p>
         </div>
       </div>
-
       <div className="share-options">
         <label className="share-options-label">Share via</label>
         <div className="share-buttons">
@@ -112,5 +102,4 @@ const ShareModal = () => {
     </Modal>
   );
 };
-
 export default ShareModal;

@@ -1,4 +1,5 @@
 import React from 'react';
+import { ChevronDown } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { getUserInitials, getLevelIcon } from '../../utils/helpers';
 
@@ -8,14 +9,11 @@ const UserProfile = () => {
 
   const handleProfileClick = () => {
     actions.setShowUserProfileModal(true);
-    actions.addNotification({
-      type: 'default',
-      message: '👤 Opening user profile...'
-    });
+    // Removed notification spam
   };
 
-  const initials = getUserInitials(userProfile.firstName, userProfile.lastName);
-  const levelIcon = getLevelIcon(userProfile.levelTier);
+  const initials = getUserInitials(userProfile);
+  const levelIcon = getLevelIcon(userProfile.level);
 
   return (
     <div className="user-profile-trigger">
@@ -34,9 +32,7 @@ const UserProfile = () => {
             <span className="points-trigger">{userProfile.points.toLocaleString()}</span>
           </div>
         </div>
-        <svg className="profile-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"/>
-        </svg>
+        <ChevronDown className="profile-chevron w-4 h-4" />
       </button>
     </div>
   );

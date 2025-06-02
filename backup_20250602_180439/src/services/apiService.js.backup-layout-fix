@@ -1,0 +1,287 @@
+// Enhanced API Service with comprehensive error handling and debugging
+// Handles connection issues, CORS problems, and fetch errors
+
+const API_BASE_URL = 'https://system.nytevibe.com/api';
+
+class ApiService {
+  constructor() {
+    this.token = localStorage.getItem('auth_token');
+    this.isOnline = navigator.onLine;
+    this.connectionStatus = 'unknown';
+    
+    // Listen for online/offline events
+    window.addEventListener('online', () => {
+      this.isOnline = true;
+      console.log('🟢 Network connection restored');
+    });
+    
+    window.addEventListener('offline', () => {
+      this.isOnline = false;
+      console.log('🔴 Network connection lost');
+    });
+  }
+
+  // Test API connectivity
+  async testConnection() {
+    try {
+      console.log('🔍 Testing API connection...');
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
+      const response = await fetch(`${API_BASE_URL}/health`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (response.ok) {
+        const data = await response.json();
+        this.connectionStatus = 'connected';
+        console.log('✅ API connection successful:', data);
+        return { success: true, data };
+      } else {
+        this.connectionStatus = 'error';
+        console.error('❌ API returned error status:', response.status);
+        return { success: false, error: `HTTP ${response.status}` };
+      }
+    } catch (error) {
+      this.connectionStatus = 'failed';
+      console.error('❌ API connection failed:', error);
+      
+      if (error.name === 'AbortError') {
+        return { success: false, error: 'Connection timeout - API server may be down' };
+      }
+      
+      return { success: false, error: error.message };
+    }
+  }
+
+  async request(endpoint, options = {}) {
+    // Check network connectivity first
+    if (!this.isOnline) {
+      throw new Error('No internet connection. Please check your network.');
+    }
+
+    const url = `${API_BASE_URL}${endpoint}`;
+    
+    // Default configuration with enhanced error handling
+    const config = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest', // Help with CORS
+        ...options.headers,
+      },
+      // Add timeout and abort signal
+      signal: AbortSignal.timeout(30000), // 30 second timeout
+      ...options,
+    };
+
+    // Add auth token if available
+    if (this.token) {
+      config.headers.Authorization = `Bearer ${this.token}`;
+    }
+
+    // Log request for debugging
+    console.log(`🔄 API Request: ${config.method} ${url}`);
+    
+    try {
+      const response = await fetch(url, config);
+      
+      // Log response for debugging
+      console.log(`📡 API Response: ${response.status} ${response.statusText}`);
+      
+      let data;
+      const contentType = response.headers.get('content-type');
+      
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        // Handle non-JSON responses
+        const text = await response.text();
+        console.warn('⚠️ Non-JSON response:', text);
+        
+        if (response.ok) {
+          return { status: 'success', message: 'Request completed', data: text };
+        } else {
+          throw new Error(`Server error: ${response.status} - ${text.substring(0, 100)}`);
+        }
+      }
+      
+      if (!response.ok) {
+        // Handle API error responses
+        const errorMessage = data?.message || data?.error || `HTTP ${response.status}: ${response.statusText}`;
+        console.error('❌ API Error Response:', data);
+        throw new Error(errorMessage);
+      }
+      
+      console.log('✅ API Success:', data);
+      return data;
+      
+    } catch (error) {
+      console.error('❌ Fetch Error:', error);
+      
+      // Provide specific error messages for common issues
+      if (error.name === 'AbortError' || error.name === 'TimeoutError') {
+        throw new Error('Request timeout - The server is taking too long to respond. Please try again.');
+      }
+      
+      if (error.message.includes('Failed to fetch')) {
+        // This is usually a CORS or network connectivity issue
+        throw new Error('Unable to connect to server. This could be due to:\n• Server is offline\n• CORS configuration\n• Network connectivity\n• Firewall blocking the request');
+      }
+      
+      if (error.message.includes('NetworkError')) {
+        throw new Error('Network error - Please check your internet connection and try again.');
+      }
+      
+      // Re-throw the error with original message if it's already descriptive
+      throw error;
+    }
+  }
+
+  // Authentication methods with enhanced error handling
+  async login(email, password) {
+    try {
+      const response = await this.request('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (response.status === 'success' && response.data?.token) {
+        this.token = response.data.token;
+        localStorage.setItem('auth_token', this.token);
+        console.log('✅ Login successful, token stored');
+      }
+
+      return response;
+    } catch (error) {
+      console.error('❌ Login failed:', error);
+      throw error;
+    }
+  }
+
+  async register(userData) {
+    try {
+      const response = await this.request('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(userData),
+      });
+
+      if (response.status === 'success' && response.data?.token) {
+        this.token = response.data.token;
+        localStorage.setItem('auth_token', this.token);
+        console.log('✅ Registration successful, token stored');
+      }
+
+      return response;
+    } catch (error) {
+      console.error('❌ Registration failed:', error);
+      throw error;
+    }
+  }
+
+  async logout() {
+    try {
+      if (this.token) {
+        await this.request('/auth/logout', {
+          method: 'POST',
+        });
+      }
+    } catch (error) {
+      console.error('⚠️ Logout API call failed (continuing anyway):', error);
+    } finally {
+      // Always clear local token even if API call fails
+      this.token = null;
+      localStorage.removeItem('auth_token');
+      console.log('🔐 Token cleared locally');
+    }
+  }
+
+  async getUser() {
+    return this.request('/auth/user');
+  }
+
+  async refreshToken() {
+    try {
+      const response = await this.request('/auth/refresh', {
+        method: 'POST',
+      });
+
+      if (response.status === 'success' && response.data?.token) {
+        this.token = response.data.token;
+        localStorage.setItem('auth_token', this.token);
+        console.log('✅ Token refreshed successfully');
+      }
+
+      return response;
+    } catch (error) {
+      console.error('❌ Token refresh failed:', error);
+      // Clear invalid token
+      this.token = null;
+      localStorage.removeItem('auth_token');
+      throw error;
+    }
+  }
+
+  // Health check with detailed diagnostics
+  async healthCheck() {
+    return this.testConnection();
+  }
+
+  // Diagnostic method to check API status
+  async diagnose() {
+    console.log('🔍 Running API diagnostics...');
+    
+    const diagnostics = {
+      networkStatus: this.isOnline ? 'Online' : 'Offline',
+      apiUrl: API_BASE_URL,
+      hasToken: !!this.token,
+      connectionStatus: this.connectionStatus
+    };
+    
+    console.log('📊 Diagnostics:', diagnostics);
+    
+    // Test basic connectivity
+    const connectionTest = await this.testConnection();
+    diagnostics.connectionTest = connectionTest;
+    
+    return diagnostics;
+  }
+
+  // Future API methods (ready for implementation)
+  async getVenues(filters = {}) {
+    const queryParams = new URLSearchParams(filters);
+    return this.request(`/venues?${queryParams}`);
+  }
+
+  async followVenue(venueId) {
+    return this.request(`/venues/${venueId}/follow`, {
+      method: 'POST',
+    });
+  }
+
+  async unfollowVenue(venueId) {
+    return this.request(`/venues/${venueId}/follow`, {
+      method: 'DELETE',
+    });
+  }
+}
+
+// Create and export singleton instance
+const apiService = new ApiService();
+
+// Add global error handler for debugging
+window.addEventListener('unhandledrejection', (event) => {
+  if (event.reason?.message?.includes('fetch')) {
+    console.error('🚨 Unhandled fetch error:', event.reason);
+  }
+});
+
+export default apiService;

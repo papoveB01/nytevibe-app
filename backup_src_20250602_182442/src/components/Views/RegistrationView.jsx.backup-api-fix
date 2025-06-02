@@ -1,0 +1,404 @@
+import React, { useState } from 'react';
+import { ArrowLeft, Eye, EyeOff, User, Mail, Lock, UserPlus } from 'lucide-react';
+
+const RegistrationView = ({ onBack, onRegister, onSwitchToLogin }) => {
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    username: '',
+    email: '',
+    password: '',
+    passwordConfirmation: '',
+    userType: 'user'
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false);
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({});
+
+  const validateForm = () => {
+    const errors = {};
+
+    // First Name validation
+    if (!formData.firstName.trim()) {
+      errors.firstName = 'First name is required';
+    }
+
+    // Last Name validation
+    if (!formData.lastName.trim()) {
+      errors.lastName = 'Last name is required';
+    }
+
+    // Username validation
+    if (!formData.username.trim()) {
+      errors.username = 'Username is required';
+    } else if (formData.username.length < 3) {
+      errors.username = 'Username must be at least 3 characters';
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!formData.email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!emailRegex.test(formData.email)) {
+      errors.email = 'Please enter a valid email address';
+    }
+
+    // Password validation
+    if (!formData.password) {
+      errors.password = 'Password is required';
+    } else if (formData.password.length < 6) {
+      errors.password = 'Password must be at least 6 characters';
+    }
+
+    // Password confirmation validation
+    if (!formData.passwordConfirmation) {
+      errors.passwordConfirmation = 'Please confirm your password';
+    } else if (formData.password !== formData.passwordConfirmation) {
+      errors.passwordConfirmation = 'Passwords do not match';
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+
+    // Clear validation error for this field
+    if (validationErrors[name]) {
+      setValidationErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Prepare registration data according to API specification
+      const registrationData = {
+        name: `${formData.firstName} ${formData.lastName}`,
+        email: formData.email,
+        password: formData.password,
+        password_confirmation: formData.passwordConfirmation,
+        username: formData.username,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        user_type: formData.userType
+      };
+
+      const result = await onRegister(registrationData);
+      
+      if (!result.success) {
+        setError(result.error || 'Registration failed. Please try again.');
+      }
+    } catch (error) {
+      setError('An unexpected error occurred. Please try again.');
+      console.error('Registration error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDemoFill = () => {
+    setFormData({
+      firstName: 'Demo',
+      lastName: 'User',
+      username: 'demouser',
+      email: 'demo@nytevibe.com',
+      password: 'demo123',
+      passwordConfirmation: 'demo123',
+      userType: 'user'
+    });
+    setError('');
+    setValidationErrors({});
+  };
+
+  return (
+    <div className="registration-page">
+      <div className="registration-background">
+        <div className="registration-gradient"></div>
+      </div>
+      
+      <div className="registration-container">
+        <div className="registration-card">
+          {/* Header */}
+          <div className="registration-card-header">
+            <button onClick={onBack} className="back-button">
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back</span>
+            </button>
+            
+            <div className="registration-logo">
+              <div className="logo-icon">
+                <UserPlus className="w-8 h-8" />
+              </div>
+              <div className="logo-text">
+                <h2 className="registration-title">Join nYtevibe</h2>
+                <p className="registration-subtitle">Discover Houston's best nightlife</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Demo Banner */}
+          <div className="demo-banner">
+            <div className="demo-content">
+              <div className="demo-text">
+                <strong>Quick Demo:</strong> Use demo credentials to test the registration flow
+              </div>
+              <button 
+                type="button" 
+                className="demo-fill-button"
+                onClick={handleDemoFill}
+              >
+                Fill Demo
+              </button>
+            </div>
+          </div>
+
+          {/* Error Display */}
+          {error && (
+            <div className="error-banner">
+              <span className="error-icon">⚠️</span>
+              {error}
+            </div>
+          )}
+
+          {/* Registration Form */}
+          <form onSubmit={handleSubmit} className="registration-form">
+            {/* Name Fields */}
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="firstName" className="form-label">First Name</label>
+                <div className="input-wrapper">
+                  <User className="input-icon" size={16} />
+                  <input
+                    id="firstName"
+                    name="firstName"
+                    type="text"
+                    value={formData.firstName}
+                    onChange={handleInputChange}
+                    className={`form-input ${validationErrors.firstName ? 'error' : ''}`}
+                    placeholder="First name"
+                  />
+                </div>
+                {validationErrors.firstName && (
+                  <span className="validation-error">{validationErrors.firstName}</span>
+                )}
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="lastName" className="form-label">Last Name</label>
+                <div className="input-wrapper">
+                  <User className="input-icon" size={16} />
+                  <input
+                    id="lastName"
+                    name="lastName"
+                    type="text"
+                    value={formData.lastName}
+                    onChange={handleInputChange}
+                    className={`form-input ${validationErrors.lastName ? 'error' : ''}`}
+                    placeholder="Last name"
+                  />
+                </div>
+                {validationErrors.lastName && (
+                  <span className="validation-error">{validationErrors.lastName}</span>
+                )}
+              </div>
+            </div>
+
+            {/* Username Field */}
+            <div className="form-group">
+              <label htmlFor="username" className="form-label">Username</label>
+              <div className="input-wrapper">
+                <User className="input-icon" size={16} />
+                <input
+                  id="username"
+                  name="username"
+                  type="text"
+                  value={formData.username}
+                  onChange={handleInputChange}
+                  className={`form-input ${validationErrors.username ? 'error' : ''}`}
+                  placeholder="Choose a username"
+                />
+              </div>
+              {validationErrors.username && (
+                <span className="validation-error">{validationErrors.username}</span>
+              )}
+            </div>
+
+            {/* Email Field */}
+            <div className="form-group">
+              <label htmlFor="email" className="form-label">Email Address</label>
+              <div className="input-wrapper">
+                <Mail className="input-icon" size={16} />
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  className={`form-input ${validationErrors.email ? 'error' : ''}`}
+                  placeholder="your@email.com"
+                />
+              </div>
+              {validationErrors.email && (
+                <span className="validation-error">{validationErrors.email}</span>
+              )}
+            </div>
+
+            {/* Password Field */}
+            <div className="form-group">
+              <label htmlFor="password" className="form-label">Password</label>
+              <div className="input-wrapper">
+                <Lock className="input-icon" size={16} />
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  className={`form-input ${validationErrors.password ? 'error' : ''}`}
+                  placeholder="Create a password"
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+              {validationErrors.password && (
+                <span className="validation-error">{validationErrors.password}</span>
+              )}
+            </div>
+
+            {/* Password Confirmation Field */}
+            <div className="form-group">
+              <label htmlFor="passwordConfirmation" className="form-label">Confirm Password</label>
+              <div className="input-wrapper">
+                <Lock className="input-icon" size={16} />
+                <input
+                  id="passwordConfirmation"
+                  name="passwordConfirmation"
+                  type={showPasswordConfirmation ? 'text' : 'password'}
+                  value={formData.passwordConfirmation}
+                  onChange={handleInputChange}
+                  className={`form-input ${validationErrors.passwordConfirmation ? 'error' : ''}`}
+                  placeholder="Confirm your password"
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={() => setShowPasswordConfirmation(!showPasswordConfirmation)}
+                >
+                  {showPasswordConfirmation ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+              {validationErrors.passwordConfirmation && (
+                <span className="validation-error">{validationErrors.passwordConfirmation}</span>
+              )}
+            </div>
+
+            {/* User Type Selection */}
+            <div className="form-group">
+              <label className="form-label">Account Type</label>
+              <div className="user-type-selection">
+                <label className="user-type-option">
+                  <input
+                    type="radio"
+                    name="userType"
+                    value="user"
+                    checked={formData.userType === 'user'}
+                    onChange={handleInputChange}
+                  />
+                  <span className="user-type-label">
+                    <strong>Regular User</strong>
+                    <small>Discover and review venues</small>
+                  </span>
+                </label>
+                <label className="user-type-option">
+                  <input
+                    type="radio"
+                    name="userType"
+                    value="business"
+                    checked={formData.userType === 'business'}
+                    onChange={handleInputChange}
+                  />
+                  <span className="user-type-label">
+                    <strong>Business Owner</strong>
+                    <small>Manage your venue</small>
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              className={`registration-button ${isLoading ? 'loading' : ''}`}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <div className="loading-spinner"></div>
+                  Creating Account...
+                </>
+              ) : (
+                <>
+                  <UserPlus className="w-4 h-4" />
+                  Create Account
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Footer */}
+          <div className="registration-card-footer">
+            <p>
+              Already have an account?{' '}
+              <button 
+                type="button" 
+                className="link-button"
+                onClick={onSwitchToLogin}
+              >
+                Sign In
+              </button>
+            </p>
+          </div>
+        </div>
+
+        {/* Features Preview */}
+        <div className="registration-features">
+          <h3>Join Houston's Nightlife Community</h3>
+          <ul className="features-list">
+            <li>🔍 Discover trending venues instantly</li>
+            <li>📊 Get real-time crowd and wait updates</li>
+            <li>❤️ Save and share your favorite spots</li>
+            <li>⭐ Rate and review venues</li>
+            <li>🎯 Get personalized recommendations</li>
+            <li>🏆 Earn points and unlock achievements</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default RegistrationView;

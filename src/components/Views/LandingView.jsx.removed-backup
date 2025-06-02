@@ -1,0 +1,187 @@
+import React from 'react';
+import { MapPin, Users, Heart, TrendingUp, Star, Zap, Clock, Check } from 'lucide-react';
+
+const LandingView = ({ onSelectUserType }) => {
+  const features = [
+    {
+      icon: MapPin,
+      title: "Real-Time Discovery",
+      description: "Find the hottest venues with live crowd levels and wait times"
+    },
+    {
+      icon: Users,
+      title: "Community Driven",
+      description: "Real reports from Houston nightlife enthusiasts like you"
+    },
+    {
+      icon: Heart,
+      title: "Personal Favorites",
+      description: "Save and share your favorite spots with friends"
+    },
+    {
+      icon: TrendingUp,
+      title: "Smart Insights",
+      description: "Discover trending venues and hidden gems in your area"
+    }
+  ];
+
+  const userBenefits = [
+    "Discover trending venues instantly",
+    "Get real-time crowd and wait updates",
+    "Save and share favorite spots",
+    "Earn points for community contributions",
+    "Connect with Houston's nightlife community"
+  ];
+
+  const businessBenefits = [
+    "Attract more customers to your venue",
+    "Manage your venue's online presence",
+    "Share promotions and special events",
+    "Get valuable customer insights",
+    "Increase visibility in Houston nightlife"
+  ];
+
+  return (
+    <div className="landing-page">
+      <div className="landing-background">
+        <div className="landing-gradient"></div>
+      </div>
+      
+      <div className="landing-container">
+        <div className="landing-content">
+          {/* Hero Section */}
+          <div className="hero-section">
+            <div className="hero-content">
+              <div className="hero-branding">
+                <div className="hero-logo">
+                  <div className="logo-icon">
+                    <Zap className="w-12 h-12 text-white" />
+                  </div>
+                </div>
+                <h1 className="title-main">nYtevibe</h1>
+                <p className="title-subtitle">Houston's Premier Nightlife Discovery Platform</p>
+              </div>
+              
+              <div className="hero-description">
+                <p className="hero-text">
+                  Discover Houston's best nightlife with real-time crowd levels, 
+                  authentic reviews, and insider recommendations from the community.
+                </p>
+              </div>
+              
+              <div className="hero-stats">
+                <div className="stat-item">
+                  <span className="stat-number">50+</span>
+                  <span className="stat-label">Venues</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-number">1K+</span>
+                  <span className="stat-label">Users</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-number">5K+</span>
+                  <span className="stat-label">Reviews</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Features Section */}
+          <div className="features-section">
+            <h2 className="section-title">Why Choose nYtevibe?</h2>
+            <div className="features-grid">
+              {features.map((feature, index) => (
+                <div key={index} className="feature-card">
+                  <div className="feature-icon">
+                    <feature.icon className="w-8 h-8 text-blue-500" />
+                  </div>
+                  <h3 className="feature-title">{feature.title}</h3>
+                  <p className="feature-description">{feature.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* User Type Selection */}
+          <div className="selection-section">
+            <h2 className="section-title">Choose Your Experience</h2>
+            <div className="selection-cards">
+              <div className="profile-card user-card">
+                <div className="card-header">
+                  <div className="card-icon">
+                    <Users className="w-8 h-8 text-blue-500" />
+                  </div>
+                  <h3 className="card-title">I'm a User</h3>
+                  <p className="card-subtitle">Discover Houston's best nightlife</p>
+                </div>
+                
+                <div className="card-benefits">
+                  <h4 className="benefits-title">Perfect for:</h4>
+                  <ul className="benefits-list">
+                    {userBenefits.map((benefit, index) => (
+                      <li key={index} className="benefit-item">
+                        <Check className="w-4 h-4 text-green-500" />
+                        <span>{benefit}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                
+                <button
+                  className="cta-button user-cta"
+                  onClick={() => onSelectUserType('user')}
+                >
+                  Start Exploring
+                  <Star className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="profile-card business-card">
+                <div className="card-header">
+                  <div className="card-icon">
+                    <TrendingUp className="w-8 h-8 text-purple-500" />
+                  </div>
+                  <h3 className="card-title">I'm a Business</h3>
+                  <p className="card-subtitle">Showcase your venue to Houston</p>
+                </div>
+                
+                <div className="card-benefits">
+                  <h4 className="benefits-title">Perfect for:</h4>
+                  <ul className="benefits-list">
+                    {businessBenefits.map((benefit, index) => (
+                      <li key={index} className="benefit-item">
+                        <Check className="w-4 h-4 text-green-500" />
+                        <span>{benefit}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                
+                <button
+                  className="cta-button business-cta"
+                  onClick={() => onSelectUserType('business')}
+                >
+                  Get Started
+                  <TrendingUp className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Trust Section */}
+          <div className="trust-section">
+            <div className="trust-content">
+              <h3 className="trust-title">Trusted by Houston's Nightlife Community</h3>
+              <p className="trust-description">
+                Join thousands of Houstonians who rely on nYtevibe to discover 
+                the city's best nightlife experiences.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default LandingView;

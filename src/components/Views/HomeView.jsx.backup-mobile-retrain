@@ -1,0 +1,109 @@
+import React, { useState } from 'react';
+import { Filter, MapPin, Users, Clock, TrendingUp } from 'lucide-react';
+import { useVenues } from '../../hooks/useVenues';
+import VenueCard from '../Venue/VenueCard';
+
+const HomeView = ({ onVenueSelect }) => {
+  const { venues } = useVenues();
+  const [activeFilter, setActiveFilter] = useState('all');
+
+  const filters = [
+    { id: 'all', label: 'All Venues', icon: MapPin },
+    { id: 'busy', label: 'Busy Now', icon: Users },
+    { id: 'quick', label: 'No Wait', icon: Clock },
+    { id: 'trending', label: 'Trending', icon: TrendingUp }
+  ];
+
+  const filteredVenues = venues.filter(venue => {
+    switch (activeFilter) {
+      case 'busy':
+        return venue.crowdLevel >= 70;
+      case 'quick':
+        return venue.waitTime === 0;
+      case 'trending':
+        return venue.followersCount > 1000;
+      default:
+        return true;
+    }
+  });
+
+  const promotionalVenues = venues.filter(venue => venue.hasPromotion);
+
+  return (
+    <div className="home-view">
+      <div className="home-content">
+        {/* Promotional Banners */}
+        {promotionalVenues.length > 0 && (
+          <div className="promotional-section">
+            <h2 className="section-title">🎉 Special Promotions</h2>
+            <div className="promotional-banners">
+              {promotionalVenues.map(venue => (
+                <div
+                  key={venue.id}
+                  className="promotional-banner"
+                  onClick={() => onVenueSelect(venue)}
+                >
+                  <div className="banner-content">
+                    <div className="banner-text">
+                      <div className="banner-title">{venue.name}</div>
+                      <div className="banner-subtitle">{venue.promotionText}</div>
+                    </div>
+                    <div className="banner-cta">
+                      View Details
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Filter Section */}
+        <div className="filter-section">
+          <div className="filter-header">
+            <h2 className="section-title">Discover Venues</h2>
+            <div className="filter-options">
+              {filters.map(filter => (
+                <button
+                  key={filter.id}
+                  onClick={() => setActiveFilter(filter.id)}
+                  className={`filter-option ${activeFilter === filter.id ? 'active' : ''}`}
+                >
+                  <filter.icon className="w-4 h-4" />
+                  <span>{filter.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Venues Grid */}
+        <div className="venues-section">
+          <div className="venues-grid">
+            {filteredVenues.map(venue => (
+              <VenueCard
+                key={venue.id}
+                venue={venue}
+                onClick={() => onVenueSelect(venue)}
+              />
+            ))}
+          </div>
+          
+          {filteredVenues.length === 0 && (
+            <div className="empty-state">
+              <div className="empty-icon">
+                <MapPin className="w-12 h-12 text-gray-400" />
+              </div>
+              <h3 className="empty-title">No venues found</h3>
+              <p className="empty-description">
+                Try adjusting your filters or search terms to find venues.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default HomeView;

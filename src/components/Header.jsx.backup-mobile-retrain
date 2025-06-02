@@ -1,0 +1,43 @@
+import React from 'react';
+import { Search, X } from 'lucide-react';
+import UserProfile from './User/UserProfile';
+
+const Header = ({ searchQuery, setSearchQuery, onClearSearch }) => {
+  return (
+    <header className="header">
+      <div className="header-content">
+        <div className="header-top">
+          <div className="brand-section">
+            <h1 className="app-title">nYtevibe</h1>
+            <p className="app-subtitle">Houston's Nightlife Pulse</p>
+          </div>
+          <UserProfile />
+        </div>
+        
+        <div className="search-section">
+          <div className="search-container">
+            <Search className="search-icon" />
+            <input
+              type="text"
+              placeholder="Search venues, vibes, or neighborhoods..."
+              className="search-input"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            {searchQuery && (
+              <button
+                onClick={onClearSearch}
+                className="search-clear"
+                aria-label="Clear search"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+};
+
+export default Header;

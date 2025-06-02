@@ -1,0 +1,125 @@
+// API Service for nYtevibe Backend Integration
+// Handles all API communications with Laravel backend
+
+const API_BASE_URL = 'https://system.nytevibe.com/api';
+
+class ApiService {
+  constructor() {
+    this.token = localStorage.getItem('auth_token');
+  }
+
+  async request(endpoint, options = {}) {
+    const url = `${API_BASE_URL}${endpoint}`;
+    const config = {
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        ...options.headers,
+      },
+      ...options,
+    };
+
+    // Add auth token if available
+    if (this.token) {
+      config.headers.Authorization = `Bearer ${this.token}`;
+    }
+
+    try {
+      const response = await fetch(url, config);
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || `HTTP error! status: ${response.status}`);
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('API Error:', error);
+      throw error;
+    }
+  }
+
+  // Authentication methods
+  async login(email, password) {
+    const response = await this.request('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+
+    if (response.status === 'success') {
+      this.token = response.data.token;
+      localStorage.setItem('auth_token', this.token);
+    }
+
+    return response;
+  }
+
+  async register(userData) {
+    const response = await this.request('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(userData),
+    });
+
+    if (response.status === 'success') {
+      this.token = response.data.token;
+      localStorage.setItem('auth_token', this.token);
+    }
+
+    return response;
+  }
+
+  async logout() {
+    try {
+      await this.request('/auth/logout', {
+        method: 'POST',
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      this.token = null;
+      localStorage.removeItem('auth_token');
+    }
+  }
+
+  async getUser() {
+    return this.request('/auth/user');
+  }
+
+  async refreshToken() {
+    const response = await this.request('/auth/refresh', {
+      method: 'POST',
+    });
+
+    if (response.status === 'success') {
+      this.token = response.data.token;
+      localStorage.setItem('auth_token', this.token);
+    }
+
+    return response;
+  }
+
+  // Health check
+  async healthCheck() {
+    return this.request('/health');
+  }
+
+  // Future API methods ready for implementation
+  async getVenues(filters = {}) {
+    const queryParams = new URLSearchParams(filters);
+    return this.request(`/venues?${queryParams}`);
+  }
+
+  async followVenue(venueId) {
+    return this.request(`/venues/${venueId}/follow`, {
+      method: 'POST',
+    });
+  }
+
+  async unfollowVenue(venueId) {
+    return this.request(`/venues/${venueId}/follow`, {
+      method: 'DELETE',
+    });
+  }
+}
+
+export default new ApiService();

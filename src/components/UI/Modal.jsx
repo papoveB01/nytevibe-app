@@ -1,20 +1,18 @@
 import React from 'react';
 import { X } from 'lucide-react';
-
-const Modal = ({ 
-  isOpen, 
-  onClose, 
-  title, 
-  children, 
+const Modal = ({
+  isOpen,
+  onClose,
+  title,
+  children,
   className = '',
-  ...props 
+  ...props
 }) => {
   if (!isOpen) return null;
-
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div 
-        className={`modal-content ${className}`} 
+      <div
+        className={`modal-content ${className}`}
         onClick={(e) => e.stopPropagation()}
         {...props}
       >
@@ -31,5 +29,4 @@ const Modal = ({
     </div>
   );
 };
-
 export default Modal;

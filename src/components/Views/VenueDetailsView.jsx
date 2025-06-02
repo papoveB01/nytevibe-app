@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   ArrowLeft, MapPin, Clock, Phone, Star, Users, Share2, Navigation,
   ExternalLink, Heart, Calendar, Globe, Wifi, CreditCard, Car,
-  Music, Volume2, Utensils, Coffee, Wine, ShoppingBag
+  Music, Volume2, Utensils, Coffee, Wine, ShoppingBag, ChevronDown
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useVenues } from '../../hooks/useVenues';
@@ -11,12 +11,13 @@ import FollowButton from '../Follow/FollowButton';
 import FollowStats from '../Follow/FollowStats';
 import { getCrowdLabel, getCrowdColor, openGoogleMaps, getDirections } from '../../utils/helpers';
 
-const VenueDetailsView = ({ onBack, onShare }) => {
+const VenueDetailsView = ({ onBack }) => {
   const { state, actions } = useApp();
   const { selectedVenue: venue } = state;
   const { isVenueFollowed } = useVenues();
   const [activeTab, setActiveTab] = useState('overview');
   const [showAllReviews, setShowAllReviews] = useState(false);
+  const [showAllAmenities, setShowAllAmenities] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -24,11 +25,10 @@ const VenueDetailsView = ({ onBack, onShare }) => {
 
   if (!venue) {
     return (
-      <div className="venue-details-view">
-        <div className="details-header">
-          <button onClick={onBack} className="back-button">
+      <div className="mobile-venue-details">
+        <div className="mobile-details-header">
+          <button onClick={onBack} className="mobile-back-button">
             <ArrowLeft className="w-5 h-5" />
-            <span>Back</span>
           </button>
           <h2>Venue Not Found</h2>
         </div>
@@ -37,7 +37,7 @@ const VenueDetailsView = ({ onBack, onShare }) => {
   }
 
   const isFollowed = isVenueFollowed(venue.id);
-  const displayedReviews = showAllReviews ? venue.reviews : venue.reviews?.slice(0, 3) || [];
+  const displayedReviews = showAllReviews ? venue.reviews : venue.reviews?.slice(0, 2) || [];
 
   const amenities = [
     { icon: Wifi, label: 'Free WiFi', available: true },
@@ -50,6 +50,8 @@ const VenueDetailsView = ({ onBack, onShare }) => {
     { icon: ShoppingBag, label: 'VIP Service', available: venue.vibe.includes('VIP') }
   ];
 
+  const displayedAmenities = showAllAmenities ? amenities : amenities.slice(0, 4);
+
   const handleShare = () => {
     actions.setShareVenue(venue);
     actions.setShowShareModal(true);
@@ -58,436 +60,269 @@ const VenueDetailsView = ({ onBack, onShare }) => {
   const handleRate = () => {
     actions.setSelectedVenue(venue);
     actions.setShowRatingModal(true);
-    actions.addNotification({
-      type: 'default',
-      message: `⭐ Opening rating form for ${venue.name}...`
-    });
   };
 
   const handleReport = () => {
     actions.setSelectedVenue(venue);
     actions.setShowReportModal(true);
-    actions.addNotification({
-      type: 'default',
-      message: `📊 Opening status report for ${venue.name}...`
-    });
-  };
-
-  const handleTabChange = (tabId) => {
-    setActiveTab(tabId);
-    actions.addNotification({
-      type: 'default',
-      message: `📑 Switched to ${tabId.charAt(0).toUpperCase() + tabId.slice(1)} tab`
-    });
   };
 
   const handleCall = () => {
     window.open(`tel:${venue.phone}`);
-    actions.addNotification({
-      type: 'success',
-      message: `📞 Calling ${venue.name}...`
-    });
   };
 
   const handleDirections = () => {
     getDirections(venue);
-    actions.addNotification({
-      type: 'success',
-      message: `🗺️ Opening directions to ${venue.name}...`
-    });
   };
 
   const handleMaps = () => {
     openGoogleMaps(venue);
-    actions.addNotification({
-      type: 'success',
-      message: `📍 Opening ${venue.name} on Google Maps...`
-    });
-  };
-
-  const renderStarBreakdown = () => {
-    const breakdown = venue.ratingBreakdown || {};
-    const total = venue.totalRatings || 1;
-
-    return (
-      <div className="rating-breakdown">
-        <h4>Rating Breakdown</h4>
-        {[5, 4, 3, 2, 1].map(rating => {
-          const count = breakdown[rating] || 0;
-          const percentage = (count / total) * 100;
-          return (
-            <div key={rating} className="rating-row">
-              <span className="rating-label">{rating} ⭐</span>
-              <div className="rating-bar">
-                <div
-                  className="rating-fill"
-                  style={{ width: `${percentage}%` }}
-                ></div>
-              </div>
-              <span className="rating-count">({count})</span>
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
-
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'overview':
-        return (
-          <div className="tab-content">
-            {/* Vibe Tags */}
-            <div className="section">
-              <h4>Vibe & Atmosphere</h4>
-              <div className="vibe-tags-large">
-                {venue.vibe.map((tag, index) => (
-                  <span key={index} className="vibe-tag">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Promotion */}
-            {venue.hasPromotion && (
-              <div className="section">
-                <div className="promotion-highlight">
-                  <div className="promotion-icon">🎉</div>
-                  <div className="promotion-content">
-                    <h4>Special Promotion</h4>
-                    <p>{venue.promotionText}</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Amenities */}
-            <div className="section">
-              <h4>Amenities & Features</h4>
-              <div className="amenities-grid">
-                {amenities.map((amenity, index) => (
-                  <div
-                    key={index}
-                    className={`amenity-item ${amenity.available ? 'available' : 'unavailable'}`}
-                  >
-                    <amenity.icon className="amenity-icon" />
-                    <span>{amenity.label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Quick Actions - Modal Triggers */}
-            <div className="section">
-              <div className="quick-actions">
-                <button
-                  className="action-button primary"
-                  onClick={handleRate}
-                >
-                  <Star className="w-4 h-4" />
-                  Rate & Review
-                </button>
-                <button
-                  className="action-button secondary"
-                  onClick={handleReport}
-                >
-                  <Users className="w-4 h-4" />
-                  Report Status
-                </button>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'reviews':
-        return (
-          <div className="tab-content">
-            {/* Rating Summary */}
-            <div className="section">
-              <div className="rating-summary">
-                <div className="rating-overview">
-                  <div className="rating-score">
-                    <span className="score">{venue.rating.toFixed(1)}</span>
-                    <div className="rating-stars">
-                      <StarRating rating={venue.rating} size="lg" />
-                    </div>
-                    <span className="rating-label">Based on {venue.totalRatings} reviews</span>
-                  </div>
-                  {renderStarBreakdown()}
-                </div>
-              </div>
-            </div>
-
-            {/* Reviews List */}
-            <div className="section">
-              <div className="reviews-header">
-                <h4>Customer Reviews</h4>
-                <button
-                  className="write-review-button"
-                  onClick={handleRate}
-                >
-                  Write a Review
-                </button>
-              </div>
-              <div className="reviews-list">
-                {displayedReviews.map((review) => (
-                  <div key={review.id} className="review-card">
-                    <div className="review-header">
-                      <div className="review-author">
-                        <div className="author-avatar">
-                          {review.user.charAt(0)}
-                        </div>
-                        <div className="author-info">
-                          <span className="author-name">{review.user}</span>
-                          <div className="review-meta">
-                            <StarRating rating={review.rating} size="sm" />
-                            <span className="review-date">{review.date}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="review-helpful">
-                        <button className="helpful-button">
-                          👍 {review.helpful}
-                        </button>
-                      </div>
-                    </div>
-                    <div className="review-content">
-                      <p>{review.comment}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {venue.reviews && venue.reviews.length > 3 && (
-                <div className="reviews-actions">
-                  <button
-                    className="show-more-reviews"
-                    onClick={() => setShowAllReviews(!showAllReviews)}
-                  >
-                    {showAllReviews ? 'Show Less' : `Show All ${venue.reviews.length} Reviews`}
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        );
-
-      case 'info':
-        return (
-          <div className="tab-content">
-            {/* Contact Information */}
-            <div className="section">
-              <h4>Contact & Location</h4>
-              <div className="contact-info">
-                <div className="contact-item">
-                  <MapPin className="contact-icon" />
-                  <div className="contact-details">
-                    <span className="contact-label">Address</span>
-                    <span className="contact-value">{venue.address}</span>
-                  </div>
-                  <button
-                    className="contact-action"
-                    onClick={handleMaps}
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="contact-item">
-                  <Phone className="contact-icon" />
-                  <div className="contact-details">
-                    <span className="contact-label">Phone</span>
-                    <span className="contact-value">{venue.phone}</span>
-                  </div>
-                  <button
-                    className="contact-action"
-                    onClick={handleCall}
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="contact-item">
-                  <Clock className="contact-icon" />
-                  <div className="contact-details">
-                    <span className="contact-label">Hours</span>
-                    <span className="contact-value">{venue.hours}</span>
-                  </div>
-                </div>
-                <div className="contact-item">
-                  <Globe className="contact-icon" />
-                  <div className="contact-details">
-                    <span className="contact-label">Website</span>
-                    <span className="contact-value">www.{venue.name.toLowerCase().replace(/\s+/g, '')}.com</span>
-                  </div>
-                  <button className="contact-action">
-                    <ExternalLink className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Navigation Actions */}
-            <div className="section">
-              <h4>Get Directions</h4>
-              <div className="navigation-actions">
-                <button
-                  className="nav-button maps"
-                  onClick={handleMaps}
-                >
-                  <MapPin className="w-5 h-5" />
-                  <div>
-                    <span className="nav-title">View on Maps</span>
-                    <span className="nav-subtitle">See location & nearby places</span>
-                  </div>
-                </button>
-                <button
-                  className="nav-button directions"
-                  onClick={handleDirections}
-                >
-                  <Navigation className="w-5 h-5" />
-                  <div>
-                    <span className="nav-title">Get Directions</span>
-                    <span className="nav-subtitle">Turn-by-turn navigation</span>
-                  </div>
-                </button>
-              </div>
-            </div>
-
-            {/* Venue Statistics */}
-            <div className="section">
-              <h4>Venue Statistics</h4>
-              <div className="venue-stats">
-                <div className="stat-card">
-                  <div className="stat-number">{venue.followersCount}</div>
-                  <div className="stat-label">Followers</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-number">{venue.reports}</div>
-                  <div className="stat-label">Reports</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-number">{venue.confidence}%</div>
-                  <div className="stat-label">Confidence</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-number">{venue.totalRatings}</div>
-                  <div className="stat-label">Reviews</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      default:
-        return null;
-    }
   };
 
   return (
-    <div className="venue-details-view">
-      {/* Header */}
-      <div className="details-header">
-        <button onClick={onBack} className="back-button">
+    <div className="mobile-venue-details">
+      {/* Mobile Header */}
+      <div className="mobile-details-header">
+        <button onClick={onBack} className="mobile-back-button">
           <ArrowLeft className="w-5 h-5" />
-          <span>Back</span>
         </button>
-        <div className="header-actions">
-          <FollowButton venue={venue} size="md" />
-          <button className="share-button-header" onClick={handleShare}>
-            <Share2 className="w-4 h-4" />
-            <span>Share</span>
-          </button>
+        <div className="mobile-header-title">
+          <h1 className="mobile-venue-title">{venue.name}</h1>
+          <p className="mobile-venue-subtitle">{venue.type}</p>
         </div>
+        <button className="mobile-share-button" onClick={handleShare}>
+          <Share2 className="w-5 h-5" />
+        </button>
       </div>
 
-      {/* Hero Section */}
-      <div className="details-hero">
-        <div className="hero-content">
-          <div className="venue-title-section">
-            <h1 className="venue-title">{venue.name}</h1>
-            <div className="venue-subtitle">
-              <span className="venue-type">{venue.type}</span>
-              <span className="venue-separator">•</span>
-              <span className="venue-address">{venue.address}</span>
+      {/* Mobile Hero Card */}
+      <div className="mobile-hero-card">
+        <div className="mobile-hero-content">
+          <div className="mobile-hero-rating">
+            <div className="mobile-rating-display">
+              <span className="mobile-rating-score">{venue.rating.toFixed(1)}</span>
+              <div className="mobile-rating-stars">
+                <StarRating rating={venue.rating} size="sm" />
+              </div>
             </div>
-            <div className="venue-rating-section">
-              <StarRating
-                rating={venue.rating}
-                size="lg"
-                showCount={true}
-                totalRatings={venue.totalRatings}
-              />
-            </div>
+            <span className="mobile-rating-count">({venue.totalRatings} reviews)</span>
+          </div>
+          
+          <div className="mobile-hero-address">
+            <MapPin className="mobile-address-icon" />
+            <span className="mobile-address-text">{venue.address}</span>
           </div>
         </div>
       </div>
 
-      {/* Status Cards */}
-      <div className="status-cards-section">
-        <div className="status-cards">
-          <div className="status-card crowd">
-            <div className="status-icon-wrapper">
-              <Users className="status-card-icon" />
-            </div>
-            <div className="status-info">
-              <span className="status-label">Crowd Level</span>
-              <span className={`status-value ${getCrowdColor(venue.crowdLevel).split(' ').pop()}`}>
-                {getCrowdLabel(venue.crowdLevel)}
+      {/* Mobile Status Cards */}
+      <div className="mobile-status-grid">
+        <div className={`mobile-status-card crowd ${getCrowdColor(venue.crowdLevel).split(' ')[0]}`}>
+          <Users className="mobile-status-card-icon" />
+          <div className="mobile-status-info">
+            <span className="mobile-status-label">Crowd</span>
+            <span className="mobile-status-value">{getCrowdLabel(venue.crowdLevel)}</span>
+          </div>
+        </div>
+        
+        <div className="mobile-status-card wait">
+          <Clock className="mobile-status-card-icon" />
+          <div className="mobile-status-info">
+            <span className="mobile-status-label">Wait</span>
+            <span className="mobile-status-value">
+              {venue.waitTime > 0 ? `${venue.waitTime}m` : 'None'}
+            </span>
+          </div>
+        </div>
+        
+        <div className="mobile-status-card followers">
+          <Heart className="mobile-status-card-icon" />
+          <div className="mobile-status-info">
+            <span className="mobile-status-label">Followers</span>
+            <span className="mobile-status-value">{venue.followersCount}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Action Bar */}
+      <div className="mobile-action-bar">
+        <button className="mobile-action-button call" onClick={handleCall}>
+          <Phone className="w-5 h-5" />
+          <span>Call</span>
+        </button>
+        <button className="mobile-action-button directions" onClick={handleDirections}>
+          <Navigation className="w-5 h-5" />
+          <span>Directions</span>
+        </button>
+        <FollowButton venue={venue} size="md" showText={true} />
+      </div>
+
+      {/* Mobile Promotion */}
+      {venue.hasPromotion && (
+        <div className="mobile-promotion-card">
+          <div className="mobile-promo-icon">🎉</div>
+          <div className="mobile-promo-content">
+            <h3 className="mobile-promo-title">Special Offer</h3>
+            <p className="mobile-promo-text">{venue.promotionText}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Content Sections */}
+      <div className="mobile-content-sections">
+        
+        {/* Vibe Section */}
+        <div className="mobile-content-section">
+          <h3 className="mobile-section-title">Vibe & Atmosphere</h3>
+          <div className="mobile-vibe-grid">
+            {venue.vibe.map((tag, index) => (
+              <span key={index} className="mobile-vibe-tag-large">
+                {tag}
               </span>
-              <span className="status-meta">Updated {venue.lastUpdate}</span>
-            </div>
-          </div>
-          <div className="status-card wait">
-            <div className="status-icon-wrapper">
-              <Clock className="status-card-icon" />
-            </div>
-            <div className="status-info">
-              <span className="status-label">Wait Time</span>
-              <span className="status-value">
-                {venue.waitTime > 0 ? `${venue.waitTime} min` : 'No wait'}
-              </span>
-              <span className="status-meta">{venue.confidence}% confidence</span>
-            </div>
-          </div>
-          <div className="status-card followers">
-            <div className="status-icon-wrapper">
-              <Heart className="status-card-icon" />
-            </div>
-            <div className="status-info">
-              <span className="status-label">Followers</span>
-              <span className="status-value">{venue.followersCount}</span>
-              <span className="status-meta">{isFollowed ? 'You follow this' : 'Join the community'}</span>
-            </div>
+            ))}
           </div>
         </div>
-      </div>
 
-      {/* Follow Stats */}
-      <FollowStats venue={venue} />
+        {/* Amenities Section */}
+        <div className="mobile-content-section">
+          <div className="mobile-section-header">
+            <h3 className="mobile-section-title">What's Available</h3>
+            {amenities.length > 4 && (
+              <button 
+                className="mobile-toggle-button"
+                onClick={() => setShowAllAmenities(!showAllAmenities)}
+              >
+                {showAllAmenities ? 'Show Less' : 'Show All'}
+                <ChevronDown className={`w-4 h-4 transition-transform ${showAllAmenities ? 'rotate-180' : ''}`} />
+              </button>
+            )}
+          </div>
+          
+          <div className="mobile-amenities-grid">
+            {displayedAmenities.map((amenity, index) => (
+              <div
+                key={index}
+                className={`mobile-amenity-item ${amenity.available ? 'available' : 'unavailable'}`}
+              >
+                <amenity.icon className="mobile-amenity-icon" />
+                <span className="mobile-amenity-label">{amenity.label}</span>
+                {amenity.available && <span className="mobile-amenity-check">✓</span>}
+              </div>
+            ))}
+          </div>
+        </div>
 
-      {/* Tab Navigation */}
-      <div className="tab-navigation">
-        <div className="tab-buttons">
-          {[
-            { id: 'overview', label: 'Overview' },
-            { id: 'reviews', label: 'Reviews', count: venue.reviews?.length },
-            { id: 'info', label: 'Info' }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              className={`tab-button ${activeTab === tab.id ? 'active' : ''}`}
-              onClick={() => handleTabChange(tab.id)}
+        {/* Reviews Section */}
+        <div className="mobile-content-section">
+          <div className="mobile-section-header">
+            <h3 className="mobile-section-title">What People Say</h3>
+            <button 
+              className="mobile-write-review"
+              onClick={handleRate}
             >
-              {tab.label}
-              {tab.count && <span className="tab-count">({tab.count})</span>}
+              Write Review
             </button>
-          ))}
+          </div>
+
+          <div className="mobile-reviews-summary">
+            <div className="mobile-review-score">
+              <span className="mobile-score-large">{venue.rating.toFixed(1)}</span>
+              <div className="mobile-score-stars">
+                <StarRating rating={venue.rating} size="md" />
+              </div>
+              <span className="mobile-score-text">Based on {venue.totalRatings} reviews</span>
+            </div>
+          </div>
+
+          <div className="mobile-reviews-list">
+            {displayedReviews.map((review) => (
+              <div key={review.id} className="mobile-review-card">
+                <div className="mobile-review-header">
+                  <div className="mobile-reviewer">
+                    <div className="mobile-reviewer-avatar">
+                      {review.user.charAt(0)}
+                    </div>
+                    <div className="mobile-reviewer-info">
+                      <span className="mobile-reviewer-name">{review.user}</span>
+                      <div className="mobile-review-meta">
+                        <StarRating rating={review.rating} size="sm" />
+                        <span className="mobile-review-date">{review.date}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <p className="mobile-review-text">{review.comment}</p>
+                <button className="mobile-helpful-button">
+                  👍 Helpful ({review.helpful})
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {venue.reviews && venue.reviews.length > 2 && (
+            <button
+              className="mobile-show-more-reviews"
+              onClick={() => setShowAllReviews(!showAllReviews)}
+            >
+              {showAllReviews ? 'Show Less Reviews' : `Show All ${venue.reviews.length} Reviews`}
+            </button>
+          )}
+        </div>
+
+        {/* Contact Section */}
+        <div className="mobile-content-section">
+          <h3 className="mobile-section-title">Contact & Hours</h3>
+          
+          <div className="mobile-contact-grid">
+            <div className="mobile-contact-item">
+              <Phone className="mobile-contact-icon" />
+              <div className="mobile-contact-info">
+                <span className="mobile-contact-label">Phone</span>
+                <span className="mobile-contact-value">{venue.phone}</span>
+              </div>
+              <button className="mobile-contact-action" onClick={handleCall}>
+                Call
+              </button>
+            </div>
+            
+            <div className="mobile-contact-item">
+              <Clock className="mobile-contact-icon" />
+              <div className="mobile-contact-info">
+                <span className="mobile-contact-label">Hours</span>
+                <span className="mobile-contact-value">{venue.hours}</span>
+              </div>
+            </div>
+            
+            <div className="mobile-contact-item">
+              <Globe className="mobile-contact-icon" />
+              <div className="mobile-contact-info">
+                <span className="mobile-contact-label">Website</span>
+                <span className="mobile-contact-value">Visit Website</span>
+              </div>
+              <button className="mobile-contact-action">
+                View
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Section */}
+        <div className="mobile-content-section">
+          <div className="mobile-action-grid">
+            <button className="mobile-action-card primary" onClick={handleRate}>
+              <Star className="mobile-action-icon" />
+              <span className="mobile-action-label">Rate & Review</span>
+            </button>
+            <button className="mobile-action-card secondary" onClick={handleReport}>
+              <Users className="mobile-action-icon" />
+              <span className="mobile-action-label">Report Status</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Tab Content */}
-      <div className="tab-content-wrapper">
-        {renderTabContent()}
-      </div>
+      {/* Mobile Bottom Padding */}
+      <div className="mobile-bottom-padding"></div>
     </div>
   );
 };

@@ -3,12 +3,10 @@ export const useAI = () => {
     // Placeholder for AI recommendations
     return [];
   };
-
   const getPersonalizedVenues = (userHistory) => {
     // Placeholder for personalized venue suggestions
     return [];
   };
-
   return {
     getRecommendations,
     getPersonalizedVenues

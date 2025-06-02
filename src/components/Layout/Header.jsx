@@ -1,7 +1,6 @@
 import React from 'react';
 import UserProfile from '../User/UserProfile';
 import SearchBar from './SearchBar';
-
 const Header = ({ searchQuery, setSearchQuery, onClearSearch }) => {
   return (
     <div className="header-frame">
@@ -26,5 +25,4 @@ const Header = ({ searchQuery, setSearchQuery, onClearSearch }) => {
     </div>
   );
 };
-
 export default Header;

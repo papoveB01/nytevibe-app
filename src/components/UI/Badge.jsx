@@ -1,11 +1,10 @@
 import React from 'react';
-
-const Badge = ({ 
-  children, 
-  variant = 'primary', 
+const Badge = ({
+  children,
+  variant = 'primary',
   size = 'md',
   className = '',
-  ...props 
+  ...props
 }) => {
   const baseClasses = 'badge';
   const variantClasses = {
@@ -14,18 +13,15 @@ const Badge = ({
     warning: 'badge-yellow',
     danger: 'badge-red'
   };
-
   const classes = [
     baseClasses,
     variantClasses[variant],
     className
   ].filter(Boolean).join(' ');
-
   return (
     <span className={classes} {...props}>
       {children}
     </span>
   );
 };
-
 export default Badge;

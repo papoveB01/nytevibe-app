@@ -1,0 +1,145 @@
+import React, { useState, useEffect } from 'react';
+import { AppProvider, useApp } from './context/AppContext';
+import { useVenues } from './hooks/useVenues';
+
+// Views
+import LandingView from './components/Views/LandingView';
+import LoginView from './components/Views/LoginView';
+import HomeView from './components/Views/HomeView';
+import VenueDetailsView from './components/Views/VenueDetailsView';
+
+// Components
+import Header from './components/Header';
+import Notifications from './components/Notifications';
+
+// Modals
+import RatingModal from './components/Modals/RatingModal';
+import ReportModal from './components/Modals/ReportModal';
+import ShareModal from './components/Modals/ShareModal';
+import UserProfileModal from './components/User/UserProfileModal';
+
+import './App.css';
+
+function AppContent() {
+  const { state, actions } = useApp();
+  const { updateVenueData } = useVenues();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Update search query in context
+  useEffect(() => {
+    actions.setSearchQuery(searchQuery);
+  }, [searchQuery, actions]);
+
+  // Auto-update venue data periodically when authenticated
+  useEffect(() => {
+    if (state.isAuthenticated && !['landing', 'login'].includes(state.currentView)) {
+      const interval = setInterval(() => {
+        updateVenueData();
+      }, 45000); // Update every 45 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [updateVenueData, state.currentView, state.isAuthenticated]);
+
+  const handleSelectUserType = (userType) => {
+    actions.setUserType(userType);
+    
+    if (userType === 'user') {
+      // Users require authentication
+      actions.setCurrentView('login');
+    } else {
+      // Businesses bypass authentication for demo
+      actions.setCurrentView('home');
+      actions.addNotification({
+        type: 'success',
+        message: '🏢 Welcome to nYtevibe Business! Start showcasing your venue.',
+        duration: 4000
+      });
+    }
+  };
+
+  const handleLogin = (userData) => {
+    actions.loginUser(userData);
+    actions.addNotification({
+      type: 'success',
+      message: `🎉 Welcome back, ${userData.firstName}! Start discovering Houston's best nightlife.`,
+      duration: 4000
+    });
+  };
+
+  const handleBackToLanding = () => {
+    actions.setCurrentView('landing');
+    actions.setUserType(null);
+  };
+
+  const handleVenueSelect = (venue) => {
+    actions.setSelectedVenue(venue);
+    actions.setCurrentView('details');
+  };
+
+  const handleBackToHome = () => {
+    actions.setCurrentView('home');
+    actions.setSelectedVenue(null);
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
+  };
+
+  // Determine if header should be shown
+  const showHeader = !['landing', 'login'].includes(state.currentView);
+
+  return (
+    <div className="app">
+      {/* Header */}
+      {showHeader && (
+        <Header
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          onClearSearch={handleClearSearch}
+        />
+      )}
+
+      {/* Main Content */}
+      <main className="main-content">
+        {state.currentView === 'landing' && (
+          <LandingView onSelectUserType={handleSelectUserType} />
+        )}
+        
+        {state.currentView === 'login' && (
+          <LoginView
+            onBack={handleBackToLanding}
+            onLogin={handleLogin}
+          />
+        )}
+        
+        {state.currentView === 'home' && (
+          <HomeView onVenueSelect={handleVenueSelect} />
+        )}
+        
+        {state.currentView === 'details' && (
+          <VenueDetailsView onBack={handleBackToHome} />
+        )}
+      </main>
+
+      {/* Modals */}
+      <RatingModal />
+      <ReportModal />
+      <ShareModal />
+      <UserProfileModal />
+
+      {/* Notifications */}
+      <Notifications />
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <AppProvider>
+      <AppContent />
+    </AppProvider>
+  );
+}
+
+export default App;

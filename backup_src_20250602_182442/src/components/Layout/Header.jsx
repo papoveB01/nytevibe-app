@@ -1,0 +1,30 @@
+import React from 'react';
+import UserProfile from '../User/UserProfile';
+import SearchBar from './SearchBar';
+
+const Header = ({ searchQuery, setSearchQuery, onClearSearch }) => {
+  return (
+    <div className="header-frame">
+      <div className="header-content">
+        <div className="header-top">
+          <div className="header-left">
+            <h1 className="app-title">nYtevibe</h1>
+            <p className="app-subtitle">Houston Nightlife Discovery</p>
+          </div>
+          <div className="header-right">
+            <UserProfile />
+          </div>
+        </div>
+        <div className="header-bottom">
+          <SearchBar
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            onClearSearch={onClearSearch}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Header;

@@ -1,0 +1,141 @@
+import React from 'react';
+import { AppProvider, useApp } from './context/AppContext';
+import Header from './components/Layout/Header';
+import HomeView from './components/Views/HomeView';
+import VenueDetailsView from './components/Views/VenueDetailsView';
+import LoginLandingView from './components/Views/LoginLandingView';
+import ShareModal from './components/Social/ShareModal';
+import RatingModal from './components/Venue/RatingModal';
+import ReportModal from './components/Venue/ReportModal';
+import UserProfileModal from './components/User/UserProfileModal';
+import './App.css';
+
+function AppContent() {
+  const { state, actions } = useApp();
+
+  // Handle login
+  const handleLogin = (userData) => {
+    actions.loginUser(userData);
+    actions.addNotification({
+      type: 'success',
+      message: `🎉 Welcome back, ${userData.firstName}! Ready to discover Houston's best nightlife?`,
+      duration: 4000
+    });
+  };
+
+  // Handle forgot password
+  const handleForgotPassword = () => {
+    actions.addNotification({
+      type: 'info',
+      message: '📧 Password reset functionality coming soon! For now, use demo credentials.',
+      duration: 5000
+    });
+  };
+
+  // Handle navigate to register
+  const handleNavigateToRegister = () => {
+    actions.addNotification({
+      type: 'info',
+      message: '🚀 Registration feature coming soon! For now, use demo login to explore.',
+      duration: 5000
+    });
+  };
+
+  // Handle logout
+  const handleLogout = () => {
+    actions.logoutUser();
+    actions.addNotification({
+      type: 'default',
+      message: '👋 See you soon! Thanks for exploring nYtevibe.',
+      duration: 3000
+    });
+  };
+
+  // Handle back navigation
+  const handleBack = () => {
+    actions.setCurrentView('home');
+    actions.setSelectedVenue(null);
+  };
+
+  // Conditional rendering based on authentication and current view
+  const renderCurrentView = () => {
+    // If not authenticated, show login landing
+    if (!state.isAuthenticated) {
+      return (
+        <LoginLandingView
+          onLogin={handleLogin}
+          onForgotPassword={handleForgotPassword}
+          onNavigateToRegister={handleNavigateToRegister}
+        />
+      );
+    }
+
+    // If authenticated, show appropriate view
+    switch (state.currentView) {
+      case 'details':
+        return (
+          <VenueDetailsView
+            venue={state.selectedVenue}
+            onBack={handleBack}
+          />
+        );
+      case 'home':
+      default:
+        return <HomeView />;
+    }
+  };
+
+  return (
+    <div className="app">
+      {/* Header - only show when authenticated */}
+      {state.isAuthenticated && (
+        <Header onLogout={handleLogout} />
+      )}
+
+      {/* Main Content */}
+      <main className="main-content">
+        {renderCurrentView()}
+      </main>
+
+      {/* Modals - only show when authenticated */}
+      {state.isAuthenticated && (
+        <>
+          <ShareModal />
+          <RatingModal />
+          <ReportModal />
+          <UserProfileModal />
+        </>
+      )}
+
+      {/* Notifications */}
+      <div className="notification-container">
+        {state.notifications.map((notification) => (
+          <div
+            key={notification.id}
+            className={`notification ${notification.type || 'default'}`}
+          >
+            <div className="notification-content">
+              <span className="notification-message">{notification.message}</span>
+              <button
+                className="notification-close"
+                onClick={() => actions.removeNotification(notification.id)}
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <AppProvider>
+      <AppContent />
+    </AppProvider>
+  );
+}
+
+export default App;

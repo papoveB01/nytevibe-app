@@ -2,46 +2,40 @@ import React, { useState } from 'react';
 import { X, Star } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import Modal from '../UI/Modal';
-
 const RatingModal = () => {
   const { state, actions } = useApp();
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [hoveredRating, setHoveredRating] = useState(0);
-
   const handleSubmit = () => {
     if (rating > 0 && state.selectedVenue) {
       actions.rateVenue(state.selectedVenue.id, rating, comment);
       actions.addNotification({
         type: 'success',
-        message: `✅ Rating submitted! +5 points earned`
+        message: ` ✅  Rating submitted! +5 points earned`
       });
-      
       actions.setShowRatingModal(false);
       setRating(0);
       setComment('');
       setHoveredRating(0);
     }
   };
-
   const handleClose = () => {
     actions.setShowRatingModal(false);
     setRating(0);
     setComment('');
     setHoveredRating(0);
   };
-
   const getRatingLabel = (rating) => {
     const labels = {
       1: 'Poor',
-      2: 'Fair', 
+      2: 'Fair',
       3: 'Good',
       4: 'Very Good',
       5: 'Excellent'
     };
     return labels[rating] || '';
   };
-
   return (
     <Modal
       isOpen={state.showRatingModal}
@@ -56,7 +50,6 @@ const RatingModal = () => {
             {Array.from({ length: 5 }, (_, index) => {
               const starNumber = index + 1;
               const isActive = starNumber <= (hoveredRating || rating);
-
               return (
                 <Star
                   key={index}
@@ -75,7 +68,6 @@ const RatingModal = () => {
           )}
         </div>
       </div>
-
       <div className="comment-section">
         <label className="comment-label">
           Share Your Experience <span className="optional">(Optional)</span>
@@ -92,7 +84,6 @@ const RatingModal = () => {
           {comment.length}/500
         </div>
       </div>
-
       <div className="modal-actions">
         <button
           onClick={handleSubmit}
@@ -112,5 +103,4 @@ const RatingModal = () => {
     </Modal>
   );
 };
-
 export default RatingModal;
