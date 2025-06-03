@@ -1,0 +1,119 @@
+/**
+ * nYtevibe Registration API Service
+ * Handles all registration-related API calls
+ */
+
+const API_CONFIG = {
+    baseURL: 'https://system.nytevibe.com/api',
+    timeout: 30000,
+    headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+    }
+};
+
+class APIError extends Error {
+    constructor(errorData, status) {
+        super(errorData.message || 'API Error');
+        this.status = status;
+        this.errors = errorData.errors || {};
+        this.code = errorData.code;
+        this.retryAfter = errorData.retry_after;
+    }
+}
+
+class RegistrationAPI {
+    constructor() {
+        this.baseURL = API_CONFIG.baseURL;
+    }
+
+    async register(userData) {
+        try {
+            const response = await fetch(`${this.baseURL}/auth/register`, {
+                method: 'POST',
+                headers: {
+                    ...API_CONFIG.headers,
+                    'Origin': 'https://blackaxl.com'
+                },
+                body: JSON.stringify(userData),
+                credentials: 'include'
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new APIError(data, response.status);
+            }
+
+            return data;
+        } catch (error) {
+            if (error instanceof APIError) {
+                throw error;
+            }
+            
+            // Network or other errors
+            throw new APIError({
+                message: 'Network error. Please check your connection.',
+                code: 'NETWORK_ERROR'
+            }, 0);
+        }
+    }
+
+    async checkUsernameAvailability(username) {
+        try {
+            const response = await fetch(`${this.baseURL}/auth/check-username`, {
+                method: 'POST',
+                headers: API_CONFIG.headers,
+                body: JSON.stringify({ username })
+            });
+
+            const data = await response.json();
+            return data.available || false;
+        } catch (error) {
+            // If check fails, assume available to not block user
+            return true;
+        }
+    }
+
+    async checkEmailAvailability(email) {
+        try {
+            const response = await fetch(`${this.baseURL}/auth/check-email`, {
+                method: 'POST',
+                headers: API_CONFIG.headers,
+                body: JSON.stringify({ email })
+            });
+
+            const data = await response.json();
+            return data.available || false;
+        } catch (error) {
+            // If check fails, assume available to not block user
+            return true;
+        }
+    }
+
+    // Placeholder for future country API call
+    async getCountries() {
+        // TODO: Implement when backend endpoint is ready
+        // try {
+        //     const response = await fetch(`${this.baseURL}/locations/countries`, {
+        //         method: 'GET',
+        //         headers: API_CONFIG.headers
+        //     });
+        //     const data = await response.json();
+        //     return data.countries || [];
+        // } catch (error) {
+        //     console.warn('Failed to load countries from API:', error);
+        //     return [];
+        // }
+        
+        // Return hardcoded US and Canada for now
+        return [
+            { code: 'US', name: 'United States' },
+            { code: 'CA', name: 'Canada' }
+        ];
+    }
+}
+
+export default new RegistrationAPI();
+export { APIError };

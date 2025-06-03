@@ -1,0 +1,210 @@
+/**
+ * nYtevibe Registration API Service - CORS Preflight Fix
+ * Handles server 500 errors on OPTIONS requests
+ */
+
+const API_CONFIG = {
+    baseURL: 'https://system.nytevibe.com/api',
+    timeout: 30000,
+    headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+        // Removed X-Requested-With to avoid triggering preflight
+    }
+};
+
+class APIError extends Error {
+    constructor(errorData, status) {
+        super(errorData.message || 'API Error');
+        this.status = status;
+        this.errors = errorData.errors || {};
+        this.code = errorData.code;
+        this.retryAfter = errorData.retry_after;
+        
+        console.error('APIError created:', {
+            status: this.status,
+            message: this.message,
+            errors: this.errors,
+            code: this.code
+        });
+    }
+}
+
+class RegistrationAPI {
+    constructor() {
+        this.baseURL = API_CONFIG.baseURL;
+    }
+
+    // Test if the server is having issues
+    async testServerHealth() {
+        console.log('🏥 Testing server health...');
+        try {
+            // Try a simple GET request that shouldn't trigger preflight
+            const response = await fetch('https://system.nytevibe.com/', {
+                method: 'GET',
+                mode: 'no-cors' // Bypass CORS for health check
+            });
+            
+            console.log('🔍 Server health check completed');
+            return true;
+        } catch (error) {
+            console.error('❌ Server health check failed:', error);
+            return false;
+        }
+    }
+
+    // Test OPTIONS preflight specifically
+    async testCorsPrelight() {
+        console.log('🔍 Testing CORS preflight...');
+        try {
+            const response = await fetch(`${this.baseURL}/auth/register`, {
+                method: 'OPTIONS',
+                headers: {
+                    'Origin': window.location.origin,
+                    'Access-Control-Request-Method': 'POST',
+                    'Access-Control-Request-Headers': 'Content-Type'
+                }
+            });
+            
+            console.log('✅ CORS preflight test result:', {
+                status: response.status,
+                statusText: response.statusText,
+                headers: Object.fromEntries(response.headers.entries())
+            });
+            
+            return response.ok;
+        } catch (error) {
+            console.error('❌ CORS preflight test failed:', error);
+            return false;
+        }
+    }
+
+    // Alternative registration method for CORS issues
+    async registerWithCorsWorkaround(userData) {
+        console.log('🔄 Attempting registration with CORS workaround...');
+        
+        // Try with minimal headers to avoid preflight
+        try {
+            const response = await fetch(`${this.baseURL}/auth/register`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'text/plain' // Use text/plain to avoid preflight
+                },
+                body: JSON.stringify(userData)
+            });
+            
+            console.log('📡 CORS workaround response:', {
+                status: response.status,
+                statusText: response.statusText
+            });
+            
+            const data = await response.json();
+            return { response, data };
+            
+        } catch (error) {
+            console.error('💥 CORS workaround failed:', error);
+            throw error;
+        }
+    }
+
+    async register(userData) {
+        console.log('🚀 Starting registration with CORS handling...');
+        console.log('📤 Registration data:', userData);
+        
+        // Test server health first
+        const serverHealthy = await this.testServerHealth();
+        if (!serverHealthy) {
+            console.warn('⚠️ Server health check indicates issues');
+        }
+        
+        // Test CORS preflight
+        const corsOk = await this.testCorsPrelight();
+        if (!corsOk) {
+            console.warn('⚠️ CORS preflight test failed - server may be returning 500 on OPTIONS');
+        }
+        
+        try {
+            // Try standard registration first
+            console.log('🔄 Attempting standard registration...');
+            const response = await fetch(`${this.baseURL}/auth/register`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                    // Removed Origin header - let browser handle it
+                },
+                body: JSON.stringify(userData),
+                credentials: 'include'
+            });
+
+            console.log('📡 Standard registration response:', {
+                status: response.status,
+                statusText: response.statusText,
+                headers: Object.fromEntries(response.headers.entries())
+            });
+
+            const data = await response.json();
+            console.log('📥 Response data:', data);
+
+            if (!response.ok) {
+                console.error('❌ Registration failed with status:', response.status);
+                throw new APIError(data, response.status);
+            }
+
+            console.log('✅ Registration successful!');
+            return data;
+            
+        } catch (error) {
+            console.error('💥 Standard registration failed:', error);
+            
+            // Check if this is a CORS error
+            if (error.message && error.message.includes('CORS')) {
+                console.log('🔄 Detected CORS error, trying workaround...');
+                
+                try {
+                    const { response, data } = await this.registerWithCorsWorkaround(userData);
+                    
+                    if (!response.ok) {
+                        throw new APIError(data, response.status);
+                    }
+                    
+                    console.log('✅ CORS workaround successful!');
+                    return data;
+                    
+                } catch (workaroundError) {
+                    console.error('💥 CORS workaround also failed:', workaroundError);
+                    
+                    // Create specific CORS error
+                    throw new APIError({
+                        message: 'Server is experiencing issues with CORS configuration. This is a server-side problem that needs to be fixed.',
+                        code: 'CORS_SERVER_ERROR',
+                        details: 'The server is returning 500 errors on OPTIONS preflight requests, which prevents registration from working in browsers.'
+                    }, 0);
+                }
+            }
+            
+            // Handle other errors
+            if (error instanceof APIError) {
+                throw error;
+            }
+            
+            // Create generic network error
+            throw new APIError({
+                message: 'Unable to connect to registration server. The server may be experiencing issues.',
+                code: 'SERVER_ERROR',
+                originalError: error.message
+            }, 0);
+        }
+    }
+
+    // Placeholder for future country API call
+    async getCountries() {
+        return [
+            { code: 'US', name: 'United States' },
+            { code: 'CA', name: 'Canada' }
+        ];
+    }
+}
+
+export default new RegistrationAPI();
+export { APIError };

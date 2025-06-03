@@ -1,0 +1,111 @@
+/**
+ * nYtevibe Registration API Service (No Real-time Availability Checking)
+ * Handles registration-related API calls
+ */
+
+const API_CONFIG = {
+    baseURL: 'https://system.nytevibe.com/api',
+    timeout: 30000,
+    headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+    }
+};
+
+class APIError extends Error {
+    constructor(errorData, status) {
+        super(errorData.message || 'API Error');
+        this.status = status;
+        this.errors = errorData.errors || {};
+        this.code = errorData.code;
+        this.retryAfter = errorData.retry_after;
+        
+        // Enhanced debugging
+        console.error('APIError created:', {
+            status: this.status,
+            message: this.message,
+            errors: this.errors,
+            code: this.code
+        });
+    }
+}
+
+class RegistrationAPI {
+    constructor() {
+        this.baseURL = API_CONFIG.baseURL;
+    }
+
+    async register(userData) {
+        console.log('🚀 Registration API Call Started');
+        console.log('📤 Sending data:', userData);
+        
+        try {
+            const response = await fetch(`${this.baseURL}/auth/register`, {
+                method: 'POST',
+                headers: {
+                    ...API_CONFIG.headers,
+                    'Origin': 'https://blackaxl.com'
+                },
+                body: JSON.stringify(userData),
+                credentials: 'include'
+            });
+
+            console.log('📡 Response Status:', response.status);
+            console.log('📡 Response Headers:', Object.fromEntries(response.headers.entries()));
+
+            const data = await response.json();
+            console.log('📥 Response Data:', data);
+
+            if (!response.ok) {
+                console.error('❌ Registration failed with status:', response.status);
+                throw new APIError(data, response.status);
+            }
+
+            console.log('✅ Registration successful');
+            return data;
+        } catch (error) {
+            console.error('💥 Registration error caught:', error);
+            
+            if (error instanceof APIError) {
+                throw error;
+            }
+            
+            // Network or other errors
+            const networkError = new APIError({
+                message: 'Network error. Please check your connection.',
+                code: 'NETWORK_ERROR'
+            }, 0);
+            
+            throw networkError;
+        }
+    }
+
+    // Removed availability checking methods since endpoints don't exist
+    // Username and email conflicts will be handled during registration
+
+    // Placeholder for future country API call
+    async getCountries() {
+        // TODO: Implement when backend endpoint is ready
+        // try {
+        //     const response = await fetch(`${this.baseURL}/locations/countries`, {
+        //         method: 'GET',
+        //         headers: API_CONFIG.headers
+        //     });
+        //     const data = await response.json();
+        //     return data.countries || [];
+        // } catch (error) {
+        //     console.warn('Failed to load countries from API:', error);
+        //     return [];
+        // }
+        
+        // Return hardcoded US and Canada for now
+        return [
+            { code: 'US', name: 'United States' },
+            { code: 'CA', name: 'Canada' }
+        ];
+    }
+}
+
+export default new RegistrationAPI();
+export { APIError };
