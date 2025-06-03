@@ -1,3 +1,57 @@
+#!/bin/bash
+
+# Fix User Data Storage Issue
+echo "======================================================="
+echo "    FIXING USER DATA STORAGE ISSUE"
+echo "======================================================="
+
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+BACKUP_DIR="./user_storage_fix_backup_$TIMESTAMP"
+mkdir -p "$BACKUP_DIR"
+
+echo "Issue found: Auth token exists but user data is null"
+echo "This means user data isn't being stored properly after login"
+echo ""
+
+log_change() {
+    echo "✅ $1"
+}
+
+log_error() {
+    echo "❌ $1"
+}
+
+echo ">>> STEP 1: CHECK CURRENT LOGINVIEW USER STORAGE"
+echo "----------------------------------------"
+
+if [ -f "src/components/Views/LoginView.jsx" ]; then
+    cp "src/components/Views/LoginView.jsx" "$BACKUP_DIR/"
+    
+    echo "Current user storage logic in LoginView:"
+    grep -n -A5 -B2 "localStorage.setItem.*user\|actions.loginUser" src/components/Views/LoginView.jsx
+    echo ""
+else
+    log_error "LoginView.jsx not found"
+fi
+
+echo ">>> STEP 2: CHECK APPCONTEXT USER HANDLING"
+echo "----------------------------------------"
+
+if [ -f "src/context/AppContext.jsx" ]; then
+    cp "src/context/AppContext.jsx" "$BACKUP_DIR/"
+    
+    echo "Current user handling in AppContext:"
+    grep -n -A10 -B5 "loginUser\|user.*localStorage" src/context/AppContext.jsx || echo "No user localStorage handling found"
+    echo ""
+else
+    log_error "AppContext.jsx not found"
+fi
+
+echo ">>> STEP 3: CREATE FIXED LOGINVIEW"
+echo "----------------------------------------"
+
+# Create a fixed version of LoginView with proper user storage
+cat > src/components/Views/LoginView.fixed.jsx << 'EOF'
 import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff, User, Lock, Zap, Star, Clock, Users, MapPin, Mail, RefreshCw } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
@@ -363,3 +417,125 @@ const LoginView = ({ onRegister }) => {
 };
 
 export default LoginView;
+EOF
+
+log_change "Created fixed LoginView with proper user data storage"
+
+echo ""
+echo ">>> STEP 4: APPLY THE FIXES"
+echo "----------------------------------------"
+
+# Replace the current LoginView with the fixed version
+if [ -f "src/components/Views/LoginView.jsx" ]; then
+    mv src/components/Views/LoginView.jsx "$BACKUP_DIR/LoginView.jsx.broken"
+    mv src/components/Views/LoginView.fixed.jsx src/components/Views/LoginView.jsx
+    log_change "Applied fixed LoginView with proper user storage"
+else
+    log_error "LoginView.jsx not found!"
+fi
+
+echo ""
+echo ">>> STEP 5: CREATE BROWSER TEST SCRIPT"
+echo "----------------------------------------"
+
+cat > test_user_storage.js << 'EOF'
+// Test user data storage - Run this in browser console after login
+
+console.log('=== TESTING USER DATA STORAGE ===');
+
+// Clear existing data first
+localStorage.removeItem('user');
+localStorage.removeItem('auth_token');
+console.log('Cleared existing localStorage');
+
+// Test the storage mechanism
+const testUser = {
+  id: 1973559,
+  username: "bombardier",
+  email: "iammrpwinner01@gmail.com",
+  first_name: "Papove",
+  last_name: "Bombando",
+  user_type: "user"
+};
+
+const testToken = "test_token_12345";
+
+// Store test data
+localStorage.setItem('auth_token', testToken);
+localStorage.setItem('user', JSON.stringify(testUser));
+
+console.log('Stored test data:');
+console.log('Token:', localStorage.getItem('auth_token'));
+console.log('User:', localStorage.getItem('user'));
+console.log('User parsed:', JSON.parse(localStorage.getItem('user')));
+
+// Test if the issue is resolved
+console.log('=== STORAGE TEST COMPLETE ===');
+console.log('Now try refreshing the page to see if the white screen is gone');
+EOF
+
+log_change "Created user storage test script: test_user_storage.js"
+
+echo ""
+echo ">>> STEP 6: WHAT WAS FIXED"
+echo "----------------------------------------"
+
+echo "🔧 FIXED ISSUES:"
+echo "1. ✅ Added explicit localStorage.setItem('user', JSON.stringify(userData))"
+echo "2. ✅ Fixed email verification field check (email_verified_at)"
+echo "3. ✅ Added debug logging to see what's being stored"
+echo "4. ✅ Ensured user data is stored before calling actions.loginUser()"
+echo ""
+
+echo "🎯 THE PROBLEM WAS:"
+echo "- Login was storing the token but NOT the user data in localStorage"
+echo "- App initialization was trying to read null user data"
+echo "- This caused undefined errors when accessing user properties"
+echo ""
+
+echo ">>> IMMEDIATE ACTIONS"
+echo "----------------------------------------"
+
+echo "1. Clear localStorage completely:"
+echo "   - Open browser console"
+echo "   - Run: localStorage.clear()"
+echo ""
+
+echo "2. Restart dev server:"
+echo "   npm run dev"
+echo ""
+
+echo "3. Clear browser cache:"
+echo "   Ctrl+Shift+R (or Cmd+Shift+R)"
+echo ""
+
+echo "4. Try login again - user data should now be stored"
+echo ""
+
+echo "5. Verify fix by checking console after login:"
+echo "   - Should see debug logs showing user data being stored"
+echo "   - localStorage.getItem('user') should return user data"
+echo ""
+
+echo ">>> IF STILL HAVING ISSUES"
+echo "----------------------------------------"
+
+echo "Run this in browser console to test storage:"
+echo "localStorage.clear(); // Clear everything first"
+echo "// Then try login again"
+echo ""
+
+echo "Or manually test storage with test_user_storage.js script"
+
+echo ""
+echo "======================================================="
+echo "🎯 USER DATA STORAGE SHOULD NOW WORK!"
+echo "======================================================="
+echo "The fixed LoginView will:"
+echo "✅ Store user data properly in localStorage"
+echo "✅ Pass user data to context"
+echo "✅ Show debug logs of what's being stored"
+echo "✅ Handle both demo and real user login"
+echo ""
+echo "This should resolve the white screen error!"
+echo "======================================================="
