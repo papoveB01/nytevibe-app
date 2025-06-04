@@ -1,5 +1,3 @@
-import ForgotPasswordView from "../components/Views/ForgotPasswordView";
-import ResetPasswordView from "../components/Views/ResetPasswordView";
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';

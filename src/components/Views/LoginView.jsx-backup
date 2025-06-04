@@ -236,17 +236,6 @@ const LoginView = ({ onRegister, onForgotPassword }) => {
               </div>
             </div>
 
-            {/* NEW: Forgot Password Link */}
-            <div className="forgot-password-section">
-              <button
-                type="button"
-                onClick={onForgotPassword}
-                className="forgot-password-link"
-              >
-                Forgot your password?
-              </button>
-            </div>
-
             <button
               type="submit"
               disabled={isLoading}
