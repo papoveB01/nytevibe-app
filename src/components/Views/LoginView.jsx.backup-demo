@@ -13,6 +13,11 @@ const LoginView = ({ onRegister }) => {
   const [canResendVerification, setCanResendVerification] = useState(true);
   const [resendCooldown, setResendCooldown] = useState(0);
 
+  const demoCredentials = {
+    username: 'demouser',
+    password: 'demopass'
+  };
+
   // Handle verification message from registration
   const verificationMessage = state.verificationMessage;
 
@@ -34,12 +39,51 @@ const LoginView = ({ onRegister }) => {
     }
   }, [username, password, verificationMessage, actions]);
 
+  const fillDemoCredentials = () => {
+    setUsername(demoCredentials.username);
+    setPassword(demoCredentials.password);
+    setError('');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
 
     try {
+      // Check if demo credentials
+      if (username === demoCredentials.username && password === demoCredentials.password) {
+        // Demo login (unchanged)
+        setTimeout(() => {
+          const demoUser = {
+            id: 'usr_demo',
+            username: username,
+            firstName: 'Demo',
+            lastName: 'User',
+            email: 'demo@nytevibe.com',
+            level: 5,
+            points: 1250,
+            user_type: 'user',
+            email_verified: true
+          };
+
+          // Store demo user data properly
+          localStorage.setItem('user', JSON.stringify(demoUser));
+          localStorage.setItem('auth_token', 'demo_token_12345');
+
+          actions.loginUser(demoUser);
+
+          actions.addNotification({
+            type: 'success',
+            message: `🎉 Welcome back, Demo!`,
+            important: true,
+            duration: 3000
+          });
+          setIsLoading(false);
+        }, 1000);
+        return;
+      }
+
       // Real API login
       console.log('=== LOGIN DEBUG ===');
       console.log('Attempting login for:', username);
@@ -188,6 +232,24 @@ const LoginView = ({ onRegister }) => {
               )}
             </div>
           )}
+
+          <div className="demo-banner">
+            <div className="demo-content">
+              <div className="demo-info">
+                <h4 className="demo-title">Demo Account Available</h4>
+                <p className="demo-description">
+                  Try nYtevibe with our demo account. Click below to auto-fill credentials.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={fillDemoCredentials}
+                className="demo-fill-button"
+              >
+                Fill Demo
+              </button>
+            </div>
+          </div>
 
           <form onSubmit={handleSubmit} className="login-form">
             {error && (
