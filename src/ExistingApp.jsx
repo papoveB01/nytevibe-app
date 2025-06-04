@@ -1,0 +1,237 @@
+import React, { useState, useEffect } from 'react';
+import { useApp } from './context/AppContext';
+import { useVenues } from './hooks/useVenues';
+
+// Views
+import LoginView from './components/Views/LoginView';
+import HomeView from './components/Views/HomeView';
+import VenueDetailsView from './components/Views/VenueDetailsView';
+import RegistrationView from './components/Registration/RegistrationView';
+import EmailVerificationView from './components/Auth/EmailVerificationView';
+
+// Components
+import Header from './components/Header';
+import Notifications from './components/Notifications';
+
+// Modals
+import RatingModal from './components/Modals/RatingModal';
+import ReportModal from './components/Modals/ReportModal';
+import ShareModal from './components/Modals/ShareModal';
+import UserProfileModal from './components/User/UserProfileModal';
+
+import './App.css';
+
+function AppContent() {
+  const { state, actions } = useApp();
+  const { updateVenueData } = useVenues();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
+  const [verificationData, setVerificationData] = useState({ token: null, email: null });
+
+  // Defensive check for state
+  if (!state) {
+    console.error('App state is undefined');
+    return <div>Loading...</div>;
+  }
+
+  // Ensure currentView has a default value
+  const currentView = state.currentView || "login" || 'login';
+  const isAuthenticated = state.isAuthenticated || false;
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth <= 768 ||
+        /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      setIsMobile(mobile);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Handle email verification from URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const verificationToken = urlParams.get('token');
+    const verifyEmail = urlParams.get('verify');
+
+    if (verificationToken && verifyEmail && actions) {
+      setVerificationData({ token: verificationToken, email: urlParams.get("email") || localStorage.getItem("pending_verification_email") });
+      actions.setCurrentView('email-verification');
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [actions]);
+
+  // Update search query in context
+  useEffect(() => {
+    if (actions && actions.setSearchQuery) {
+      actions.setSearchQuery(searchQuery);
+    }
+  }, [searchQuery, actions]);
+
+  // Auto-update venue data periodically when authenticated
+useEffect(() => { 
+// Extra safety checks for React re-render race conditions 
+if (!currentView || !isAuthenticated || !updateVenueData) { 
+return; 
+} 
+const authViews = ['login', 'register', 'email-verification'];
+ // Verify authViews is array and currentView is string before using .includes() 
+if (!Array.isArray(authViews) || typeof currentView !== 'string') {
+ return; 
+}
+ if (isAuthenticated && !authViews.includes(currentView)) {      const interval = setInterval(() => {
+        updateVenueData();
+      }, 45000);
+
+      return () => clearInterval(interval);
+    }
+  }, [updateVenueData, currentView, isAuthenticated]);
+
+  // Initialize app to login view if not authenticated
+useEffect(() => {
+  // Extra safety checks for React re-render race conditions
+  if (!currentView || !actions || !actions.setCurrentView) {
+    return;
+  }
+  
+  const authViews = ['login', 'register', 'email-verification'];
+  
+  // Verify all variables before using .includes()
+  if (!Array.isArray(authViews) || typeof currentView !== 'string') {
+    return;
+  }
+  
+  if (!isAuthenticated && !authViews.includes(currentView) && actions) {      actions.setCurrentView('login');
+    }
+  }, [isAuthenticated, currentView, actions]);
+
+  const handleShowRegistration = () => {
+    if (actions) actions.setCurrentView('register');
+  };
+
+  const handleBackToLogin = () => {
+    if (actions) actions.setCurrentView('login');
+  };
+
+  const handleRegistrationSuccess = (userData) => {
+    // Registration success should redirect to login with verification message
+    if (actions) actions.setCurrentView('login');
+  };
+
+  const handleEmailVerificationSuccess = () => {
+    if (actions) {
+      actions.setCurrentView('login');
+      actions.clearVerificationMessage();
+    }
+  };
+
+  const handleVenueSelect = (venue) => {
+    if (actions) {
+      actions.setSelectedVenue(venue);
+      actions.setCurrentView('details');
+    }
+  };
+
+  const handleBackToHome = () => {
+    if (actions) {
+      actions.setCurrentView('home');
+      actions.setSelectedVenue(null);
+    }
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
+  };
+
+  // Get verification token and email from URL or localStorage
+  const getVerificationData = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    const email = urlParams.get('email') || localStorage.getItem('pending_verification_email');
+    return { token, email };
+  };
+
+  // Determine if header should be shown (not on login, register, or verification pages)
+  const authViews = ['login', 'register', 'email-verification'];
+
+// Safe header visibility calculation with type validation
+let showHeader = false;
+if (Array.isArray(authViews) && typeof currentView === 'string') {
+  showHeader = !authViews.includes(currentView);
+}
+  // Debug logging
+  console.log('App Debug:', {
+    currentView,
+    isAuthenticated,
+    stateExists: !!state,
+    actionsExists: !!actions
+  });
+
+  return (
+    <div className={`app ${isMobile ? 'mobile' : 'desktop'}`}>
+      {/* Header */}
+      {showHeader && (
+        <Header
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          onClearSearch={handleClearSearch}
+          isMobile={isMobile}
+        />
+      )}
+
+      {/* Main Content */}
+      <main className={`main-content ${isMobile ? 'mobile-main' : ''}`}>
+        {currentView === 'login' && (
+          <LoginView onRegister={handleShowRegistration} />
+        )}
+
+        {currentView === 'register' && (
+          <RegistrationView
+            onBack={handleBackToLogin}
+            onSuccess={handleRegistrationSuccess}
+          />
+        )}
+
+        {currentView === 'email-verification' && (
+          <EmailVerificationView
+            onBack={handleBackToLogin}
+            onSuccess={handleEmailVerificationSuccess}
+            token={verificationData.token}
+            email={verificationData.email}
+          />
+        )}
+
+        {currentView === 'home' && (
+          <HomeView onVenueSelect={handleVenueSelect} />
+        )}
+
+        {currentView === 'details' && (
+          <VenueDetailsView onBack={handleBackToHome} />
+        )}
+      </main>
+
+      {/* Modals */}
+      <RatingModal />
+      <ReportModal />
+      <ShareModal />
+      <UserProfileModal />
+
+      {/* Notifications */}
+      <Notifications />
+    </div>
+  );
+}
+
+function App() {
+  return (
+    
+      <AppContent />
+    
+  );
+}
+
+export default App;
