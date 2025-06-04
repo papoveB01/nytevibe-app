@@ -71,17 +71,10 @@ function AppContent() {
   }, [searchQuery, actions]);
 
   // Auto-update venue data periodically when authenticated
-useEffect(() => { 
-// Extra safety checks for React re-render race conditions 
-if (!currentView || !isAuthenticated || !updateVenueData) { 
-return; 
-} 
-const authViews = ['login', 'register', 'email-verification'];
- // Verify authViews is array and currentView is string before using .includes() 
-if (!Array.isArray(authViews) || typeof currentView !== 'string') {
- return; 
-}
- if (isAuthenticated && !authViews.includes(currentView)) {      const interval = setInterval(() => {
+  useEffect(() => {
+    const authViews = ['login', 'register', 'email-verification'];
+    if (isAuthenticated && !authViews.includes(currentView)) {
+      const interval = setInterval(() => {
         updateVenueData();
       }, 45000);
 
@@ -90,20 +83,10 @@ if (!Array.isArray(authViews) || typeof currentView !== 'string') {
   }, [updateVenueData, currentView, isAuthenticated]);
 
   // Initialize app to login view if not authenticated
-useEffect(() => {
-  // Extra safety checks for React re-render race conditions
-  if (!currentView || !actions || !actions.setCurrentView) {
-    return;
-  }
-  
-  const authViews = ['login', 'register', 'email-verification'];
-  
-  // Verify all variables before using .includes()
-  if (!Array.isArray(authViews) || typeof currentView !== 'string') {
-    return;
-  }
-  
-  if (!isAuthenticated && !authViews.includes(currentView) && actions) {      actions.setCurrentView('login');
+  useEffect(() => {
+    const authViews = ['login', 'register', 'email-verification'];
+    if (!isAuthenticated && !authViews.includes(currentView) && actions) {
+      actions.setCurrentView('login');
     }
   }, [isAuthenticated, currentView, actions]);
 
@@ -155,12 +138,8 @@ useEffect(() => {
 
   // Determine if header should be shown (not on login, register, or verification pages)
   const authViews = ['login', 'register', 'email-verification'];
+  const showHeader = !authViews.includes(currentView);
 
-// Safe header visibility calculation with type validation
-let showHeader = false;
-if (Array.isArray(authViews) && typeof currentView === 'string') {
-  showHeader = !authViews.includes(currentView);
-}
   // Debug logging
   console.log('App Debug:', {
     currentView,

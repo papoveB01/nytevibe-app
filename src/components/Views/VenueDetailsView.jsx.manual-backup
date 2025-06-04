@@ -43,11 +43,11 @@ const VenueDetailsView = ({ onBack }) => {
     { icon: Wifi, label: 'Free WiFi', available: true },
     { icon: Car, label: 'Parking', available: true },
     { icon: CreditCard, label: 'Card Accepted', available: true },
-    { icon: Music, label: 'Live Music', available: Array.isArray(venue.vibe) && venue.vibe.includes('Live Music') },
-    { icon: Utensils, label: 'Food Menu', available: venue.type && venue.type.includes('Grill') || venue.type && venue.type.includes('Restaurant') },
-    { icon: Coffee, label: 'Coffee', available: venue.type && venue.type.includes('Cafe') || venue.type && venue.type.includes('Coffee') },
-    { icon: Wine, label: 'Full Bar', available: venue.type && venue.type.includes('Bar') || venue.type && venue.type.includes('Lounge') },
-    { icon: ShoppingBag, label: 'VIP Service', available: Array.isArray(venue.vibe) && venue.vibe.includes('VIP') }
+    { icon: Music, label: 'Live Music', available: venue.vibe.includes('Live Music') },
+    { icon: Utensils, label: 'Food Menu', available: venue.type.includes('Grill') || venue.type.includes('Restaurant') },
+    { icon: Coffee, label: 'Coffee', available: venue.type.includes('Cafe') || venue.type.includes('Coffee') },
+    { icon: Wine, label: 'Full Bar', available: venue.type.includes('Bar') || venue.type.includes('Lounge') },
+    { icon: ShoppingBag, label: 'VIP Service', available: venue.vibe.includes('VIP') }
   ];
 
   const displayedAmenities = showAllAmenities ? amenities : amenities.slice(0, 4);
