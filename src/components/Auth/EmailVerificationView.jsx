@@ -4,6 +4,17 @@ import { useApp } from '../../context/AppContext';
 import registrationAPI, { APIError } from '../../services/registrationAPI';
 
 const EmailVerificationView = ({ onBack, onSuccess, token, email }) => {
+    console.log("🔍 =========================");
+    console.log("EmailVerificationView LOADED");
+    console.log("Props received:", { token, email, onBack: !!onBack, onSuccess: !!onSuccess });
+    console.log("Current URL:", window.location.href);
+    console.log("URL params:", window.location.search);
+    
+    // Parse URL directly to see what we get
+    const urlParams = new URLSearchParams(window.location.search);
+    console.log("Token from URL directly:", urlParams.get("token"));
+    console.log("Verify param from URL:", urlParams.get("verify"));
+    console.log("=========================");
 const { actions } = useApp();
 const [verificationStatus, setVerificationStatus] = useState('verifying'); // 'verifying', 'success', 'error', 'expired'
 const [isLoading, setIsLoading] = useState(false);
@@ -11,12 +22,16 @@ const [canResend, setCanResend] = useState(true);
 const [resendCooldown, setResendCooldown] = useState(0);
 
 useEffect(() => {
+        console.log("🔄 useEffect triggered!");
+        console.log("Token value in useEffect:", token);
 if (token) {
 verifyEmailToken(token);
 }
 }, [token]);
 
 useEffect(() => {
+        console.log("🔄 useEffect triggered!");
+        console.log("Token value in useEffect:", token);
 if (resendCooldown > 0) {
 const timer = setTimeout(() => {
 setResendCooldown(resendCooldown - 1);
@@ -28,9 +43,20 @@ setCanResend(true);
 }, [resendCooldown, canResend]);
 
 const verifyEmailToken = async (verificationToken) => {
+        console.log("🌐 verifyEmailToken called with:", verificationToken);
+        console.log("Token type:", typeof verificationToken);
+        console.log("Token length:", verificationToken?.length);
+        
+        if (!verificationToken) {
+            console.error("❌ NO TOKEN - aborting verification");
+            setVerificationStatus("error");
+            return;
+        }
 setIsLoading(true);
 try {
+            console.log("📡 About to make API call with token:", verificationToken);
 const response = await registrationAPI.verifyEmail(verificationToken);
+            console.log("✅ API call successful! Response:", response);
 
 if (response.status === 'success') {
 setVerificationStatus('success');

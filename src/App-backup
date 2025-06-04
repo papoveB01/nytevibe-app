@@ -26,7 +26,6 @@ function AppContent() {
   const { updateVenueData } = useVenues();
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobile, setIsMobile] = useState(false);
-  const [verificationData, setVerificationData] = useState({ token: null, email: null });
 
   // Defensive check for state
   if (!state) {
@@ -58,7 +57,6 @@ function AppContent() {
     const verifyEmail = urlParams.get('verify');
 
     if (verificationToken && verifyEmail && actions) {
-      setVerificationData({ token: verificationToken, email: urlParams.get("email") || localStorage.getItem("pending_verification_email") });
       actions.setCurrentView('email-verification');
       // Clean up URL
       window.history.replaceState({}, document.title, window.location.pathname);
@@ -200,8 +198,8 @@ if (Array.isArray(authViews) && typeof currentView === 'string') {
           <EmailVerificationView
             onBack={handleBackToLogin}
             onSuccess={handleEmailVerificationSuccess}
-            token={verificationData.token}
-            email={verificationData.email}
+            token={getVerificationData().token}
+            email={getVerificationData().email}
           />
         )}
 
