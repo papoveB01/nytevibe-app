@@ -1,0 +1,90 @@
+[0;32m🚀 Starting nYtevibe Frontend Real-Time Availability Implementation[0m
+[2025-06-08 15:52:41] 
+[0;34m📅 Sun 08 Jun 2025 03:52:41 PM CDT[0m
+[2025-06-08 15:52:41] 
+✅ React project validated: /var/www/nytevibe
+[2025-06-08 15:52:41] ✅ React project validated: /var/www/nytevibe
+[0;34m📦 Creating backup directory: /var/www/nytevibe/backups/frontend_20250608_155241[0m
+[2025-06-08 15:52:41] 
+[0;34m📦 Backing up files...[0m
+[2025-06-08 15:52:41] 
+✅ Backed up: src/services/registrationAPI.js
+[2025-06-08 15:52:41] ✅ Backed up: src/services/registrationAPI.js
+✅ Backed up: src/components/Registration/RegistrationView.jsx
+[2025-06-08 15:52:41] ✅ Backed up: src/components/Registration/RegistrationView.jsx
+✅ Backed up: src/services/authAPI.js
+[2025-06-08 15:52:41] ✅ Backed up: src/services/authAPI.js
+✅ Backed up: src/utils/authUtils.js
+[2025-06-08 15:52:41] ✅ Backed up: src/utils/authUtils.js
+✅ Backed up: package.json
+[2025-06-08 15:52:41] ✅ Backed up: package.json
+[0;34m🔌 Adding availability check methods to registrationAPI.js...[0m
+[2025-06-08 15:52:41] 
+✅ API methods added before export statement
+[2025-06-08 15:52:41] ✅ API methods added before export statement
+[0;34m⚛️  Adding real-time checking to RegistrationView.jsx...[0m
+[2025-06-08 15:52:41] 
+  📝 Adding React hooks to imports...
+[2025-06-08 15:52:41]   📝 Adding React hooks to imports...
+  📝 Adding availability state...
+[2025-06-08 15:52:41]   📝 Adding availability state...
+  ✅ Availability state added
+[2025-06-08 15:52:41]   ✅ Availability state added
+  📝 Adding debounced checking function...
+[2025-06-08 15:52:41]   📝 Adding debounced checking function...
+  ✅ Debounced checking function added
+[2025-06-08 15:52:41]   ✅ Debounced checking function added
+  📝 Updating handleInputChange...
+[2025-06-08 15:52:41]   📝 Updating handleInputChange...
+  ✅ Input change handler updated
+[2025-06-08 15:52:42]   ✅ Input change handler updated
+  📝 Updating CredentialsStep component...
+[2025-06-08 15:52:42]   📝 Updating CredentialsStep component...
+  📝 Updating renderStepContent...
+[2025-06-08 15:52:42]   📝 Updating renderStepContent...
+[0;34m👁️  Adding visual indicators to input fields...[0m
+[2025-06-08 15:52:42] 
+  ✅ Username indicators added
+[2025-06-08 15:52:42]   ✅ Username indicators added
+  ✅ Username messages added
+[2025-06-08 15:52:42]   ✅ Username messages added
+[0;34m🎨 Adding CSS styles for availability indicators...[0m
+[2025-06-08 15:52:42] 
+✅ CSS styles added to App.css
+[2025-06-08 15:52:42] ✅ CSS styles added to App.css
+[0;34m📦 Installing dependencies...[0m
+[2025-06-08 15:52:42] 
+[0;34m🔍 Verifying implementation...[0m
+[2025-06-08 15:52:43] 
+[0;32m✅ Availability API methods already exist[0m
+[2025-06-08 15:52:43] 
+✅ API methods added to registrationAPI.js
+[2025-06-08 15:52:43] ✅ API methods added to registrationAPI.js
+[0;32m✅ Real-time checking already exists in component[0m
+[2025-06-08 15:52:43] 
+✅ Real-time checking added to RegistrationView
+[2025-06-08 15:52:43] ✅ Real-time checking added to RegistrationView
+[0;34m🔨 Testing React build...[0m
+[2025-06-08 15:52:43] 
+[0;31m❌ ERROR: React build failed - syntax errors detected[0m
+[2025-06-08 15:52:45] 
+[1;33m🔄 Starting automatic rollback...[0m
+[2025-06-08 15:52:45] 
+[1;33m🔄 Rolling back changes...[0m
+[2025-06-08 15:52:45] 
+✅ Restored: package.json
+[2025-06-08 15:52:45] ✅ Restored: package.json
+✅ Restored: src/App.css
+[2025-06-08 15:52:45] ✅ Restored: src/App.css
+✅ Restored: src/services/registrationAPI.js
+[2025-06-08 15:52:45] ✅ Restored: src/services/registrationAPI.js
+✅ Restored: src/services/authAPI.js
+[2025-06-08 15:52:45] ✅ Restored: src/services/authAPI.js
+✅ Restored: src/password-reset.css
+[2025-06-08 15:52:45] ✅ Restored: src/password-reset.css
+✅ Restored: src/utils/authUtils.js
+[2025-06-08 15:52:45] ✅ Restored: src/utils/authUtils.js
+✅ Restored: src/components/Registration/RegistrationView.jsx
+[2025-06-08 15:52:45] ✅ Restored: src/components/Registration/RegistrationView.jsx
+[0;32m✅ Rollback completed[0m
+[2025-06-08 15:52:45] 

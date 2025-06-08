@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
 ArrowLeft,
 User,
@@ -30,7 +30,6 @@ validatePersonalInfo,
 prepareRegistrationData,
 LOCATION_DATA
 } from '../../utils/registrationValidation';
-import './availability.css';
 
 const RegistrationView = ({ onBack, onSuccess }) => {
 const { actions } = useApp();
@@ -59,73 +58,9 @@ zipcode: ''
 // Validation state
 const [validation, setValidation] = useState({});
 
-// Real-time availability state
-const [availabilityStatus, setAvailabilityStatus] = useState({
-username: { checking: false, available: null, message: '', suggestions: [] },
-email: { checking: false, available: null, message: '' }
-});
-
 // UI state
 const [showPassword, setShowPassword] = useState(false);
 const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
-
-// Debounce refs
-const debounceTimeouts = useRef({});
-
-// Debounced availability checking
-const checkAvailability = useCallback(async (field, value) => {
-  if (!value || value.trim().length < 3) {
-    setAvailabilityStatus(prev => ({
-      ...prev,
-      [field]: { checking: false, available: null, message: '', suggestions: [] }
-    }));
-    return;
-  }
-
-  // Clear existing timeout
-  if (debounceTimeouts.current[field]) {
-    clearTimeout(debounceTimeouts.current[field]);
-  }
-
-  // Set checking state
-  setAvailabilityStatus(prev => ({
-    ...prev,
-    [field]: { ...prev[field], checking: true, message: 'Checking availability...' }
-  }));
-
-  // Debounce the actual check
-  debounceTimeouts.current[field] = setTimeout(async () => {
-    try {
-      let result;
-      if (field === 'username') {
-        result = await registrationAPI.checkUsernameAvailability(value);
-      } else if (field === 'email') {
-        result = await registrationAPI.checkEmailAvailability(value);
-      }
-
-      setAvailabilityStatus(prev => ({
-        ...prev,
-        [field]: {
-          checking: false,
-          available: result.available,
-          message: result.message,
-          suggestions: result.suggestions || []
-        }
-      }));
-    } catch (error) {
-      console.error(`${field} availability check failed:`, error);
-      setAvailabilityStatus(prev => ({
-        ...prev,
-        [field]: {
-          checking: false,
-          available: null,
-          message: 'Unable to check availability',
-          suggestions: []
-        }
-      }));
-    }
-  }, 500);
-}, []);
 
 // Handle form data changes
 const handleInputChange = (field, value) => {
@@ -140,11 +75,6 @@ setFormData(prev => ({ ...prev, state: '', city: '' }));
 }
 if (field === 'state') {
 setFormData(prev => ({ ...prev, city: '' }));
-}
-
-// Trigger real-time availability checking for username/email
-if (field === 'username' || field === 'email') {
-  checkAvailability(field, value);
 }
 };
 
@@ -311,7 +241,6 @@ return (
 formData={formData}
 onChange={handleInputChange}
 validation={validation}
-availabilityStatus={availabilityStatus}
 />
 );
 case 3:
@@ -474,7 +403,7 @@ onClick={() => onChange('userType', 'business')}
 </div>
 );
 
-const CredentialsStep = ({ formData, onChange, validation, availabilityStatus }) => (
+const CredentialsStep = ({ formData, onChange, validation }) => (
 <div className="step-content">
 <h2 className="step-title">Create Your Credentials</h2>
 <p className="step-description">
@@ -495,50 +424,11 @@ onChange={(e) => onChange('username', e.target.value)}
 className={`form-input ${validation.username ? 'error' : ''}`}
 placeholder="Choose your username"
 />
-{availabilityStatus.username.checking && (
-<div className="availability-indicator checking">
-<div className="loading-spinner-sm"></div>
 </div>
-)}
-{!availabilityStatus.username.checking && availabilityStatus.username.available === true && (
-<Check className="availability-indicator success" />
-)}
-{!availabilityStatus.username.checking && availabilityStatus.username.available === false && (
-<X className="availability-indicator error" />
-)}
-</div>
-
 {validation.username && (
 <div className="field-errors">
 {validation.username.map((error, idx) => (
 <span key={idx} className="error-message">{error}</span>
-))}
-</div>
-)}
-
-{availabilityStatus.username.message && (
-<div className={`availability-status ${
-availabilityStatus.username.checking ? 'checking' : 
-availabilityStatus.username.available ? 'success' : 'error'
-}`}>
-{availabilityStatus.username.message}
-</div>
-)}
-
-{availabilityStatus.username.suggestions && availabilityStatus.username.suggestions.length > 0 && (
-<div className="username-suggestions">
-<div style={{fontSize: '0.75rem', color: '#6b7280', marginBottom: '4px'}}>
-Try these instead:
-</div>
-{availabilityStatus.username.suggestions.map((suggestion, idx) => (
-<button
-key={idx}
-type="button"
-className="suggestion-button"
-onClick={() => onChange('username', suggestion)}
->
-{suggestion}
-</button>
 ))}
 </div>
 )}
@@ -558,33 +448,12 @@ onChange={(e) => onChange('email', e.target.value)}
 className={`form-input ${validation.email ? 'error' : ''}`}
 placeholder="Enter your email"
 />
-{availabilityStatus.email.checking && (
-<div className="availability-indicator checking">
-<div className="loading-spinner-sm"></div>
 </div>
-)}
-{!availabilityStatus.email.checking && availabilityStatus.email.available === true && (
-<Check className="availability-indicator success" />
-)}
-{!availabilityStatus.email.checking && availabilityStatus.email.available === false && (
-<X className="availability-indicator error" />
-)}
-</div>
-
 {validation.email && (
 <div className="field-errors">
 {validation.email.map((error, idx) => (
 <span key={idx} className="error-message">{error}</span>
 ))}
-</div>
-)}
-
-{availabilityStatus.email.message && (
-<div className={`availability-status ${
-availabilityStatus.email.checking ? 'checking' : 
-availabilityStatus.email.available ? 'success' : 'error'
-}`}>
-{availabilityStatus.email.message}
 </div>
 )}
 </div>
