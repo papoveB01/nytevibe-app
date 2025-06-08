@@ -1,0 +1,641 @@
+🔍 FRONTEND COMPREHENSIVE ANALYSIS
+==================================
+📅 Analysis Date: Sun 08 Jun 2025 02:33:32 PM CDT
+📂 Current Directory: /var/www/nytevibe
+
+📋 STEP 1: Project Structure Analysis
+=====================================
+🔍 Checking if we're in React project...
+✅ Found package.json - React project confirmed
+📦 Project details:
+  "name": "nytevibe",
+  "version": "2.0.1",
+    "dev": "vite",
+    "react": "^18.2.0",
+    "vite": "^6.3.5"
+
+🔍 Frontend file structure:
+📁 Key directories and files:
+total 828
+drwxr-xr-x 11 root root   4096 Jun  7 20:17 .
+drwxr-xr-x 16 root root   4096 Jun  8 14:33 ..
+-rw-r--r--  1 root root   6990 Jun  6 13:35 App-backup
+-rw-r--r--  1 root root 133507 Jun  6 13:35 App.css
+-rw-r--r--  1 root root 126026 Jun  6 13:35 App.css.backup-20250604-215910
+-rw-r--r--  1 root root 125124 Jun  6 13:35 App.css.backup-demo
+-rw-r--r--  1 root root  87187 Jun  6 13:35 App.css.backup-login-mobile-fix
+-rw-r--r--  1 root root  54315 Jun  6 13:35 App.css.backup-mobile-enhance
+-rw-r--r--  1 root root  61466 Jun  6 13:35 App.css.backup-mobile-retrain
+
+📁 Components structure:
+src/components/Views/ForgotPasswordView.jsx
+src/components/Views/LoginView.jsx
+src/components/Views/ResetPasswordView.jsx
+src/components/auth/LoginTest.jsx
+src/components/auth/Login.jsx
+src/components/Auth/EmailVerificationView.jsx
+
+📁 Services/API structure:
+src/services/registrationAPI.js
+src/services/authAPI.js
+src/services/registrationAPI.js.backup-network-debug
+src/services/registrationAPI.js.backup-email-verification
+src/services/registrationAPI.js.backup-health-fix-1748910175
+src/services/registrationAPI.js.backup-debug
+src/services/emailVerificationAPI.js
+src/services/registrationAPI.js.backup-cors-fix
+src/utils/authUtils.js
+src/components/auth
+
+📋 STEP 2: Password Reset Component Analysis
+============================================
+🔍 Looking for password reset components...
+✅ Found password reset components:
+src/components/Views/ForgotPasswordView.jsx
+src/components/Views/ResetPasswordView.jsx
+src/__tests__/components/Views/ForgotPasswordView.test.js
+src/__tests__/components/Views/ResetPasswordView.test.js
+
+📄 Analyzing: src/components/Views/ForgotPasswordView.jsx
+─────────────────────────
+🔍 Imports:
+6:import React, { useState, useEffect } from 'react';
+7:import { ArrowLeft, Mail, Zap, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+8:import authAPI from '../../services/authAPI';
+9:import { 
+
+🔍 API calls in this component:
+81-    try {
+82:      const result = await authAPI.forgotPassword(sanitizedIdentifier);
+83-
+84-      if (result.success) {
+85-        setEmailSent(true);
+
+🔍 Form submission handling:
+61-  };
+62-
+63:  const handleSubmit = async (e) => {
+64-    e.preventDefault();
+65-
+66-    // Clear previous states
+67-    setError('');
+68-    setValidationErrors({});
+--
+186-          {/* Form Section */}
+187-          {!emailSent && (
+188:            <form onSubmit={handleSubmit} className="login-form" noValidate>
+189-              <div className="form-group">
+190-                <label htmlFor="identifier" className="form-label">Email or Username</label>
+191-                <div className="input-wrapper">
+
+🔍 State management:
+6:import React, { useState, useEffect } from 'react';
+18:  // Form state
+19:  const [identifier, setIdentifier] = useState('');
+20:  const [isLoading, setIsLoading] = useState(false);
+21:  const [validationErrors, setValidationErrors] = useState({});
+23:  // Success state
+24:  const [emailSent, setEmailSent] = useState(false);
+25:  const [maskedEmail, setMaskedEmail] = useState('');
+27:  // Rate limiting state
+28:  const [isRateLimited, setIsRateLimited] = useState(false);
+
+📄 Analyzing: src/components/Views/ResetPasswordView.jsx
+─────────────────────────
+🔍 Imports:
+6:import React, { useState, useEffect } from 'react';
+7:import { ArrowLeft, Eye, EyeOff, Lock, Zap, CheckCircle, Clock, AlertCircle, XCircle, Shield } from 'lucide-react';
+8:import authAPI from '../../services/authAPI';
+9:import { 
+15:import { 
+
+🔍 API calls in this component:
+   No API calls found
+
+🔍 Form submission handling:
+143-  };
+144-
+145:  const handleSubmit = async (e) => {
+146-    e.preventDefault();
+147-
+148-    // Clear previous states
+149-    setError('');
+150-    setValidationErrors({});
+--
+332-
+333-          {/* Form Section */}
+334:          <form onSubmit={handleSubmit} className="login-form" noValidate>
+335-            {/* New Password Field */}
+336-            <div className="form-group">
+337-              <label htmlFor="password" className="form-label">New Password</label>
+
+🔍 State management:
+6:import React, { useState, useEffect } from 'react';
+22:const ResetPasswordView = ({ onBack, onSuccess, token: propToken, email: propEmail }) => {
+24:  const [token, setToken] = useState(propToken || '');
+25:  const [email, setEmail] = useState(propEmail || '');
+27:  // Form state
+28:  const [password, setPassword] = useState('');
+29:  const [passwordConfirmation, setPasswordConfirmation] = useState('');
+30:  const [showPassword, setShowPassword] = useState(false);
+31:  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+33:  // UI state
+
+📄 Analyzing: src/__tests__/components/Views/ForgotPasswordView.test.js
+─────────────────────────
+🔍 Imports:
+6:import React from 'react';
+7:import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+8:import { BrowserRouter } from 'react-router-dom';
+9:import ForgotPasswordView from '../../../components/Views/ForgotPasswordView';
+10:import authAPI from '../../../services/authAPI';
+
+🔍 API calls in this component:
+13-jest.mock('../../../services/authAPI', () => ({
+14:  forgotPassword: jest.fn()
+15-}));
+16-
+17-const MockedForgotPasswordView = () => (
+--
+59-  test('handles successful email submission', async () => {
+60:    authAPI.forgotPassword.mockResolvedValue({
+61-      success: true,
+62-      data: { email: 't***@example.com' }
+63-    });
+--
+79-  test('handles rate limiting correctly', async () => {
+80:    authAPI.forgotPassword.mockResolvedValue({
+81-      success: false,
+82-      code: 'RATE_LIMIT_EXCEEDED',
+83-      retryAfter: 60
+--
+99-  test('handles user not found gracefully', async () => {
+100:    authAPI.forgotPassword.mockResolvedValue({
+101-      success: false,
+102-      code: 'USER_NOT_FOUND'
+103-    });
+
+🔍 Form submission handling:
+38-    render(<MockedForgotPasswordView />);
+39-    
+40:    const submitButton = screen.getByRole('button', { name: 'Send Reset Link' });
+41:    expect(submitButton).toBeDisabled();
+42-  });
+43-
+44-  test('validates email input correctly', async () => {
+45-    render(<MockedForgotPasswordView />);
+46-    
+47-    const input = screen.getByLabelText('Email or Username');
+48:    const submitButton = screen.getByRole('button', { name: 'Send Reset Link' });
+49-    
+50-    // Test valid email
+51-    fireEvent.change(input, { target: { value: 'test@example.com' } });
+52:    expect(submitButton).not.toBeDisabled();
+
+🔍 State management:
+44:  test('validates email input correctly', async () => {
+50:    // Test valid email
+59:  test('handles successful email submission', async () => {
+62:      data: { email: 't***@example.com' }
+114:      expect(screen.getByText(/If an account with that email exists/)).toBeInTheDocument();
+
+📄 Analyzing: src/__tests__/components/Views/ResetPasswordView.test.js
+─────────────────────────
+🔍 Imports:
+6:import React from 'react';
+7:import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+8:import { BrowserRouter } from 'react-router-dom';
+9:import ResetPasswordView from '../../../components/Views/ResetPasswordView';
+10:import authAPI from '../../../services/authAPI';
+
+🔍 API calls in this component:
+   No API calls found
+
+🔍 Form submission handling:
+105-    fireEvent.change(confirmInput, { target: { value: 'DifferentPass123!' } });
+106-    
+107:    const submitButton = screen.getByRole('button', { name: 'Reset Password' });
+108:    fireEvent.click(submitButton);
+109-    
+110-    await waitFor(() => {
+111-      expect(screen.getByText('Passwords do not match')).toBeInTheDocument();
+112-    });
+113-  });
+--
+125-    const passwordInput = screen.getByLabelText('New Password');
+126-    const confirmInput = screen.getByLabelText('Confirm Password');
+127:    const submitButton = screen.getByRole('button', { name: 'Reset Password' });
+128-    
+129-    fireEvent.change(passwordInput, { target: { value: 'StrongPass123!' } });
+
+🔍 State management:
+21:mockSearchParams.set('email', 'test@example.com');
+
+📋 STEP 3: API Service Analysis
+===============================
+🔍 Looking for API service files...
+✅ Found API service files:
+src/services/registrationAPI.js
+src/services/authAPI.js
+src/services/emailVerificationAPI.js
+src/__tests__/services/authAPI.test.js
+
+📄 Analyzing: src/services/registrationAPI.js
+─────────────────────────
+🔍 Password reset methods:
+   No forgotPassword method found
+
+🔍 Base URL configuration:
+6-
+7-const API_CONFIG = {
+8:  baseURL: 'https://system.nytevibe.com/api',
+9-  timeout: 30000,
+10-  headers: {
+--
+71-class RegistrationAPI {
+72-  constructor() {
+73:    this.baseURL = API_CONFIG.baseURL;
+74-  }
+75-
+--
+82-      console.log('📤 Mapped registration data:', registrationData);
+83-      
+84:      const response = await fetch(`${this.baseURL}/auth/register`, {
+85-        method: 'POST',
+86-        headers: {
+--
+115-    try {
+116-      // 🔧 FIX: Use correct login endpoint
+117:      const response = await fetch(`${this.baseURL}/auth/login`, {
+118-        method: 'POST',
+119-        headers: {
+--
+145-  async verifyEmail(token) {
+146-    try {
+147:      const response = await fetch(`${this.baseURL}/auth/verify-email`, {
+148-        method: 'POST',
+149-        headers: API_CONFIG.headers,
+--
+171-  async resendVerificationEmail(email) {
+172-    try {
+173:      const response = await fetch(`${this.baseURL}/auth/resend-verification`, {
+174-        method: 'POST',
+175-        headers: API_CONFIG.headers,
+
+🔍 Request headers:
+8-  baseURL: 'https://system.nytevibe.com/api',
+9-  timeout: 30000,
+10:  headers: {
+11:    'Content-Type': 'application/json',
+12-    'Accept': 'application/json',
+13-    'X-Requested-With': 'XMLHttpRequest'
+14-  }
+15-};
+16-
+--
+79-      const registrationData = prepareRegistrationData(userData);
+80-      
+81:      console.log('📤 Original form data:', userData);
+82-      console.log('📤 Mapped registration data:', registrationData);
+83-      
+
+🔍 Request body/data format:
+1-/**
+2- * nYtevibe Registration API Service
+3: * Handles all registration-related API calls including email verification
+4: * No username/email availability checking
+5- */
+6-
+7-const API_CONFIG = {
+--
+28-const prepareRegistrationData = (formData) => {
+29-  const data = {
+30-    username: formData.username?.trim(),
+31:    email: formData.email?.trim().toLowerCase(),
+32-    password: formData.password,
+33-    password_confirmation: formData.passwordConfirmation,  // Fix: camelCase → snake_case
+34-    first_name: formData.firstName,                        // Fix: camelCase → snake_case  
+
+📄 Analyzing: src/services/authAPI.js
+─────────────────────────
+🔍 Password reset methods:
+129-   * @returns {Promise<{success: boolean, data?: object, error?: string, code?: string}>}
+130-   */
+131:  async forgotPassword(identifier) {
+132-    try {
+133:      const response = await this.request('/auth/forgot-password', {
+134-        method: 'POST',
+135-        body: JSON.stringify({ identifier })
+136-      });
+137-
+138-      if (response.ok) {
+139-        const data = await response.json();
+140-        return {
+141-          success: true,
+142-          data: data.data,
+143-          message: data.message
+
+🔍 Base URL configuration:
+9-class AuthAPI {
+10-  constructor() {
+11:    this.baseURL = 'https://system.nytevibe.com/api';
+12-    this.timeout = 30000; // 30 seconds
+13-  }
+--
+282-   */
+283-  async request(endpoint, options = {}) {
+284:    const url = `${this.baseURL}${endpoint}`;
+285-    
+286-    const headers = {
+
+🔍 Request headers:
+284-    const url = `${this.baseURL}${endpoint}`;
+285-    
+286:    const headers = {
+287:      'Content-Type': 'application/json',
+288-      'Accept': 'application/json',
+289-      'X-Requested-With': 'XMLHttpRequest',
+290:      'Origin': window.location.origin,
+291:      ...options.headers
+292-    };
+293-
+294-    // Add auth token if available and not already included
+295-    const token = this.getToken();
+296:    if (token && !headers.Authorization) {
+297:      headers.Authorization = `Bearer ${token}`;
+298-    }
+
+🔍 Request body/data format:
+18-
+19-  /**
+20-   * User login
+21:   * @param {string} email - User email or username
+22-   * @param {string} password - User password
+23-   * @param {boolean} remember - Remember session
+24-   * @returns {Promise<{success: boolean, user?: object, token?: string, error?: string}>}
+25-   */
+26:  async login(email, password, remember = false) {
+27-    try {
+28-      const response = await this.request('/auth/login', {
+29-        method: 'POST',
+30:        body: JSON.stringify({ email, password, remember })
+31-      });
+32-
+
+📄 Analyzing: src/services/emailVerificationAPI.js
+─────────────────────────
+🔍 Password reset methods:
+   No forgotPassword method found
+
+🔍 Base URL configuration:
+2-// Phase 2: API service to connect with Phase 1 backend
+3-
+4:const API_BASE_URL = 'https://system.nytevibe.com/api';
+5-
+6-class EmailVerificationAPI {
+--
+13-  static async verifyEmail(userId, hash) {
+14-    try {
+15:      const response = await fetch(`${API_BASE_URL}/email/verify/${userId}/${hash}`, {
+16-        method: 'GET',
+17-        headers: {
+--
+51-  static async checkVerificationStatus(userId) {
+52-    try {
+53:      const response = await fetch(`${API_BASE_URL}/email/verify-status/${userId}`, {
+54-        method: 'GET',
+55-        headers: {
+--
+90-  static async resendVerificationEmail(email) {
+91-    try {
+92:      const response = await fetch(`${API_BASE_URL}/email/resend-verification`, {
+93-        method: 'POST',
+94-        headers: {
+
+🔍 Request headers:
+15-      const response = await fetch(`${API_BASE_URL}/email/verify/${userId}/${hash}`, {
+16-        method: 'GET',
+17:        headers: {
+18:          'Content-Type': 'application/json',
+19-          'Accept': 'application/json',
+20-        },
+21-        credentials: 'include', // Include cookies if needed
+22-      });
+23-
+--
+53-      const response = await fetch(`${API_BASE_URL}/email/verify-status/${userId}`, {
+54-        method: 'GET',
+55:        headers: {
+56:          'Content-Type': 'application/json',
+57-          'Accept': 'application/json',
+
+🔍 Request body/data format:
+1:// src/services/emailVerificationAPI.js
+2-// Phase 2: API service to connect with Phase 1 backend
+3-
+4-const API_BASE_URL = 'https://system.nytevibe.com/api';
+5-
+6-class EmailVerificationAPI {
+7-  /**
+8:   * Verify email using the verification link
+9-   * @param {string} userId - User UUID
+10-   * @param {string} hash - Verification hash
+11-   * @returns {Promise<Object>} Verification result
+12-   */
+13-  static async verifyEmail(userId, hash) {
+14-    try {
+15:      const response = await fetch(`${API_BASE_URL}/email/verify/${userId}/${hash}`, {
+
+📄 Analyzing: src/__tests__/services/authAPI.test.js
+─────────────────────────
+🔍 Password reset methods:
+15-  });
+16-
+17:  describe('forgotPassword', () => {
+18-    test('handles successful password reset request', async () => {
+19-      const mockResponse = {
+20-        ok: true,
+21-        json: () => Promise.resolve({
+22-          success: true,
+23-          data: { email: 't***@example.com' },
+24-          message: 'Reset link sent'
+25-        })
+26-      };
+27-      
+28-      fetch.mockResolvedValue(mockResponse);
+29-      
+30:      const result = await authAPI.forgotPassword('test@example.com');
+31-      
+32-      expect(result.success).toBe(true);
+33-      expect(result.data.email).toBe('t***@example.com');
+34-    });
+35-
+36-    test('handles user not found error', async () => {
+37-      const mockResponse = {
+38-        ok: false,
+39-        json: () => Promise.resolve({
+40-          error: {
+--
+47-      fetch.mockResolvedValue(mockResponse);
+48-      
+49:      const result = await authAPI.forgotPassword('nonexistent@example.com');
+50-      
+51-      expect(result.success).toBe(false);
+52-      expect(result.code).toBe('USER_NOT_FOUND');
+53-    });
+54-
+55-    test('handles rate limiting', async () => {
+56-      const mockResponse = {
+57-        ok: false,
+58-        json: () => Promise.resolve({
+59-          error: {
+--
+67-      fetch.mockResolvedValue(mockResponse);
+68-      
+69:      const result = await authAPI.forgotPassword('test@example.com');
+70-      
+71-      expect(result.success).toBe(false);
+72-      expect(result.code).toBe('RATE_LIMIT_EXCEEDED');
+73-      expect(result.retryAfter).toBe(60);
+74-    });
+75-  });
+76-
+77-  describe('resetPassword', () => {
+78-    test('handles successful password reset', async () => {
+79-      const mockResponse = {
+
+🔍 Base URL configuration:
+   No base URL found
+
+🔍 Request headers:
+
+🔍 Request body/data format:
+20-        ok: true,
+21-        json: () => Promise.resolve({
+22-          success: true,
+23:          data: { email: 't***@example.com' },
+24-          message: 'Reset link sent'
+25-        })
+26-      };
+--
+30-      const result = await authAPI.forgotPassword('test@example.com');
+31-      
+32-      expect(result.success).toBe(true);
+33:      expect(result.data.email).toBe('t***@example.com');
+34-    });
+35-
+36-    test('handles user not found error', async () => {
+
+📋 STEP 4: Network Request Analysis
+===================================
+🔍 Checking for hardcoded API endpoints...
+src/router/AppRouter.jsx:31:      <Route path="/forgot-password" element={
+src/router/AppRouter.jsx:37:      <Route path="/reset-password" element={
+src/App.css:7329:.forgot-password-section {
+src/App.css:7335:.forgot-password-link {
+src/App.css:7347:.forgot-password-link:hover {
+src/App.css:7352:.forgot-password-link:focus {
+src/App.css:7360:  .forgot-password-section {
+src/App.css:7365:  .forgot-password-link {
+src/App.css:7682:.forgot-password-section {
+src/App.css:7688:.forgot-password-link {
+
+🔍 Checking for environment variables...
+❌ No .env files found
+
+🔍 Checking for fetch/axios configuration...
+src/services/registrationAPI.js:84:      const response = await fetch(`${this.baseURL}/auth/register`, {
+src/services/registrationAPI.js:117:      const response = await fetch(`${this.baseURL}/auth/login`, {
+src/services/registrationAPI.js:147:      const response = await fetch(`${this.baseURL}/auth/verify-email`, {
+src/services/registrationAPI.js:173:      const response = await fetch(`${this.baseURL}/auth/resend-verification`, {
+src/services/authAPI.js:306:    return fetch(url, requestOptions);
+src/services/authAPI.js-307-  }
+src/services/authAPI.js-308-
+src/services/authAPI.js-309-  /**
+src/services/authAPI.js-310-   * Get request headers
+src/services/authAPI.js-311-   * @param {boolean} includeAuth - Include authorization header
+
+📋 STEP 5: Build and Runtime Analysis
+=====================================
+🔍 Checking build configuration...
+✅ Found Vite config:
+   No relevant config found
+
+🔍 Checking package.json scripts...
+📦 Available scripts:
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "lucide-react": "^0.263.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-icons": "^5.5.0",
+    "react-router-dom": "^7.6.2"
+
+🔍 Checking for build errors...
+✅ Build files exist
+
+📋 STEP 6: Frontend Testing Simulation
+======================================
+🧪 Simulating password reset flow...
+📝 Expected frontend flow:
+1. User enters email/username in form
+2. Form calls forgotPassword function
+3. Function makes API request to system.nytevibe.com/api/auth/forgot-password
+4. Request includes { 'identifier': 'user@email.com' }
+5. Headers include Content-Type: application/json, Origin: https://blackaxl.com
+
+🔍 Checking what frontend would actually send...
+📄 Request format based on code analysis:
+   From src/services/registrationAPI.js:
+   From src/services/authAPI.js:
+  async forgotPassword(identifier) {
+      const response = await this.request('/auth/forgot-password', {
+        body: JSON.stringify({ identifier })
+   From src/services/emailVerificationAPI.js:
+   From src/__tests__/services/authAPI.test.js:
+    test('handles successful password reset request', async () => {
+          data: { email: 't***@example.com' },
+      fetch.mockResolvedValue(mockResponse);
+      expect(result.data.email).toBe('t***@example.com');
+
+📋 STEP 7: Frontend Analysis Summary
+===================================
+📊 FRONTEND HEALTH CHECK:
+✅ Password reset components: FOUND
+✅ API service files: FOUND
+⚠️  Environment configuration: MISSING
+
+🎯 EXPECTED vs ACTUAL REQUEST FORMAT:
+════════════════════════════════════
+Expected by backend:
+  URL: POST https://system.nytevibe.com/api/auth/forgot-password
+  Headers: Content-Type: application/json, Origin: https://blackaxl.com
+  Body: { "identifier": "user@email.com" }
+
+What frontend appears to send (based on code analysis):
+  Analyzing request format from API files...
+  File: src/services/authAPI.js
+      async forgotPassword(identifier) {
+            method: 'POST',
+            body: JSON.stringify({ identifier })
+  File: src/__tests__/services/authAPI.test.js
+              data: { email: 't***@example.com' },
+          fetch.mockResolvedValue(mockResponse);
+          expect(result.data.email).toBe('t***@example.com');
+          fetch.mockResolvedValue(mockResponse);
+          fetch.mockResolvedValue(mockResponse);
+
+🔧 NEXT STEPS:
+=============
+1. ✅ Run backend analysis script: ./backend_analysis.sh
+2. 🔍 Compare frontend request format with backend expectations
+3. 🧪 Test actual network request in browser dev tools
+4. 🔧 Fix any mismatches found
+
+📁 FRONTEND ANALYSIS COMPLETE
+============================
+📅 Completed: Sun 08 Jun 2025 02:33:33 PM CDT
