@@ -1,0 +1,16 @@
+[0;35m[DEPLOY][0m Starting nYtevibe Beautiful Verification Page deployment...
+[0;34m[2025-06-07 17:52:33][0m Validating React project structure...
+[0;32m[SUCCESS][0m Project structure validation passed
+[0;34m[2025-06-07 17:52:33][0m Creating backup directory: ./backup_beautiful_verification_20250607_175233
+[0;34m[2025-06-07 17:52:33][0m Backing up: src/components/Auth/EmailVerificationView.jsx
+[0;34m[2025-06-07 17:52:33][0m Backing up: src/services/emailVerificationAPI.js
+[0;32m[SUCCESS][0m Backup created successfully in ./backup_beautiful_verification_20250607_175233
+[0;32m[SUCCESS][0m Rollback script created: ./rollback_beautiful_verification_20250607_175233.sh
+[0;34m[2025-06-07 17:52:33][0m Creating beautiful EmailVerificationView component...
+[0;32m[SUCCESS][0m Beautiful EmailVerificationView component created successfully
+[0;34m[2025-06-07 17:52:33][0m Testing beautiful verification page deployment...
+[0;34m[2025-06-07 17:52:33][0m Running basic syntax checks...
+[0;32m[SUCCESS][0m React component export found
+[0;32m[SUCCESS][0m Beautiful gradient styling found
+[0;32m[SUCCESS][0m Beautiful verification page deployment testing completed
+[0;34m[2025-06-07 17:52:33][0m Beautiful verification page deployment completed successfully!

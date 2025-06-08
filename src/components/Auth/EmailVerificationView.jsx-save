@@ -3,23 +3,23 @@ import { CheckCircle, XCircle, Mail, ArrowLeft, RefreshCw, Sparkles, Heart, MapP
 import { useApp } from '../../context/AppContext';
 import EmailVerificationAPI from '../../services/emailVerificationAPI';
 
-const EmailVerificationView = ({ onBack, onSuccess, token, email, userId }) => {
+const EmailVerificationView = ({ onBack, onSuccess, token, email }) => {
     console.log("🎨 =========================");
     console.log("Beautiful EmailVerificationView LOADED");
-    console.log("Props received:", { token, email, userId, onBack: !!onBack, onSuccess: !!onSuccess });
+    console.log("Props received:", { token, email, onBack: !!onBack, onSuccess: !!onSuccess });
     console.log("Current URL:", window.location.href);
     
-    // PRIORITY 1: Use props first, then fallback to URL extraction
+    // DIRECT PARAMETER EXTRACTION - bypass the broken parsing function
     const urlParams = new URLSearchParams(window.location.search);
-    const finalUserId = userId || urlParams.get('userId');
-    const finalToken = token || urlParams.get('token');
-    const finalEmail = email || urlParams.get('email');
+    const directUserId = urlParams.get('userId');
+    const directToken = urlParams.get('token');
+    const directEmail = urlParams.get('email');
     
-    console.log("🔍 FINAL VERIFICATION PARAMS:");
-    console.log("- finalUserId:", finalUserId, "(from props:", !!userId, ")");
-    console.log("- finalToken:", finalToken, "(from props:", !!token, ")");
-    console.log("- finalEmail:", finalEmail, "(from props:", !!email, ")");
-    console.log("- Will use Phase 1?", !!(finalUserId && finalToken));
+    console.log("🔍 DIRECT PARAMETER EXTRACTION:");
+    console.log("- directUserId:", directUserId);
+    console.log("- directToken:", directToken);
+    console.log("- directEmail:", directEmail);
+    console.log("- Will use Phase 1?", !!(directUserId && directToken));
     console.log("=========================");
 
     const { actions } = useApp();
@@ -34,26 +34,25 @@ const EmailVerificationView = ({ onBack, onSuccess, token, email, userId }) => {
     useEffect(() => {
         console.log("🔄 Auto-verification useEffect triggered!");
         
-        // Phase 1 format: Check for user ID + token (hash) - USE FINAL PARAMS
-        if (finalUserId && finalToken) {
+        // Phase 1 format: Check for user ID + token (hash) - DIRECT EXTRACTION
+        if (directUserId && directToken) {
             console.log("📧 Found Phase 1 verification format - auto-verifying");
-            console.log("Calling verifyEmailWithIdAndHash with:", { finalUserId, finalToken });
-            verifyEmailWithIdAndHash(finalUserId, finalToken);
+            console.log("Calling verifyEmailWithIdAndHash with:", { directUserId, directToken });
+            verifyEmailWithIdAndHash(directUserId, directToken);
         }
-        // Fallback: Check for legacy token
-        else if (finalToken && !finalUserId) {
-            console.log("🔄 Found legacy token format");
-            verifyEmailToken(finalToken);
+        // Fallback: Check for legacy token from props
+        else if (token) {
+            console.log("🔄 Found legacy token from props");
+            verifyEmailToken(token);
         }
         // No verification parameters found
         else {
             console.log("⚠️ No verification parameters found");
-            console.log("Props - userId:", userId, "token:", token);
             console.log("URL search:", window.location.search);
             console.log("Full URL:", window.location.href);
             setVerificationStatus('error');
         }
-    }, [finalUserId, finalToken]); // Use final params in dependencies
+    }, []); // No dependencies to avoid loops
 
     // Resend cooldown timer
     useEffect(() => {
@@ -106,18 +105,11 @@ const EmailVerificationView = ({ onBack, onSuccess, token, email, userId }) => {
                     case 'VERIFIED':  // Handle the actual response code we got
                         setVerificationStatus('success');
                         setVerificationData(response.data);
-                        setShowConfetti(true);
                         actions.addNotification({
                             type: 'info',
                             message: '✅ Email already verified! Welcome back to nYtevibe!',
                             duration: 4000
                         });
-                        // Hide confetti after 3 seconds
-                        setTimeout(() => setShowConfetti(false), 3000);
-                        // Auto-redirect after 5 seconds
-                        setTimeout(() => {
-                            onSuccess && onSuccess();
-                        }, 5000);
                         break;
                         
                     case 'INVALID_HASH':
@@ -192,7 +184,7 @@ const EmailVerificationView = ({ onBack, onSuccess, token, email, userId }) => {
      * Resend verification email using Phase 1 API
      */
     const handleResendEmail = async () => {
-        const emailToUse = finalEmail;
+        const emailToUse = directEmail || email;
         if (!canResend || !emailToUse) return;
 
         setIsLoading(true);

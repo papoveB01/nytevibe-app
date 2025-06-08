@@ -53,21 +53,11 @@ const LoginView = ({ onRegister, onForgotPassword }) => {
 
       if (response.status === 'success') {
         // Check if email is verified - FIXED FIELD NAME
-        // DISABLED: Frontend email verification check
-
-        /*
-
         if (!response.data.user.email_verified_at) {
-
-          setError("Please verify your email before signing in. Check your inbox for the verification link.");
-
+          setError('Please verify your email before signing in. Check your inbox for the verification link.');
           setIsLoading(false);
-
           return;
-
         }
-
-        */
 
         console.log('User data from API:', response.data.user);
         console.log('Token from API:', response.data.token);

@@ -148,8 +148,8 @@ return;
 setIsLoading(true);
 
 try {
-const registrationData = prepareRegistrationData(formData);
-const response = await registrationAPI.register(registrationData);
+// API handles field mapping
+const response = await registrationAPI.register(formData);
 
 if (response.status === 'success') {
 // Show success notification

@@ -1,0 +1,22 @@
+nYtevibe Frontend Configuration Analysis
+=======================================
+Generated: Fri 06 Jun 2025 06:22:36 PM CDT
+
+Problems Found: 2
+
+Files with login endpoints in registration context:
+./node_modules/react-router/dist/production/index.d.ts
+./node_modules/react-router/dist/development/index.d.ts
+./backup_src_20250602_182442/src/services/apiService.js
+./backup_20250602_180439/src/services/apiService.js
+./dist/assets/index-26icg2Qe.js
+./src/router/routeConfig.js
+./src/services/registrationAPI.js
+
+All configuration files found:
+./backup_src_20250602_182442/src/services/apiService.js
+./backup_20250602_180439/src/services/apiService.js
+./backup_src_20250602_182442/src/utils/auth.js
+./backup_20250602_180439/src/utils/auth.js
+./node_modules/vite/dist/node/constants.js
+./node_modules/picomatch/lib/constants.js

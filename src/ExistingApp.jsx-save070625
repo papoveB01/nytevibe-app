@@ -29,8 +29,7 @@ function AppContent() {
   const { updateVenueData } = useVenues();
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobile, setIsMobile] = useState(false);
-  // FIXED: Add userId to verification data
-  const [verificationData, setVerificationData] = useState({ token: null, email: null, userId: null });
+  const [verificationData, setVerificationData] = useState({ token: null, email: null });
   // ADD NEW STATE FOR PASSWORD RESET
   const [resetData, setResetData] = useState({ token: null, email: null });
 
@@ -61,24 +60,12 @@ function AppContent() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     
-    // Email verification logic (FIXED to include userId)
+    // Email verification logic (existing)
     const verificationToken = urlParams.get('token');
     const verifyEmail = urlParams.get('verify');
-    const userId = urlParams.get('userId');  // ADD THIS LINE
-
-    console.log('🔍 ExistingApp.jsx URL Parameter Debug:');
-    console.log('- verificationToken:', verificationToken);
-    console.log('- verifyEmail:', verifyEmail);
-    console.log('- userId:', userId);
-    console.log('- email:', urlParams.get("email"));
 
     if (verificationToken && verifyEmail && actions) {
-      // FIXED: Include userId in verification data
-      setVerificationData({ 
-        token: verificationToken, 
-        email: urlParams.get("email") || localStorage.getItem("pending_verification_email"),
-        userId: userId  // ADD THIS LINE
-      });
+      setVerificationData({ token: verificationToken, email: urlParams.get("email") || localStorage.getItem("pending_verification_email") });
       actions.setCurrentView('email-verification');
       // Clean up URL
       window.history.replaceState({}, document.title, window.location.pathname);
@@ -205,13 +192,12 @@ function AppContent() {
     setSearchQuery('');
   };
 
-  // Get verification token and email from URL or localStorage (UPDATED to include userId)
+  // Get verification token and email from URL or localStorage
   const getVerificationData = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token');
     const email = urlParams.get('email') || localStorage.getItem('pending_verification_email');
-    const userId = urlParams.get('userId');  // ADD THIS LINE
-    return { token, email, userId };  // ADD userId HERE
+    return { token, email };
   };
 
   // UPDATE: Add new auth views to header visibility logic
@@ -223,13 +209,12 @@ function AppContent() {
     showHeader = !authViews.includes(currentView);
   }
   
-  // Debug logging (ENHANCED)
+  // Debug logging
   console.log('App Debug:', {
     currentView,
     isAuthenticated,
     stateExists: !!state,
-    actionsExists: !!actions,
-    verificationData: verificationData  // ADD THIS
+    actionsExists: !!actions
   });
 
   return (
@@ -266,7 +251,6 @@ function AppContent() {
             onSuccess={handleEmailVerificationSuccess}
             token={verificationData.token}
             email={verificationData.email}
-            userId={verificationData.userId}  // ADD THIS LINE - CRITICAL FIX!
           />
         )}
 

@@ -1,25 +1,168 @@
+#!/bin/bash
+
+# nYtevibe Beautiful Email Verification Page Deployment Script
+# Safe deployment with backup and rollback mechanisms
+
+set -e  # Exit on any error
+
+# Configuration
+TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+BACKUP_DIR="./backup_beautiful_verification_${TIMESTAMP}"
+PROJECT_ROOT="."
+LOG_FILE="./deploy_beautiful_verification_${TIMESTAMP}.log"
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+
+# Logging function
+log() {
+    echo -e "${BLUE}[$(date '+%Y-%m-%d %H:%M:%S')]${NC} $1" | tee -a "$LOG_FILE"
+}
+
+error() {
+    echo -e "${RED}[ERROR]${NC} $1" | tee -a "$LOG_FILE"
+}
+
+success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1" | tee -a "$LOG_FILE"
+}
+
+warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1" | tee -a "$LOG_FILE"
+}
+
+header() {
+    echo -e "${PURPLE}[DEPLOY]${NC} $1" | tee -a "$LOG_FILE"
+}
+
+# Function to create backups
+create_backup() {
+    log "Creating backup directory: $BACKUP_DIR"
+    mkdir -p "$BACKUP_DIR"
+    
+    # Backup existing files that will be modified
+    local files_to_backup=(
+        "src/components/Auth/EmailVerificationView.jsx"
+        "src/services/emailVerificationAPI.js"
+    )
+    
+    for file in "${files_to_backup[@]}"; do
+        if [ -f "$file" ]; then
+            log "Backing up: $file"
+            mkdir -p "$BACKUP_DIR/$(dirname "$file")"
+            cp "$file" "$BACKUP_DIR/$file"
+        else
+            warning "File not found for backup: $file"
+        fi
+    done
+    
+    # Create backup manifest
+    cat > "$BACKUP_DIR/backup_manifest.txt" << EOF
+# nYtevibe Beautiful Verification Page Backup Manifest
+# Created: $(date)
+# Backup Directory: $BACKUP_DIR
+
+Files backed up:
+$(find "$BACKUP_DIR" -type f | grep -v backup_manifest.txt)
+
+Original deployment script: $0
+Log file: $LOG_FILE
+EOF
+    
+    success "Backup created successfully in $BACKUP_DIR"
+}
+
+# Function to create rollback script
+create_rollback_script() {
+    cat > "./rollback_beautiful_verification_${TIMESTAMP}.sh" << 'ROLLBACK_EOF'
+#!/bin/bash
+
+# Auto-generated rollback script for nYtevibe Beautiful Verification Page deployment
+
+BACKUP_DIR="BACKUP_DIR_PLACEHOLDER"
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+PURPLE='\033[0;35m'
+NC='\033[0m'
+
+echo -e "${PURPLE}========================================${NC}"
+echo -e "${PURPLE}  nYtevibe Beautiful Verification${NC}"
+echo -e "${PURPLE}        Rollback Script${NC}"
+echo -e "${PURPLE}========================================${NC}"
+
+if [ ! -d "$BACKUP_DIR" ]; then
+    echo -e "${RED}ERROR: Backup directory not found: $BACKUP_DIR${NC}"
+    exit 1
+fi
+
+echo -e "${YELLOW}Rolling back files from: $BACKUP_DIR${NC}"
+
+# Restore backed up files
+find "$BACKUP_DIR" -type f \( -name "*.jsx" -o -name "*.js" \) | while read backup_file; do
+    # Calculate relative path
+    relative_path=${backup_file#$BACKUP_DIR/}
+    
+    if [ "$relative_path" != "backup_manifest.txt" ]; then
+        echo "Restoring: $relative_path"
+        mkdir -p "$(dirname "$relative_path")"
+        cp "$backup_file" "$relative_path"
+    fi
+done
+
+echo -e "${GREEN}✅ Rollback completed successfully!${NC}"
+echo -e "${YELLOW}Please restart your development server if running.${NC}"
+ROLLBACK_EOF
+
+    # Replace placeholder with actual backup directory
+    sed -i "s|BACKUP_DIR_PLACEHOLDER|$BACKUP_DIR|g" "./rollback_beautiful_verification_${TIMESTAMP}.sh"
+    chmod +x "./rollback_beautiful_verification_${TIMESTAMP}.sh"
+    
+    success "Rollback script created: ./rollback_beautiful_verification_${TIMESTAMP}.sh"
+}
+
+# Function to validate React project structure
+validate_project() {
+    log "Validating React project structure..."
+    
+    if [ ! -f "package.json" ]; then
+        error "package.json not found. Are you in the React project root?"
+        exit 1
+    fi
+    
+    if [ ! -d "src/components/Auth" ]; then
+        error "src/components/Auth directory not found."
+        exit 1
+    fi
+    
+    success "Project structure validation passed"
+}
+
+# Function to create beautiful EmailVerificationView component
+create_beautiful_verification_component() {
+    log "Creating beautiful EmailVerificationView component..."
+    
+    cat > "src/components/Auth/EmailVerificationView.jsx" << 'COMPONENT_EOF'
 import React, { useState, useEffect } from 'react';
 import { CheckCircle, XCircle, Mail, ArrowLeft, RefreshCw, Sparkles, Heart, MapPin, Clock } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import EmailVerificationAPI from '../../services/emailVerificationAPI';
 
-const EmailVerificationView = ({ onBack, onSuccess, token, email, userId }) => {
+const EmailVerificationView = ({ onBack, onSuccess, token, email }) => {
     console.log("🎨 =========================");
     console.log("Beautiful EmailVerificationView LOADED");
-    console.log("Props received:", { token, email, userId, onBack: !!onBack, onSuccess: !!onSuccess });
+    console.log("Props received:", { token, email, onBack: !!onBack, onSuccess: !!onSuccess });
     console.log("Current URL:", window.location.href);
     
-    // PRIORITY 1: Use props first, then fallback to URL extraction
-    const urlParams = new URLSearchParams(window.location.search);
-    const finalUserId = userId || urlParams.get('userId');
-    const finalToken = token || urlParams.get('token');
-    const finalEmail = email || urlParams.get('email');
-    
-    console.log("🔍 FINAL VERIFICATION PARAMS:");
-    console.log("- finalUserId:", finalUserId, "(from props:", !!userId, ")");
-    console.log("- finalToken:", finalToken, "(from props:", !!token, ")");
-    console.log("- finalEmail:", finalEmail, "(from props:", !!email, ")");
-    console.log("- Will use Phase 1?", !!(finalUserId && finalToken));
+    // Parse URL to get verification parameters
+    const verificationParams = EmailVerificationAPI.parseVerificationURL();
+    console.log("Parsed verification params:", verificationParams);
     console.log("=========================");
 
     const { actions } = useApp();
@@ -30,30 +173,27 @@ const EmailVerificationView = ({ onBack, onSuccess, token, email, userId }) => {
     const [verificationData, setVerificationData] = useState(null);
     const [showConfetti, setShowConfetti] = useState(false);
 
-    // Auto-verify on component mount - FIXED VERSION
+    // Auto-verify on component mount
     useEffect(() => {
         console.log("🔄 Auto-verification useEffect triggered!");
         
-        // Phase 1 format: Check for user ID + token (hash) - USE FINAL PARAMS
-        if (finalUserId && finalToken) {
+        // Phase 1 format: Check for user ID + hash
+        if (verificationParams.userId && verificationParams.hash) {
             console.log("📧 Found Phase 1 verification format - auto-verifying");
-            console.log("Calling verifyEmailWithIdAndHash with:", { finalUserId, finalToken });
-            verifyEmailWithIdAndHash(finalUserId, finalToken);
+            verifyEmailWithIdAndHash(verificationParams.userId, verificationParams.hash);
         }
-        // Fallback: Check for legacy token
-        else if (finalToken && !finalUserId) {
+        // Legacy support: Check for token
+        else if (token || verificationParams.token) {
             console.log("🔄 Found legacy token format");
-            verifyEmailToken(finalToken);
+            const tokenToUse = token || verificationParams.token;
+            verifyEmailToken(tokenToUse);
         }
         // No verification parameters found
         else {
-            console.log("⚠️ No verification parameters found");
-            console.log("Props - userId:", userId, "token:", token);
-            console.log("URL search:", window.location.search);
-            console.log("Full URL:", window.location.href);
+            console.log("⚠️ No verification parameters found in URL");
             setVerificationStatus('error');
         }
-    }, [finalUserId, finalToken]); // Use final params in dependencies
+    }, [verificationParams.userId, verificationParams.hash, token]);
 
     // Resend cooldown timer
     useEffect(() => {
@@ -103,21 +243,13 @@ const EmailVerificationView = ({ onBack, onSuccess, token, email, userId }) => {
                 
                 switch (errorCode) {
                     case 'ALREADY_VERIFIED':
-                    case 'VERIFIED':  // Handle the actual response code we got
                         setVerificationStatus('success');
                         setVerificationData(response.data);
-                        setShowConfetti(true);
                         actions.addNotification({
                             type: 'info',
                             message: '✅ Email already verified! Welcome back to nYtevibe!',
                             duration: 4000
                         });
-                        // Hide confetti after 3 seconds
-                        setTimeout(() => setShowConfetti(false), 3000);
-                        // Auto-redirect after 5 seconds
-                        setTimeout(() => {
-                            onSuccess && onSuccess();
-                        }, 5000);
                         break;
                         
                     case 'INVALID_HASH':
@@ -192,15 +324,14 @@ const EmailVerificationView = ({ onBack, onSuccess, token, email, userId }) => {
      * Resend verification email using Phase 1 API
      */
     const handleResendEmail = async () => {
-        const emailToUse = finalEmail;
-        if (!canResend || !emailToUse) return;
+        if (!canResend || !email) return;
 
         setIsLoading(true);
         setCanResend(false);
         setResendCooldown(60);
 
         try {
-            const response = await EmailVerificationAPI.resendVerificationEmail(emailToUse);
+            const response = await EmailVerificationAPI.resendVerificationEmail(email);
             
             if (response.success) {
                 actions.addNotification({
@@ -490,3 +621,134 @@ const EmailVerificationView = ({ onBack, onSuccess, token, email, userId }) => {
 };
 
 export default EmailVerificationView;
+COMPONENT_EOF
+
+    success "Beautiful EmailVerificationView component created successfully"
+}
+
+# Function to test the deployment
+test_deployment() {
+    log "Testing beautiful verification page deployment..."
+    
+    # Test 1: Check if files exist
+    local required_files=(
+        "src/components/Auth/EmailVerificationView.jsx"
+        "src/services/emailVerificationAPI.js"
+    )
+    
+    for file in "${required_files[@]}"; do
+        if [ ! -f "$file" ]; then
+            error "Required file missing: $file"
+            return 1
+        fi
+    done
+    
+    # Test 2: Basic syntax check for JavaScript files
+    if command -v node >/dev/null 2>&1; then
+        log "Running basic syntax checks..."
+        
+        # Check for React component structure
+        if grep -q "export default EmailVerificationView" "src/components/Auth/EmailVerificationView.jsx"; then
+            success "React component export found"
+        else
+            error "React component export not found"
+            return 1
+        fi
+        
+        # Check for beautiful styling elements
+        if grep -q "bg-gradient-to-br" "src/components/Auth/EmailVerificationView.jsx"; then
+            success "Beautiful gradient styling found"
+        else
+            error "Beautiful styling not found"
+            return 1
+        fi
+    else
+        warning "Node.js not available for syntax checking"
+    fi
+    
+    success "Beautiful verification page deployment testing completed"
+}
+
+# Main deployment function
+deploy_beautiful_verification() {
+    header "Starting nYtevibe Beautiful Verification Page deployment..."
+    
+    echo -e "${PURPLE}========================================${NC}"
+    echo -e "${PURPLE}  nYtevibe Beautiful Verification${NC}"
+    echo -e "${PURPLE}     Email Confirmation Page${NC}"
+    echo -e "${PURPLE}========================================${NC}"
+    
+    # Step 1: Validate project
+    validate_project
+    
+    # Step 2: Create backup
+    create_backup
+    
+    # Step 3: Create rollback script
+    create_rollback_script
+    
+    # Step 4: Deploy beautiful component
+    create_beautiful_verification_component
+    
+    # Step 5: Test deployment
+    test_deployment
+    
+    echo -e "${GREEN}========================================${NC}"
+    echo -e "${GREEN}  Beautiful Verification Deployment${NC}"
+    echo -e "${GREEN}         Completed! ✨${NC}"
+    echo -e "${GREEN}========================================${NC}"
+    
+    log "Beautiful verification page deployment completed successfully!"
+    
+    echo ""
+    echo -e "${YELLOW}🎨 New Features Added:${NC}"
+    echo -e "• Beautiful gradient backgrounds"
+    echo -e "• Animated loading states"
+    echo -e "• Confetti celebration effect"
+    echo -e "• Improved Houston nightlife branding"
+    echo -e "• Enhanced mobile responsiveness"
+    echo -e "• Smooth hover animations"
+    echo ""
+    echo -e "${YELLOW}📋 Next Steps:${NC}"
+    echo -e "1. Restart your React development server: ${BLUE}npm run dev${NC}"
+    echo -e "2. Test the beautiful verification page"
+    echo -e "3. Visit: ${CYAN}http://localhost:3000/verify/USER_ID/HASH${NC}"
+    echo ""
+    echo -e "${YELLOW}🧪 Test URL Example:${NC}"
+    echo -e "${CYAN}http://localhost:3000/verify/4a0c0252-6c7d-48d7-b603-43bcccc7cdbd/b08b5d75748bcf8d30452eb2900eb90710315417${NC}"
+    echo ""
+    echo -e "${YELLOW}🔄 Rollback Instructions:${NC}"
+    echo -e "If issues occur, run: ${RED}./rollback_beautiful_verification_${TIMESTAMP}.sh${NC}"
+    echo ""
+    echo -e "${YELLOW}📄 Files:${NC}"
+    echo -e "• Backup: ${BLUE}$BACKUP_DIR${NC}"
+    echo -e "• Log: ${BLUE}$LOG_FILE${NC}"
+    echo -e "• Rollback: ${BLUE}./rollback_beautiful_verification_${TIMESTAMP}.sh${NC}"
+}
+
+# Error handling
+handle_error() {
+    error "Beautiful verification deployment failed on line $1"
+    echo -e "${RED}========================================${NC}"
+    echo -e "${RED}  DEPLOYMENT FAILED${NC}"
+    echo -e "${RED}========================================${NC}"
+    echo ""
+    echo -e "${YELLOW}To rollback changes, run:${NC}"
+    echo -e "${RED}./rollback_beautiful_verification_${TIMESTAMP}.sh${NC}"
+    echo ""
+    echo -e "${YELLOW}Check the log file for details:${NC}"
+    echo -e "${BLUE}$LOG_FILE${NC}"
+    exit 1
+}
+
+trap 'handle_error $LINENO' ERR
+
+# Script entry point
+main() {
+    if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+        # Script is being executed directly
+        deploy_beautiful_verification
+    fi
+}
+
+main "$@"

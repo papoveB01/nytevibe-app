@@ -1,0 +1,12 @@
+# nYtevibe Phase 2 Backup Manifest
+# Created: Sat 07 Jun 2025 05:27:45 PM CDT
+# Backup Directory: ./backup_phase2_20250607_172745
+
+Files backed up:
+./backup_phase2_20250607_172745/package.json
+./backup_phase2_20250607_172745/src/router/AppRouter.jsx
+./backup_phase2_20250607_172745/src/services/registrationAPI.js
+./backup_phase2_20250607_172745/src/components/Auth/EmailVerificationView.jsx
+
+Original deployment script: ./email-verification.sh
+Log file: ./deployment_phase2_20250607_172745.log
