@@ -13,8 +13,6 @@ import ForgotPasswordView from './components/Views/ForgotPasswordView';
 import ResetPasswordView from './components/Views/ResetPasswordView';
 // ADD TERMS AND CONDITIONS IMPORT
 import TermsAndConditions from './components/TermsAndConditions';
-// ADD PRIVACY POLICY IMPORT
-import PrivacyPolicy from './components/PrivacyPolicy';
 
 // Components
 import Header from './components/Header';
@@ -102,15 +100,13 @@ function AppContent() {
     }
   }, [actions]);
 
-  // UPDATED: Handle Terms and Conditions AND Privacy Policy URL paths
+  // NEW: Handle Terms and Conditions URL paths
   useEffect(() => {
     const pathname = window.location.pathname;
     
-    // Check if URL is /terms, /terms-and-conditions, /privacy, or /privacy-policy
+    // Check if URL is /terms or /terms-and-conditions
     if ((pathname === '/terms' || pathname === '/terms-and-conditions') && actions) {
       actions.setCurrentView('terms');
-    } else if ((pathname === '/privacy' || pathname === '/privacy-policy') && actions) {
-      actions.setCurrentView('privacy');
     }
   }, [actions]);
 
@@ -128,7 +124,7 @@ function AppContent() {
       return; 
     } 
     // UPDATE: Add new auth views to the list
-    const authViews = ['login', 'register', 'email-verification', 'forgot-password', 'reset-password', 'terms', 'privacy'];
+    const authViews = ['login', 'register', 'email-verification', 'forgot-password', 'reset-password', 'terms'];
     
     // Verify authViews is array and currentView is string before using .includes() 
     if (!Array.isArray(authViews) || typeof currentView !== 'string') {
@@ -152,7 +148,7 @@ function AppContent() {
     }
     
     // UPDATE: Add new auth views to the list
-    const authViews = ['login', 'register', 'email-verification', 'forgot-password', 'reset-password', 'terms', 'privacy'];
+    const authViews = ['login', 'register', 'email-verification', 'forgot-password', 'reset-password', 'terms'];
     
     // Verify all variables before using .includes()
     if (!Array.isArray(authViews) || typeof currentView !== 'string') {
@@ -231,7 +227,7 @@ function AppContent() {
   };
 
   // UPDATE: Add new auth views to header visibility logic
-  const authViews = ['login', 'register', 'email-verification', 'forgot-password', 'reset-password', 'terms', 'privacy'];
+  const authViews = ['login', 'register', 'email-verification', 'forgot-password', 'reset-password', 'terms'];
 
   // Safe header visibility calculation with type validation
   let showHeader = false;
@@ -304,14 +300,9 @@ function AppContent() {
           />
         )}
 
-        {/* Terms and Conditions View */}
+        {/* NEW: Terms and Conditions View */}
         {currentView === 'terms' && (
           <TermsAndConditions />
-        )}
-
-        {/* Privacy Policy View */}
-        {currentView === 'privacy' && (
-          <PrivacyPolicy />
         )}
 
         {currentView === 'home' && (
@@ -323,8 +314,8 @@ function AppContent() {
         )}
       </main>
 
-      {/* Modals - FIXED: Only hide on Terms and Privacy pages to prevent null errors */}
-      {currentView !== 'terms' && currentView !== 'privacy' && (
+      {/* Modals - FIXED: Only hide on Terms page to prevent null errors */}
+      {currentView !== 'terms' && (
         <>
           <RatingModal />
           <ReportModal />

@@ -1,0 +1,5 @@
+
+src/components/User/UserProfile.jsx:16:  const levelIcon = getLevelIcon(userProfile.level);
+src/components/User/UserProfile.jsx:31:            {levelIcon} {userProfile.level}
+src/components/User/UserProfileModal.jsx:46:  const levelIcon = getLevelIcon(userProfile.level);
+src/components/User/UserProfileModal.jsx:80:                {levelIcon} {userProfile.level}

@@ -1,0 +1,232 @@
+// Enhanced registrationAPI.js with phone availability checking
+class RegistrationAPI {
+    constructor() {
+        this.baseURL = 'https://system.nytevibe.com/api';
+    }
+
+    // API Configuration
+    getHeaders() {
+        return {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'Origin': 'https://blackaxl.com'
+        };
+    }
+
+    // Enhanced register method with phone fields
+    async register(formData) {
+        try {
+            // Prepare data for API - transform phone fields
+            const apiData = {
+                username: formData.username,
+                email: formData.email,
+                password: formData.password,
+                password_confirmation: formData.passwordConfirmation,
+                first_name: formData.firstName,
+                last_name: formData.lastName,
+                user_type: formData.userType === 'user' ? 'customer' : formData.userType,
+                date_of_birth: formData.dateOfBirth,
+                phone_number: formData.phone ? formData.phone.replace(/^\+\d{1,4}/, '') : '', // Remove country code
+                phone_country_code: formData.phoneCountryCode || 'US',
+                country: formData.country,
+                state: formData.state,
+                city: formData.city,
+                zipcode: formData.zipcode
+            };
+
+            const response = await fetch(`${this.baseURL}/auth/register`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify(apiData),
+                credentials: 'include'
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new APIError(data, response.status);
+            }
+
+            return data;
+        } catch (error) {
+            console.error('Registration error:', error);
+            throw error;
+        }
+    }
+
+    // Username availability check (existing)
+    async checkUsernameAvailability(username) {
+        try {
+            if (!username || username.trim().length < 3) {
+                return {
+                    available: false,
+                    message: 'Username must be at least 3 characters',
+                    checking: false
+                };
+            }
+
+            const response = await fetch(`${this.baseURL}/auth/check-username`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify({ username: username.trim() }),
+                credentials: 'include'
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new APIError(data, response.status);
+            }
+
+            return {
+                available: data.available,
+                message: data.message,
+                suggestions: data.suggestions || [],
+                checking: false
+            };
+        } catch (error) {
+            console.error('Username availability check error:', error);
+            return {
+                available: false,
+                message: 'Unable to check username availability',
+                checking: false,
+                error: true
+            };
+        }
+    }
+
+    // Email availability check (existing)
+    async checkEmailAvailability(email) {
+        try {
+            if (!email || email.trim().length < 5) {
+                return {
+                    available: false,
+                    message: 'Email must be valid',
+                    checking: false
+                };
+            }
+
+            const response = await fetch(`${this.baseURL}/auth/check-email`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify({ email: email.trim() }),
+                credentials: 'include'
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new APIError(data, response.status);
+            }
+
+            return {
+                available: data.available,
+                message: data.message,
+                checking: false
+            };
+        } catch (error) {
+            console.error('Email availability check error:', error);
+            return {
+                available: false,
+                message: 'Unable to check email availability',
+                checking: false,
+                error: true
+            };
+        }
+    }
+
+    // NEW: Phone availability check
+    async checkPhoneAvailability(phoneNumber, countryCode) {
+        try {
+            // Client-side validation
+            if (!phoneNumber || phoneNumber.length < 10) {
+                return {
+                    available: false,
+                    message: 'Phone number must be exactly 10 digits (excluding country code)',
+                    checking: false
+                };
+            }
+
+            // Extract just the number part (remove country code for API)
+            const cleanNumber = phoneNumber.replace(/^\+\d{1,4}/, '').replace(/\D/g, '');
+            
+            if (cleanNumber.length !== 10) {
+                return {
+                    available: false,
+                    message: 'Phone number must be exactly 10 digits (excluding country code)',
+                    checking: false
+                };
+            }
+
+            const response = await fetch(`${this.baseURL}/auth/check-phone`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify({ 
+                    phone_number: cleanNumber,
+                    country_code: countryCode || 'US'
+                }),
+                credentials: 'include'
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new APIError(data, response.status);
+            }
+
+            return {
+                available: data.available,
+                message: data.message,
+                checking: false
+            };
+        } catch (error) {
+            console.error('Phone availability check error:', error);
+            return {
+                available: false,
+                message: 'Unable to check phone availability',
+                checking: false,
+                error: true
+            };
+        }
+    }
+
+    // Login method (existing)
+    async login(credentials) {
+        try {
+            const response = await fetch(`${this.baseURL}/auth/login`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify(credentials),
+                credentials: 'include'
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new APIError(data, response.status);
+            }
+
+            return data;
+        } catch (error) {
+            console.error('Login error:', error);
+            throw error;
+        }
+    }
+}
+
+// API Error class
+class APIError extends Error {
+    constructor(data, status) {
+        super(data.message || 'API Error');
+        this.name = 'APIError';
+        this.status = status;
+        this.errors = data.errors || {};
+        this.data = data;
+    }
+}
+
+// Create and export instance
+const registrationAPI = new RegistrationAPI();
+export default registrationAPI;
+export { APIError };

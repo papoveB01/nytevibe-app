@@ -1,6 +1,7 @@
 import ForgotPasswordView from "../components/Views/ForgotPasswordView";
 import ResetPasswordView from "../components/Views/ResetPasswordView";
 import EmailVerificationView from "../components/Auth/EmailVerificationView";
+import TermsAndConditions from "../components/TermsAndConditions";
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';
@@ -16,7 +17,19 @@ const AppRouter = () => {
           <div>Login will be routed here in future</div>
         </PublicRoute>
       } />
-
+      
+      {/* Terms and Conditions Routes - PUBLIC */}
+      <Route path="/terms" element={
+        <PublicRoute>
+          <TermsAndConditions />
+        </PublicRoute>
+      } />
+      <Route path="/terms-and-conditions" element={
+        <PublicRoute>
+          <TermsAndConditions />
+        </PublicRoute>
+      } />
+      
       {/* Email Verification Route - PUBLIC (users aren't logged in yet) */}
       <Route path="/verify/:userId/:hash" element={
         <PublicRoute>
@@ -26,14 +39,13 @@ const AppRouter = () => {
           />
         </PublicRoute>
       } />
-
+      
       {/* Password Reset Routes */}
       <Route path="/forgot-password" element={
         <PublicRoute>
           <ForgotPasswordView />
         </PublicRoute>
       } />
-
       <Route path="/reset-password" element={
         <PublicRoute>
           <ResetPasswordView />

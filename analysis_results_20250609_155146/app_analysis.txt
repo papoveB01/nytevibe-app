@@ -1,0 +1,8 @@
+
+304:        {currentView === 'terms' && (
+        <Header
+      <RatingModal />
+      <ReportModal />
+      <ShareModal />
+      <UserProfileModal />
+      <Notifications />

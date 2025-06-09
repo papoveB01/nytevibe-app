@@ -1,0 +1,4 @@
+
+=== TermsAndConditions.jsx imports ===
+import React, { useEffect } from 'react';
+import './TermsAndConditions.css';

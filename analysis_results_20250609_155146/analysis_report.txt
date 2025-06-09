@@ -1,0 +1,56 @@
+[1;33m=== SEARCHING FOR .level PROPERTY ACCESS ===[0m
+Files containing '.level':
+  src/components/User/UserProfile.jsx:16:  const levelIcon = getLevelIcon(userProfile.level);
+  src/components/User/UserProfile.jsx:31:            {levelIcon} {userProfile.level}
+  src/components/User/UserProfileModal.jsx:46:  const levelIcon = getLevelIcon(userProfile.level);
+  src/components/User/UserProfileModal.jsx:80:                {levelIcon} {userProfile.level}
+
+[1;33m=== SEARCHING FOR USER OBJECT ACCESS PATTERNS ===[0m
+Pattern: user\.level
+Pattern: user\[
+Pattern: state\.user
+  src/context/AppContext.jsx:366:user: state.userProfile?.firstName + ' ' + (state.userProfile?.lastName?.charAt(0) || '') + '.',
+  src/hooks/useVenues.js:41:    if (!venueId || !state || !state.userProfile) {
+  src/hooks/useVenues.js:46:    const favoriteVenues = state.userProfile.favoriteVenues;
+Pattern: currentUser
+Pattern: auth\.user
+Pattern: profile\.level
+Pattern: member\.level
+
+[1;33m=== ANALYZING TERMS-RELATED FILES ===[0m
+TermsAndConditions.jsx found
+  [0;32mOK: TermsAndConditions doesn't use context hooks[0m
+
+[1;33m=== CHECKING EXISTINGAPP.JSX ===[0m
+Components that might render on terms page:
+
+[1;33m=== SEARCHING COMPONENTS THAT MIGHT USE USER.LEVEL ===[0m
+Analyzing Header component:
+Analyzing UserProfileModal component:
+Analyzing UserProfile component:
+Analyzing Notifications component:
+Analyzing Badge component:
+Analyzing LevelIcon component:
+
+[1;33m=== CHECKING CONDITIONAL RENDERING ===[0m
+
+[1;33m=== ANALYZING CONTEXT PROVIDERS ===[0m
+
+[1;33m=== POTENTIAL MISSING NULL CHECKS ===[0m
+
+[1;33m=== ANALYSIS SUMMARY ===[0m
+Total .level occurrences: 4
+Total user. occurrences: 4
+
+[0;31m=== MOST LIKELY CULPRITS ===[0m
+  [0;31m⚠️  UserProfileModal components contain .level access[0m
+
+[0;32m=== RECOMMENDATIONS ===[0m
+
+[0;34m=== ANALYSIS COMPLETE ===[0m
+Full results saved in: analysis_results_20250609_155146/
+
+Files generated:
+
+[0;32mRun this command to see the most likely issue:[0m
+grep -r '\.level' src --include='*.jsx' --include='*.js' | grep -v 'user?' | grep -v '?.level'

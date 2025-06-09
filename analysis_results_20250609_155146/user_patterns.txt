@@ -1,0 +1,4 @@
+
+src/context/AppContext.jsx:366:user: state.userProfile?.firstName + ' ' + (state.userProfile?.lastName?.charAt(0) || '') + '.',
+src/hooks/useVenues.js:41:    if (!venueId || !state || !state.userProfile) {
+src/hooks/useVenues.js:46:    const favoriteVenues = state.userProfile.favoriteVenues;

@@ -1,0 +1,28 @@
+
+File: src/components/Header.jsx
+
+File: src/components/Layout/Header.jsx
+
+File: src/components/User/UserProfileModal.jsx
+46:  const levelIcon = getLevelIcon(userProfile.level);
+78:            <div className="profile-modal-level">
+79:              <span className="level-badge-modal">
+80:                {levelIcon} {userProfile.level}
+
+File: src/components/User/UserProfile.jsx
+16:  const levelIcon = getLevelIcon(userProfile.level);
+30:          <div className="user-level-trigger">
+31:            {levelIcon} {userProfile.level}
+
+File: src/components/User/UserProfileModal.jsx
+46:  const levelIcon = getLevelIcon(userProfile.level);
+78:            <div className="profile-modal-level">
+79:              <span className="level-badge-modal">
+80:                {levelIcon} {userProfile.level}
+
+File: src/hooks/useNotifications.js
+
+File: src/components/Notifications.jsx
+
+File: src/components/UI/Badge.jsx
+

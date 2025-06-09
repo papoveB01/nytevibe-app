@@ -980,7 +980,7 @@ const PersonalInfoStep = ({ formData, onChange, onPhoneChange, onPhoneCountryCha
   </div>
 );
 
-// ENHANCED Location Step - Now Required - UPDATED WITH INTERNAL TERMS NAVIGATION
+// ENHANCED Location Step - Now Required - FIXED
 const LocationStep = ({ formData, onChange, validation, stateOptions, cityOptions }) => (
   <div className="step-content">
     <h2 className="step-title">Location Information</h2>
@@ -1103,7 +1103,7 @@ const LocationStep = ({ formData, onChange, validation, stateOptions, cityOption
         </div>
       </div>
       
-      {/* Terms and Conditions Checkbox - UPDATED FOR INTERNAL NAVIGATION */}
+      {/* Terms and Conditions Checkbox */}
       <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
         <label style={{ display: 'flex', alignItems: 'flex-start', cursor: 'pointer' }}>
           <input
@@ -1122,28 +1122,26 @@ const LocationStep = ({ formData, onChange, validation, stateOptions, cityOption
           <span style={{ flex: 1, fontSize: '0.95rem', lineHeight: 1.5, color: '#e5e7eb' }}>
             I accept the{' '}
             <a 
-              href="/terms"
+              href="https://blackaxl.com/terms"
               target="_blank"
               rel="noopener noreferrer"
               style={{ color: '#8b5cf6', textDecoration: 'underline' }}
               onClick={(e) => {
                 e.preventDefault();
-                // Open in new tab using internal navigation
-                window.open('/terms', '_blank');
+                window.open('https://blackaxl.com/terms', '_blank', 'width=800,height=600');
               }}
             >
               Terms and Conditions
             </a>
             {' '}and{' '}
             <a 
-              href="/privacy"
+              href="https://blackaxl.com/privacy"
               target="_blank"
               rel="noopener noreferrer"
               style={{ color: '#8b5cf6', textDecoration: 'underline' }}
               onClick={(e) => {
                 e.preventDefault();
-                // Open in new tab using internal navigation
-                window.open('/privacy', '_blank');
+                window.open('https://blackaxl.com/privacy', '_blank', 'width=800,height=600');
               }}
             >
               Privacy Policy

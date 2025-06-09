@@ -1,3 +1,39 @@
+#!/bin/bash
+
+#################################################################################
+# Phone Availability Debug and Fix
+# Add comprehensive debugging to see what's being sent to API
+#################################################################################
+
+PROJECT_DIR="/var/www/nytevibe"
+
+# Colors for output
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+print_success() {
+    echo -e "${GREEN}✅ $1${NC}"
+}
+
+print_info() {
+    echo -e "${BLUE}ℹ️  $1${NC}"
+}
+
+print_warning() {
+    echo -e "${YELLOW}⚠️  $1${NC}"
+}
+
+cd "$PROJECT_DIR"
+
+print_info "Adding comprehensive debugging to phone availability checking..."
+
+# Create backup
+cp src/services/registrationAPI.js src/services/registrationAPI.js.backup_debug
+
+# Create a debug version with extensive logging
+cat > src/services/registrationAPI.js << 'EOF'
 // Debug version of registrationAPI.js with extensive phone validation logging
 class RegistrationAPI {
     constructor() {
@@ -38,7 +74,7 @@ class RegistrationAPI {
         return allDigits;
     }
 
-    // Enhanced register method with phone fields - FIXED WITH STATE MAPPING
+    // Enhanced register method with phone fields
     async register(formData) {
         try {
             // Extract clean phone number (10 digits only)
@@ -46,36 +82,7 @@ class RegistrationAPI {
             
             console.log('🚀 REGISTRATION DEBUG - Clean phone for registration:', cleanPhone);
             
-            // Complete US state abbreviation to full name mapping
-            const STATE_NAMES = {
-                'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas',
-                'CA': 'California', 'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware',
-                'FL': 'Florida', 'GA': 'Georgia', 'HI': 'Hawaii', 'ID': 'Idaho',
-                'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa', 'KS': 'Kansas',
-                'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
-                'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi',
-                'MO': 'Missouri', 'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada',
-                'NH': 'New Hampshire', 'NJ': 'New Jersey', 'NM': 'New Mexico', 'NY': 'New York',
-                'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio', 'OK': 'Oklahoma',
-                'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
-                'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah',
-                'VT': 'Vermont', 'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia',
-                'WI': 'Wisconsin', 'WY': 'Wyoming', 'DC': 'District of Columbia'
-            };
-            
-            // Canadian province mapping
-            const PROVINCE_NAMES = {
-                'AB': 'Alberta', 'BC': 'British Columbia', 'MB': 'Manitoba',
-                'NB': 'New Brunswick', 'NL': 'Newfoundland and Labrador',
-                'NS': 'Nova Scotia', 'NT': 'Northwest Territories', 'NU': 'Nunavut',
-                'ON': 'Ontario', 'PE': 'Prince Edward Island', 'QC': 'Quebec',
-                'SK': 'Saskatchewan', 'YT': 'Yukon'
-            };
-            
-            // Determine which mapping to use based on country
-            const stateMapping = formData.country === 'CA' ? PROVINCE_NAMES : STATE_NAMES;
-            
-            // Prepare data for API - FIXED FIELD NAMES AND STATE MAPPING
+            // Prepare data for API
             const apiData = {
                 username: formData.username,
                 email: formData.email,
@@ -85,20 +92,13 @@ class RegistrationAPI {
                 last_name: formData.lastName,
                 user_type: formData.userType === 'user' ? 'customer' : formData.userType,
                 date_of_birth: formData.dateOfBirth,
-                phone: cleanPhone, // FIXED: Changed from phone_number to phone
-                country: formData.country === 'US' ? 'United States' : 
-                         formData.country === 'CA' ? 'Canada' : formData.country,
-                state: stateMapping[formData.state] || formData.state, // Convert abbreviation to full name
+                phone_number: cleanPhone, // Send clean 10-digit number
+                phone_country_code: formData.phoneCountryCode || 'US',
+                country: formData.country,
+                state: formData.state,
                 city: formData.city,
-                zipcode: formData.zipcode || '00000', // FIXED: Use non-empty default zipcode
-                terms_accepted: formData.termsAccepted === true // FIXED: Single line, ensure boolean true
+                zipcode: formData.zipcode
             };
-
-            console.log('📤 Sending registration data:', apiData);
-            console.log('📤 State conversion:', formData.state, '→', apiData.state);
-            console.log('📤 Zipcode value:', apiData.zipcode);
-            console.log('📤 Terms accepted:', apiData.terms_accepted);
-            console.log('📤 Terms accepted type:', typeof apiData.terms_accepted);
 
             const response = await fetch(`${this.baseURL}/auth/register`, {
                 method: 'POST',
@@ -110,7 +110,6 @@ class RegistrationAPI {
             const data = await response.json();
 
             if (!response.ok) {
-                console.log('❌ Registration failed:', data);
                 throw new APIError(data, response.status);
             }
 
@@ -334,3 +333,41 @@ class APIError extends Error {
 const registrationAPI = new RegistrationAPI();
 export default registrationAPI;
 export { APIError };
+EOF
+
+print_success "Debug version of registrationAPI.js created"
+
+print_info "Rebuilding application with comprehensive debugging..."
+npm run build
+
+if [ $? -eq 0 ]; then
+    print_success "Build completed successfully!"
+    
+    echo ""
+    print_info "🔍 DEBUG MODE ACTIVE:"
+    echo ""
+    echo "📱 Now test the phone field and check browser console for:"
+    echo "   • Phone input processing details"
+    echo "   • API request/response data"
+    echo "   • Error details if validation fails"
+    echo ""
+    echo "🧪 To debug:"
+    echo "   1. Open browser Developer Tools (F12)"
+    echo "   2. Go to Console tab"
+    echo "   3. Enter a phone number in registration Step 4"
+    echo "   4. Watch the detailed logs"
+    echo ""
+    echo "📋 Look for these log messages:"
+    echo "   • 📱 PHONE DEBUG - shows input processing"
+    echo "   • 🔍 PHONE AVAILABILITY CHECK - shows API calls"
+    echo "   • 📤 API Request data - shows what's sent to backend"
+    echo "   • 📥 API Response - shows backend response"
+    echo "   • 💥 Error details - shows any failures"
+    
+else
+    print_warning "Build failed, restoring backup..."
+    cp src/services/registrationAPI.js.backup_debug src/services/registrationAPI.js
+fi
+
+echo ""
+print_info "Test now and share the console logs to identify the exact issue!"

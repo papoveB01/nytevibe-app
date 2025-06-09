@@ -1,0 +1,144 @@
+
+=== Context file: src/context/AppContext.jsx.backup-globalize ===
+11:  userType: null,
+24:  userProfile: {
+28:    username: 'demouser',
+30:    level: 'Explorer',
+65:          user: 'Sarah M.',
+73:          user: 'Mike R.',
+81:          user: 'Jennifer L.',
+111:          user: 'Alex T.',
+119:          user: 'Maria G.',
+149:          user: 'Chris P.',
+179:          user: 'Diana K.',
+209:          user: 'Tommy L.',
+232:      return { ...state, userType: action.payload };
+248:        userType: null
+279:          notifications: [newNotification, ...state.notifications.slice(0, 2)]
+287:        notifications: state.notifications.filter(n => n.id !== action.payload)
+292:      const isCurrentlyFollowed = state.userProfile.favoriteVenues.includes(venueId);
+294:        ? state.userProfile.favoriteVenues.filter(id => id !== venueId)
+295:        : [...state.userProfile.favoriteVenues, venueId];
+299:        userProfile: {
+300:          ...state.userProfile,
+303:        venues: state.venues.map(venue =>
+318:        venues: state.venues.map(venue => ({
+344:    setUserType: useCallback((userType) => {
+345:      dispatch({ type: 'SET_USER_TYPE', payload: userType });
+348:    loginUser: useCallback((userData) => {
+349:      dispatch({ type: 'LOGIN_SUCCESS', payload: userData });
+
+=== Context file: src/context/AppContext.jsx.backup-email-verification ===
+10:userProfile: null,
+11:userType: null,
+59:user: 'Sarah M.',
+67:user: 'Mike R.',
+96:user: 'Alex P.',
+125:user: 'Jennifer L.',
+154:user: 'Robert K.',
+183:user: 'Tom W.',
+212:user: 'Lisa H.',
+263:return { ...state, userType: action.payload };
+269:userProfile: action.payload,
+278:userProfile: null,
+279:userType: null,
+288:const newFollowedVenues = new Set(state.followedVenues);
+298:venues: state.venues.map(venue =>
+313:venues: state.venues.map(venue => ({
+330:notifications: [newNotification, ...state.notifications.slice(0, 4)]
+336:notifications: state.notifications.filter(n => n.id !== action.payload)
+357:venues: state.venues.map(venue =>
+366:user: state.userProfile?.firstName + ' ' + (state.userProfile?.lastName?.charAt(0) || '') + '.',
+383:venues: state.venues.map(venue =>
+405:registrationData: { ...state.registrationData, ...action.payload }
+451:setUserType: useCallback((userType) => {
+452:dispatch({ type: actionTypes.SET_USER_TYPE, payload: userType });
+455:loginUser: useCallback((userData) => {
+456:dispatch({ type: actionTypes.LOGIN_USER, payload: userData });
+
+=== Context file: src/context/AppContext.jsx.backup-mobile-enhance ===
+11:  userType: null,
+24:  userProfile: {
+28:    username: 'demouser',
+30:    level: 'Explorer',
+65:          user: 'Sarah M.',
+73:          user: 'Mike R.',
+81:          user: 'Jennifer L.',
+111:          user: 'Alex T.',
+119:          user: 'Maria G.',
+149:          user: 'Chris P.',
+179:          user: 'Diana K.',
+209:          user: 'Tommy L.',
+232:      return { ...state, userType: action.payload };
+248:        userType: null
+277:        notifications: [newNotification, ...state.notifications.slice(0, 4)]
+283:        notifications: state.notifications.filter(n => n.id !== action.payload)
+288:      const isCurrentlyFollowed = state.userProfile.favoriteVenues.includes(venueId);
+290:        ? state.userProfile.favoriteVenues.filter(id => id !== venueId)
+291:        : [...state.userProfile.favoriteVenues, venueId];
+295:        userProfile: {
+296:          ...state.userProfile,
+299:        venues: state.venues.map(venue =>
+314:        venues: state.venues.map(venue => ({
+340:    setUserType: useCallback((userType) => {
+341:      dispatch({ type: 'SET_USER_TYPE', payload: userType });
+344:    loginUser: useCallback((userData) => {
+345:      dispatch({ type: 'LOGIN_SUCCESS', payload: userData });
+
+=== Context file: src/context/AppContext.jsx.backup-registration-impl ===
+11:  userType: null,
+24:  userProfile: {
+28:    username: 'demouser',
+30:    level: 'Explorer',
+65:          user: 'Sarah M.',
+73:          user: 'Mike R.',
+81:          user: 'Jennifer L.',
+111:          user: 'Alex T.',
+119:          user: 'Maria G.',
+149:          user: 'Chris P.',
+179:          user: 'Diana K.',
+209:          user: 'Tommy L.',
+232:      return { ...state, userType: action.payload };
+248:        userType: null
+277:        notifications: [newNotification, ...state.notifications.slice(0, 4)]
+283:        notifications: state.notifications.filter(n => n.id !== action.payload)
+288:      const isCurrentlyFollowed = state.userProfile.favoriteVenues.includes(venueId);
+290:        ? state.userProfile.favoriteVenues.filter(id => id !== venueId)
+291:        : [...state.userProfile.favoriteVenues, venueId];
+295:        userProfile: {
+296:          ...state.userProfile,
+299:        venues: state.venues.map(venue =>
+314:        venues: state.venues.map(venue => ({
+340:    setUserType: useCallback((userType) => {
+341:      dispatch({ type: 'SET_USER_TYPE', payload: userType });
+344:    loginUser: useCallback((userData) => {
+345:      dispatch({ type: 'LOGIN_SUCCESS', payload: userData });
+
+=== Context file: src/context/AppContext.jsx ===
+10:userProfile: null,
+11:userType: null,
+59:user: 'Sarah M.',
+67:user: 'Mike R.',
+96:user: 'Alex P.',
+125:user: 'Jennifer L.',
+154:user: 'Robert K.',
+183:user: 'Tom W.',
+212:user: 'Lisa H.',
+263:return { ...state, userType: action.payload };
+269:userProfile: action.payload,
+278:userProfile: null,
+279:userType: null,
+288:const newFollowedVenues = new Set(state.followedVenues);
+298:venues: state.venues.map(venue =>
+313:venues: state.venues.map(venue => ({
+330:notifications: [newNotification, ...state.notifications.slice(0, 4)]
+336:notifications: state.notifications.filter(n => n.id !== action.payload)
+357:venues: state.venues.map(venue =>
+366:user: state.userProfile?.firstName + ' ' + (state.userProfile?.lastName?.charAt(0) || '') + '.',
+383:venues: state.venues.map(venue =>
+405:registrationData: { ...state.registrationData, ...action.payload }
+451:setUserType: useCallback((userType) => {
+452:dispatch({ type: actionTypes.SET_USER_TYPE, payload: userType });
+455:loginUser: useCallback((userData) => {
+456:dispatch({ type: actionTypes.LOGIN_USER, payload: userData });
+

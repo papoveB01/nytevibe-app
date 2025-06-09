@@ -1,0 +1,12 @@
+Based on the analysis, here are the recommended actions:
+
+1. Add null checks to all user.level access:
+   Change: user.level
+   To: user?.level || 0
+
+2. Conditionally render user-dependent components:
+   {isAuthenticated && <UserProfileModal />}
+
+3. Check these specific files (most likely sources):
+src/components/User/UserProfile.jsx
+src/components/User/UserProfileModal.jsx

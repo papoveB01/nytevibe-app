@@ -91,3 +91,186 @@
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+/* ================================================= */
+/* PHONE INPUT SPECIFIC STYLES - ADDED June 8, 2025 */
+/* ================================================= */
+
+/* Phone input container */
+.phone-input-wrapper {
+  position: relative;
+}
+
+/* Main phone input styling */
+.phone-input {
+  width: 100%;
+}
+
+/* Style the phone input field to match existing form inputs */
+.phone-input .PhoneInputInput {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 12px 16px 12px 70px;
+  color: white;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  height: 48px;
+  width: 100%;
+}
+
+.phone-input .PhoneInputInput:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.phone-input .PhoneInputInput::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Country selector styling */
+.phone-input .PhoneInputCountrySelect {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px 0 0 12px;
+  border-right: none;
+  padding: 12px 8px;
+  color: white;
+  height: 48px;
+}
+
+.phone-input .PhoneInputCountrySelect:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+/* Country flag icon */
+.phone-input .PhoneInputCountryIcon {
+  width: 20px;
+  height: 15px;
+}
+
+/* Error state styling */
+.phone-input.error .PhoneInputInput {
+  border-color: #ef4444;
+}
+
+.phone-input.error .PhoneInputCountrySelect {
+  border-color: #ef4444;
+}
+
+/* Required field indicator */
+.required {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+/* Success message styling */
+.success-message {
+  color: #10b981;
+  font-size: 0.875rem;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+}
+
+/* Phone input availability indicators positioning */
+.phone-input-wrapper .availability-indicator {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  z-index: 10;
+}
+
+/* Ensure the phone input container has proper styling hierarchy */
+.phone-input .PhoneInputCountry {
+  display: flex;
+  align-items: center;
+}
+
+/* Phone input dropdown arrow */
+.phone-input .PhoneInputCountrySelectArrow {
+  color: rgba(255, 255, 255, 0.7);
+  margin-left: 4px;
+}
+
+/* Dark theme compatibility for phone input */
+.phone-input .PhoneInputCountrySelect option {
+  background: #1f2937;
+  color: white;
+}
+
+/* Responsive adjustments for phone input */
+@media (max-width: 768px) {
+  .phone-input .PhoneInputInput {
+    font-size: 16px; /* Prevent zoom on iOS */
+    padding-left: 60px;
+  }
+  
+  .phone-input .PhoneInputCountrySelect {
+    padding: 10px 6px;
+  }
+}
+
+/* Enhanced availability indicators for phone input specifically */
+.phone-input-wrapper .availability-indicator.checking {
+  color: #6b7280;
+}
+
+.phone-input-wrapper .availability-indicator.success {
+  color: #10b981;
+}
+
+.phone-input-wrapper .availability-indicator.error {
+  color: #ef4444;
+}
+
+
+/* Terms and Conditions Checkbox */
+.terms-group {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  cursor: pointer;
+  user-select: none;
+}
+
+.terms-checkbox {
+  width: 20px;
+  height: 20px;
+  margin-right: 12px;
+  margin-top: 2px;
+  cursor: pointer;
+  accent-color: #8b5cf6;
+}
+
+.checkbox-text {
+  flex: 1;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #e5e7eb;
+}
+
+.terms-link {
+  color: #8b5cf6;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+
+.terms-link:hover {
+  color: #a78bfa;
+}
+
+.terms-group .field-errors {
+  margin-top: 0.5rem;
+  margin-left: 32px;
+}

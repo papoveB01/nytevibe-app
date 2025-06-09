@@ -32,10 +32,6 @@ LOCATION_DATA
 } from '../../utils/registrationValidation';
 import './availability.css';
 
-// Import phone input component
-import PhoneInput from 'react-phone-number-input';
-import 'react-phone-number-input/style.css';
-
 const RegistrationView = ({ onBack, onSuccess }) => {
 const { actions } = useApp();
 
@@ -43,7 +39,7 @@ const { actions } = useApp();
 const [currentStep, setCurrentStep] = useState(1);
 const [isLoading, setIsLoading] = useState(false);
 
-// Enhanced form data state with phone tracking
+// Form data state
 const [formData, setFormData] = useState({
 userType: 'user',
 username: '',
@@ -53,8 +49,7 @@ passwordConfirmation: '',
 firstName: '',
 lastName: '',
 dateOfBirth: '',
-phone: '', // Will store full E.164 format from PhoneInput
-phoneCountryCode: 'US', // Track selected country
+phone: '',
 country: 'US',
 state: '',
 city: '',
@@ -64,11 +59,10 @@ zipcode: ''
 // Validation state
 const [validation, setValidation] = useState({});
 
-// Enhanced availability state including phone
+// Real-time availability state
 const [availabilityStatus, setAvailabilityStatus] = useState({
 username: { checking: false, available: null, message: '', suggestions: [] },
-email: { checking: false, available: null, message: '' },
-phone: { checking: false, available: null, message: '' }
+email: { checking: false, available: null, message: '' }
 });
 
 // UI state
@@ -78,26 +72,14 @@ const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
 // Debounce refs
 const debounceTimeouts = useRef({});
 
-// Enhanced debounced availability checking with phone support
-const checkAvailability = useCallback(async (field, value, countryCode = null) => {
-  if (field === 'phone') {
-    // Phone validation
-    if (!value || value.length < 10) {
-      setAvailabilityStatus(prev => ({
-        ...prev,
-        phone: { checking: false, available: null, message: '' }
-      }));
-      return;
-    }
-  } else {
-    // Username/email validation (existing logic)
-    if (!value || value.trim().length < 3) {
-      setAvailabilityStatus(prev => ({
-        ...prev,
-        [field]: { checking: false, available: null, message: '', suggestions: [] }
-      }));
-      return;
-    }
+// Debounced availability checking
+const checkAvailability = useCallback(async (field, value) => {
+  if (!value || value.trim().length < 3) {
+    setAvailabilityStatus(prev => ({
+      ...prev,
+      [field]: { checking: false, available: null, message: '', suggestions: [] }
+    }));
+    return;
   }
 
   // Clear existing timeout
@@ -111,7 +93,7 @@ const checkAvailability = useCallback(async (field, value, countryCode = null) =
     [field]: { ...prev[field], checking: true, message: 'Checking availability...' }
   }));
 
-  // Debounce the actual check (500ms)
+  // Debounce the actual check
   debounceTimeouts.current[field] = setTimeout(async () => {
     try {
       let result;
@@ -119,8 +101,6 @@ const checkAvailability = useCallback(async (field, value, countryCode = null) =
         result = await registrationAPI.checkUsernameAvailability(value);
       } else if (field === 'email') {
         result = await registrationAPI.checkEmailAvailability(value);
-      } else if (field === 'phone') {
-        result = await registrationAPI.checkPhoneAvailability(value, countryCode || formData.phoneCountryCode);
       }
 
       setAvailabilityStatus(prev => ({
@@ -145,7 +125,7 @@ const checkAvailability = useCallback(async (field, value, countryCode = null) =
       }));
     }
   }, 500);
-}, [formData.phoneCountryCode]);
+}, []);
 
 // Handle form data changes
 const handleInputChange = (field, value) => {
@@ -168,27 +148,7 @@ if (field === 'username' || field === 'email') {
 }
 };
 
-// Enhanced phone change handler
-const handlePhoneChange = (value) => {
-setFormData(prev => ({ ...prev, phone: value || '' }));
-setValidation(prev => ({ ...prev, phone: null }));
-
-// Trigger availability check for phone
-if (value) {
-  checkAvailability('phone', value, formData.phoneCountryCode);
-}
-};
-
-// Phone country change handler
-const handlePhoneCountryChange = (country) => {
-setFormData(prev => ({ ...prev, phoneCountryCode: country }));
-// Re-check phone availability with new country if phone exists
-if (formData.phone) {
-  checkAvailability('phone', formData.phone, country);
-}
-};
-
-// Enhanced validation for current step
+// Validate current step
 const validateCurrentStep = () => {
 const errors = {};
 
@@ -224,35 +184,9 @@ errors.passwordConfirmation = passwordMatchValidation.errors;
 }
 break;
 
-case 4: // Personal Info - ENHANCED with required phone and DOB
+case 4: // Personal Info
 const personalValidation = validatePersonalInfo(formData);
 Object.assign(errors, personalValidation.errors);
-
-// Enhanced date of birth validation (required + 18+)
-if (!formData.dateOfBirth) {
-errors.dateOfBirth = ['Date of birth is required'];
-} else {
-const birthDate = new Date(formData.dateOfBirth);
-const today = new Date();
-let age = today.getFullYear() - birthDate.getFullYear();
-const monthDiff = today.getMonth() - birthDate.getMonth();
-
-if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-  age--;
-}
-
-if (age < 18) {
-  errors.dateOfBirth = ['You must be at least 18 years old to register. If you\'re under 18, please have a parent or guardian create an account.'];
-}
-}
-
-// Enhanced phone validation (required)
-if (!formData.phone) {
-errors.phone = ['Phone number is required'];
-} else if (formData.phone.length < 10) {
-errors.phone = ['Please enter a valid phone number'];
-}
-
 break;
 
 case 5: // Location
@@ -284,7 +218,7 @@ return;
 setIsLoading(true);
 
 try {
-// API handles field mapping including phone
+// API handles field mapping
 const response = await registrationAPI.register(formData);
 
 if (response.status === 'success') {
@@ -397,10 +331,7 @@ return (
 <PersonalInfoStep
 formData={formData}
 onChange={handleInputChange}
-onPhoneChange={handlePhoneChange}
-onPhoneCountryChange={handlePhoneCountryChange}
 validation={validation}
-availabilityStatus={availabilityStatus}
 />
 );
 case 5:
@@ -499,7 +430,7 @@ Create Account
 );
 };
 
-// Step Components (Account Type - Unchanged)
+// Step Components
 const AccountTypeStep = ({ formData, onChange }) => (
 <div className="step-content">
 <h2 className="step-title">Choose Your Account Type</h2>
@@ -543,7 +474,6 @@ onClick={() => onChange('userType', 'business')}
 </div>
 );
 
-// Credentials Step (Unchanged)
 const CredentialsStep = ({ formData, onChange, validation, availabilityStatus }) => (
 <div className="step-content">
 <h2 className="step-title">Create Your Credentials</h2>
@@ -663,7 +593,6 @@ availabilityStatus.email.available ? 'success' : 'error'
 </div>
 );
 
-// Password Step (Unchanged)
 const PasswordStep = ({
 formData,
 onChange,
@@ -792,8 +721,7 @@ className="password-toggle"
 );
 };
 
-// ENHANCED Personal Info Step with phone selector and required DOB
-const PersonalInfoStep = ({ formData, onChange, onPhoneChange, onPhoneCountryChange, validation, availabilityStatus }) => (
+const PersonalInfoStep = ({ formData, onChange, validation }) => (
 <div className="step-content">
 <h2 className="step-title">Personal Information</h2>
 <p className="step-description">
@@ -845,11 +773,8 @@ placeholder="Your last name"
 </div>
 </div>
 
-{/* ENHANCED Date of Birth - Now Required */}
 <div className="form-group">
-<label htmlFor="dateOfBirth" className="form-label">
-Date of Birth <span className="required">*</span>
-</label>
+<label htmlFor="dateOfBirth" className="form-label">Date of Birth <span className="optional">(Optional)</span></label>
 <div className="input-with-validation">
 <div className="input-wrapper">
 <Calendar className="input-icon" />
@@ -859,9 +784,7 @@ type="date"
 value={formData.dateOfBirth}
 onChange={(e) => onChange('dateOfBirth', e.target.value)}
 className={`form-input ${validation.dateOfBirth ? 'error' : ''}`}
-max={new Date().toISOString().split('T')[0]}
-min={new Date(new Date().setFullYear(new Date().getFullYear() - 100)).toISOString().split('T')[0]}
-required
+max={new Date(new Date().setFullYear(new Date().getFullYear() - 13)).toISOString().split('T')[0]}
 />
 </div>
 {validation.dateOfBirth && (
@@ -871,61 +794,28 @@ required
 ))}
 </div>
 )}
-{formData.dateOfBirth && !validation.dateOfBirth && (
-<div className="success-message">
-<Check className="w-4 h-4 inline mr-1" />
-Valid date of birth
-</div>
-)}
 </div>
 </div>
 
-{/* ENHANCED Phone Number - Now Required with Country Selector */}
 <div className="form-group">
-<label htmlFor="phone" className="form-label">
-Phone Number <span className="required">*</span>
-</label>
+<label htmlFor="phone" className="form-label">Phone Number <span className="optional">(Optional)</span></label>
 <div className="input-with-validation">
-<div className="phone-input-wrapper">
-<PhoneInput
-international
-countryCallingCodeEditable={false}
+<div className="input-wrapper">
+<Phone className="input-icon" />
+<input
+id="phone"
+type="tel"
 value={formData.phone}
-onChange={onPhoneChange}
-onCountryChange={onPhoneCountryChange}
-defaultCountry="US"
-className={`phone-input ${validation.phone ? 'error' : ''}`}
-placeholder="Enter phone number"
+onChange={(e) => onChange('phone', e.target.value)}
+className={`form-input ${validation.phone ? 'error' : ''}`}
+placeholder="+1 (555) 123-4567"
 />
-
-{/* Availability indicators */}
-{availabilityStatus.phone.checking && (
-<div className="availability-indicator checking">
-<div className="loading-spinner-sm"></div>
 </div>
-)}
-{!availabilityStatus.phone.checking && availabilityStatus.phone.available === true && (
-<Check className="availability-indicator success" />
-)}
-{!availabilityStatus.phone.checking && availabilityStatus.phone.available === false && (
-<X className="availability-indicator error" />
-)}
-</div>
-
 {validation.phone && (
 <div className="field-errors">
 {validation.phone.map((error, idx) => (
 <span key={idx} className="error-message">{error}</span>
 ))}
-</div>
-)}
-
-{availabilityStatus.phone.message && (
-<div className={`availability-status ${
-availabilityStatus.phone.checking ? 'checking' : 
-availabilityStatus.phone.available ? 'success' : 'error'
-}`}>
-{availabilityStatus.phone.message}
 </div>
 )}
 </div>
@@ -934,7 +824,6 @@ availabilityStatus.phone.available ? 'success' : 'error'
 </div>
 );
 
-// Location Step (Unchanged)
 const LocationStep = ({ formData, onChange, validation, stateOptions, cityOptions }) => (
 <div className="step-content">
 <h2 className="step-title">Location Information</h2>

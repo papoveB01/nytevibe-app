@@ -1,0 +1,268 @@
+
+src/context/AppContext.jsx:7:currentView: 'login',
+src/context/AppContext.jsx:9:isAuthenticated: false,
+src/context/AppContext.jsx:10:userProfile: null,
+src/context/AppContext.jsx:11:userType: null,
+src/context/AppContext.jsx:59:user: 'Sarah M.',
+src/context/AppContext.jsx:67:user: 'Mike R.',
+src/context/AppContext.jsx:96:user: 'Alex P.',
+src/context/AppContext.jsx:125:user: 'Jennifer L.',
+src/context/AppContext.jsx:154:user: 'Robert K.',
+src/context/AppContext.jsx:183:user: 'Tom W.',
+src/context/AppContext.jsx:212:user: 'Lisa H.',
+src/context/AppContext.jsx:257:return { ...state, currentView: action.payload };
+src/context/AppContext.jsx:263:return { ...state, userType: action.payload };
+src/context/AppContext.jsx:268:isAuthenticated: true,
+src/context/AppContext.jsx:269:userProfile: action.payload,
+src/context/AppContext.jsx:270:currentView: 'home'
+src/context/AppContext.jsx:277:isAuthenticated: false,
+src/context/AppContext.jsx:278:userProfile: null,
+src/context/AppContext.jsx:279:userType: null,
+src/context/AppContext.jsx:280:currentView: 'login',
+src/context/AppContext.jsx:366:user: state.userProfile?.firstName + ' ' + (state.userProfile?.lastName?.charAt(0) || '') + '.',
+src/context/AppContext.jsx:451:setUserType: useCallback((userType) => {
+src/context/AppContext.jsx:452:dispatch({ type: actionTypes.SET_USER_TYPE, payload: userType });
+src/context/AppContext.jsx:455:loginUser: useCallback((userData) => {
+src/context/AppContext.jsx:456:dispatch({ type: actionTypes.LOGIN_USER, payload: userData });
+src/hooks/useVenues.js:41:    if (!venueId || !state || !state.userProfile) {
+src/hooks/useVenues.js:46:    const favoriteVenues = state.userProfile.favoriteVenues;
+src/hooks/useAI.js:2:  const getRecommendations = (userPreferences) => {
+src/hooks/useAI.js:6:  const getPersonalizedVenues = (userHistory) => {
+src/router/ProtectedRoute.jsx:7:  const { isAuthenticated, isLoading } = state;
+src/router/ProtectedRoute.jsx:14:  if (!isAuthenticated) {
+src/router/PublicRoute.jsx:7:  const { isAuthenticated, isLoading } = state;
+src/router/PublicRoute.jsx:13:  // If user is already authenticated, redirect to main app
+src/router/PublicRoute.jsx:14:  if (isAuthenticated) {
+src/router/AppRouter.jsx:33:      {/* Email Verification Route - PUBLIC (users aren't logged in yet) */}
+src/router/AppRouter.jsx:34:      <Route path="/verify/:userId/:hash" element={
+src/services/registrationAPI.js:80:                username: formData.username,
+src/services/registrationAPI.js:86:                user_type: formData.userType === 'user' ? 'customer' : formData.userType,
+src/services/registrationAPI.js:125:    async checkUsernameAvailability(username) {
+src/services/registrationAPI.js:127:            if (!username || username.trim().length < 3) {
+src/services/registrationAPI.js:135:            const response = await fetch(`${this.baseURL}/auth/check-username`, {
+src/services/registrationAPI.js:138:                body: JSON.stringify({ username: username.trim() }),
+src/services/registrationAPI.js:158:                message: 'Unable to check username availability',
+src/services/authAPI.js:6: * including login, logout, password reset, and user management
+src/services/authAPI.js:21:   * @param {string} email - User email or username
+src/services/authAPI.js:24:   * @returns {Promise<{success: boolean, user?: object, token?: string, error?: string}>}
+src/services/authAPI.js:36:        // Store token and user data
+src/services/authAPI.js:38:        localStorage.setItem('user_data', JSON.stringify(data.data.user));
+src/services/authAPI.js:42:          user: data.data.user,
+src/services/authAPI.js:79:      localStorage.removeItem('user_data');
+src/services/authAPI.js:86:   * Get current user
+src/services/authAPI.js:87:   * @returns {Promise<{success: boolean, user?: object, error?: string}>}
+src/services/authAPI.js:91:      const response = await this.request('/auth/user', {
+src/services/authAPI.js:98:        // Update cached user data
+src/services/authAPI.js:99:        localStorage.setItem('user_data', JSON.stringify(data.data.user));
+src/services/authAPI.js:103:          user: data.data.user
+src/services/authAPI.js:108:          error: 'Failed to get user data',
+src/services/authAPI.js:113:      console.error('Get user error:', error);
+src/services/authAPI.js:128:   * @param {string} identifier - Email or username
+src/services/authAPI.js:253:   * Check if user is authenticated
+src/services/authAPI.js:256:  isAuthenticated() {
+src/services/authAPI.js:269:   * Get cached user data
+src/services/authAPI.js:273:    const userData = localStorage.getItem('user_data');
+src/services/authAPI.js:274:    return userData ? JSON.parse(userData) : null;
+src/services/emailVerificationAPI.js:9:   * @param {string} userId - User UUID
+src/services/emailVerificationAPI.js:13:  static async verifyEmail(userId, hash) {
+src/services/emailVerificationAPI.js:15:      const response = await fetch(`${API_BASE_URL}/email/verify/${userId}/${hash}`, {
+src/services/emailVerificationAPI.js:47:   * Check verification status for a user
+src/services/emailVerificationAPI.js:48:   * @param {string} userId - User UUID
+src/services/emailVerificationAPI.js:51:  static async checkVerificationStatus(userId) {
+src/services/emailVerificationAPI.js:53:      const response = await fetch(`${API_BASE_URL}/email/verify-status/${userId}`, {
+src/services/emailVerificationAPI.js:123:   * Parse verification URL to extract user ID and hash
+src/services/emailVerificationAPI.js:126:   * - URL params: ?userId=...&token=... (current backend format)
+src/services/emailVerificationAPI.js:127:   * - Legacy params: ?user_id=...&hash=...
+src/services/emailVerificationAPI.js:138:        userId: pathMatch[1],
+src/services/emailVerificationAPI.js:147:    // FIXED: Handle current backend format: ?userId=...&token=...
+src/services/emailVerificationAPI.js:148:    const userId = params.get('userId') || params.get('user_id') || params.get('id');
+src/services/emailVerificationAPI.js:151:    if (userId && hash) {
+src/services/emailVerificationAPI.js:153:        userId,
+src/services/emailVerificationAPI.js:161:    if (token && !userId) {  // Only use legacy if no userId found
+src/services/emailVerificationAPI.js:169:      userId: null,
+src/services/emailVerificationAPI.js:184:    if (parsed.userId && parsed.hash) {
+src/services/emailVerificationAPI.js:185:      return this.verifyEmail(parsed.userId, parsed.hash);
+src/ExistingApp.jsx:34:  // FIXED: Add userId to verification data
+src/ExistingApp.jsx:35:  const [verificationData, setVerificationData] = useState({ token: null, email: null, userId: null });
+src/ExistingApp.jsx:45:  // Ensure currentView has a default value
+src/ExistingApp.jsx:46:  const currentView = state.currentView || "login" || 'login';
+src/ExistingApp.jsx:47:  const isAuthenticated = state.isAuthenticated || false;
+src/ExistingApp.jsx:53:        /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+src/ExistingApp.jsx:66:    // Email verification logic (FIXED to include userId)
+src/ExistingApp.jsx:69:    const userId = urlParams.get('userId');  // ADD THIS LINE
+src/ExistingApp.jsx:74:    console.log('- userId:', userId);
+src/ExistingApp.jsx:78:      // FIXED: Include userId in verification data
+src/ExistingApp.jsx:82:        userId: userId  // ADD THIS LINE
+src/ExistingApp.jsx:123:    if (!currentView || !isAuthenticated || !updateVenueData) { 
+src/ExistingApp.jsx:129:    // Verify authViews is array and currentView is string before using .includes() 
+src/ExistingApp.jsx:130:    if (!Array.isArray(authViews) || typeof currentView !== 'string') {
+src/ExistingApp.jsx:134:    if (isAuthenticated && !authViews.includes(currentView)) {      
+src/ExistingApp.jsx:141:  }, [updateVenueData, currentView, isAuthenticated]);
+src/ExistingApp.jsx:146:    if (!currentView || !actions || !actions.setCurrentView) {
+src/ExistingApp.jsx:154:    if (!Array.isArray(authViews) || typeof currentView !== 'string') {
+src/ExistingApp.jsx:158:    if (!isAuthenticated && !authViews.includes(currentView) && actions) {      
+src/ExistingApp.jsx:161:  }, [isAuthenticated, currentView, actions]);
+src/ExistingApp.jsx:190:  const handleRegistrationSuccess = (userData) => {
+src/ExistingApp.jsx:220:  // Get verification token and email from URL or localStorage (UPDATED to include userId)
+src/ExistingApp.jsx:225:    const userId = urlParams.get('userId');  // ADD THIS LINE
+src/ExistingApp.jsx:226:    return { token, email, userId };  // ADD userId HERE
+src/ExistingApp.jsx:234:  if (Array.isArray(authViews) && typeof currentView === 'string') {
+src/ExistingApp.jsx:235:    showHeader = !authViews.includes(currentView);
+src/ExistingApp.jsx:240:    currentView,
+src/ExistingApp.jsx:241:    isAuthenticated,
+src/ExistingApp.jsx:261:        {currentView === 'login' && (
+src/ExistingApp.jsx:268:        {currentView === 'register' && (
+src/ExistingApp.jsx:275:        {currentView === 'email-verification' && (
+src/ExistingApp.jsx:281:            userId={verificationData.userId}  // ADD THIS LINE - CRITICAL FIX!
+src/ExistingApp.jsx:286:        {currentView === 'forgot-password' && (
+src/ExistingApp.jsx:294:        {currentView === 'reset-password' && (
+src/ExistingApp.jsx:304:        {currentView === 'terms' && (
+src/ExistingApp.jsx:308:        {currentView === 'home' && (
+src/ExistingApp.jsx:312:        {currentView === 'details' && (
+src/utils/registrationValidation.js:83:export const validateUsername = (username) => {
+src/utils/registrationValidation.js:86:if (!username || username.length < 3) {
+src/utils/registrationValidation.js:90:if (username && username.length > 50) {
+src/utils/registrationValidation.js:94:if (username && !/^[a-zA-Z0-9_.+-]+$/.test(username)) {
+src/utils/registrationValidation.js:213:username: formData.username.trim(),
+src/utils/registrationValidation.js:222:if (formData.userType) {
+src/utils/registrationValidation.js:223:payload.user_type = formData.userType;
+src/utils/authUtils.js:22:      return 'Invalid username or password. Please check your credentials and try again.';
+src/utils/authUtils.js:49: * @param {string} username - Username or email
+src/utils/authUtils.js:53:export const validateLoginForm = (username, password) => {
+src/utils/authUtils.js:56:  if (!username || username.trim().length === 0) {
+src/utils/authUtils.js:57:    errors.username = 'Username or email is required';
+src/utils/authUtils.js:71: * Sanitize username (existing function - enhance as needed)
+src/utils/authUtils.js:72: * @param {string} username - Username to sanitize
+src/utils/authUtils.js:73: * @returns {string} Sanitized username
+src/utils/authUtils.js:75:export const sanitizeUsername = (username) => {
+src/utils/authUtils.js:76:  return username ? username.trim().toLowerCase() : '';
+src/utils/authUtils.js:81: * @param {string} username - Username
+src/utils/authUtils.js:85:export const isDemoCredentials = (username, password) => {
+src/utils/authUtils.js:86:  return username === 'demouser' && password === 'demopass';
+src/utils/authUtils.js:95: * @param {string} identifier - Email or username
+src/utils/authUtils.js:102:    errors.identifier = 'Email or username is required';
+src/utils/authUtils.js:104:    errors.identifier = 'Please enter a valid email or username';
+src/utils/authUtils.js:249: * Sanitize identifier input (email or username)
+src/utils/authUtils.js:266:  const [username, domain] = email.split('@');
+src/utils/authUtils.js:267:  const maskedUsername = username.length <= 2 
+src/utils/authUtils.js:268:    ? username 
+src/utils/authUtils.js:269:    : username.charAt(0) + '*'.repeat(username.length - 2) + username.charAt(username.length - 1);
+src/utils/helpers.js:44:export const getUserInitials = (user) => {
+src/utils/helpers.js:45:  if (!user) return 'U';
+src/utils/helpers.js:46:  const firstName = user.firstName || '';
+src/utils/helpers.js:47:  const lastName = user.lastName || '';
+src/components/User/UserProfile.jsx:8:  const { userProfile } = state;
+src/components/User/UserProfile.jsx:15:  const initials = getUserInitials(userProfile);
+src/components/User/UserProfile.jsx:16:  const levelIcon = getLevelIcon(userProfile.level);
+src/components/User/UserProfile.jsx:19:    <div className="user-profile-trigger">
+src/components/User/UserProfile.jsx:21:        className="user-profile-button"
+src/components/User/UserProfile.jsx:25:        <div className="user-avatar-trigger">{initials}</div>
+src/components/User/UserProfile.jsx:26:        <div className="user-info-trigger">
+src/components/User/UserProfile.jsx:27:          <div className="user-name-trigger">
+src/components/User/UserProfile.jsx:28:            {userProfile.firstName} {userProfile.lastName}
+src/components/User/UserProfile.jsx:30:          <div className="user-level-trigger">
+src/components/User/UserProfile.jsx:31:            {levelIcon} {userProfile.level}
+src/components/User/UserProfile.jsx:32:            <span className="points-trigger">{userProfile.points.toLocaleString()}</span>
+src/components/User/UserProfileModal.jsx:11:  const { userProfile, showUserProfileModal } = state;
+src/components/User/UserProfileModal.jsx:45:  const initials = getUserInitials(userProfile);
+src/components/User/UserProfileModal.jsx:46:  const levelIcon = getLevelIcon(userProfile.level);
+src/components/User/UserProfileModal.jsx:60:      <div className="modal-content user-profile-modal-content" onClick={(e) => e.stopPropagation()}>
+src/components/User/UserProfileModal.jsx:75:              {userProfile.firstName} {userProfile.lastName}
+src/components/User/UserProfileModal.jsx:77:            <p className="profile-modal-username">@{userProfile.username}</p>
+src/components/User/UserProfileModal.jsx:80:                {levelIcon} {userProfile.level}
+src/components/User/UserProfileModal.jsx:89:            <div className="profile-stat-number">{userProfile.points.toLocaleString()}</div>
+src/components/User/UserProfileModal.jsx:93:            <div className="profile-stat-number">{userProfile.totalReports}</div>
+src/components/User/UserProfileModal.jsx:97:            <div className="profile-stat-number">{userProfile.totalRatings}</div>
+src/components/User/UserProfileModal.jsx:101:            <div className="profile-stat-number">{userProfile.followingCount}</div>
+src/components/Header.jsx:8:  const [userLocation, setUserLocation] = useState('Your City');
+src/components/Header.jsx:10:  // Get user's location
+src/components/Header.jsx:59:            <span className="mobile-location">{userLocation}</span>
+src/components/TermsAndConditions.jsx:46:            <p><strong>2.2 Geographic Restrictions</strong>: Our Platform is intended for users in jurisdictions where nightlife discovery services are legal. You are responsible for compliance with local laws.</p>
+src/components/TermsAndConditions.jsx:84:              <li>Respect other users' rights and privacy</li>
+src/components/TermsAndConditions.jsx:94:              <li>Harass, threaten, or abuse other users</li>
+src/components/Registration/RegistrationView.jsx:48:    userType: 'user',
+src/components/Registration/RegistrationView.jsx:49:    username: '',
+src/components/Registration/RegistrationView.jsx:70:    username: { checking: false, available: null, message: '', suggestions: [] },
+src/components/Registration/RegistrationView.jsx:119:        if (field === 'username') {
+src/components/Registration/RegistrationView.jsx:177:    // Trigger real-time availability checking for username/email
+src/components/Registration/RegistrationView.jsx:178:    if (field === 'username' || field === 'email') {
+src/components/Registration/RegistrationView.jsx:213:        const usernameValidation = validateUsername(formData.username);
+src/components/Registration/RegistrationView.jsx:214:        if (!usernameValidation.isValid) {
+src/components/Registration/RegistrationView.jsx:215:          errors.username = usernameValidation.errors;
+src/components/Registration/RegistrationView.jsx:558:        className={`account-type-card ${formData.userType === 'user' ? 'selected' : ''}`}
+src/components/Registration/RegistrationView.jsx:559:        onClick={() => onChange('userType', 'user')}
+src/components/Registration/RegistrationView.jsx:574:        className={`account-type-card ${formData.userType === 'business' ? 'selected' : ''}`}
+src/components/Registration/RegistrationView.jsx:575:        onClick={() => onChange('userType', 'business')}
+src/components/Registration/RegistrationView.jsx:597:      Choose a unique username and enter your email address
+src/components/Registration/RegistrationView.jsx:602:        <label htmlFor="username" className="form-label">Username</label>
+src/components/Registration/RegistrationView.jsx:607:              id="username"
+src/components/Registration/RegistrationView.jsx:609:              value={formData.username}
+src/components/Registration/RegistrationView.jsx:610:              onChange={(e) => onChange('username', e.target.value)}
+src/components/Registration/RegistrationView.jsx:611:              className={`form-input ${validation.username ? 'error' : ''}`}
+src/components/Registration/RegistrationView.jsx:612:              placeholder="Choose your username"
+src/components/Registration/RegistrationView.jsx:614:            {availabilityStatus.username.checking && (
+src/components/Registration/RegistrationView.jsx:619:            {!availabilityStatus.username.checking && availabilityStatus.username.available === true && (
+src/components/Registration/RegistrationView.jsx:622:            {!availabilityStatus.username.checking && availabilityStatus.username.available === false && (
+src/components/Registration/RegistrationView.jsx:627:          {validation.username && (
+src/components/Registration/RegistrationView.jsx:629:              {validation.username.map((error, idx) => (
+src/components/Registration/RegistrationView.jsx:635:          {availabilityStatus.username.message && (
+src/components/Registration/RegistrationView.jsx:637:              availabilityStatus.username.checking ? 'checking' : 
+src/components/Registration/RegistrationView.jsx:638:              availabilityStatus.username.available ? 'success' : 'error'
+src/components/Registration/RegistrationView.jsx:640:              {availabilityStatus.username.message}
+src/components/Registration/RegistrationView.jsx:644:          {availabilityStatus.username.suggestions && availabilityStatus.username.suggestions.length > 0 && (
+src/components/Registration/RegistrationView.jsx:645:            <div className="username-suggestions">
+src/components/Registration/RegistrationView.jsx:649:              {availabilityStatus.username.suggestions.map((suggestion, idx) => (
+src/components/Registration/RegistrationView.jsx:654:                  onClick={() => onChange('username', suggestion)}
+src/components/Views/ForgotPasswordView.jsx:51:  // Clear errors when user types
+src/components/Views/ForgotPasswordView.jsx:134:              <p className="login-subtitle">Enter your email or username to receive a reset link</p>
+src/components/Views/ForgotPasswordView.jsx:198:                    placeholder="Enter your email or username"
+src/components/Views/ForgotPasswordView.jsx:201:                    autoComplete="username"
+src/components/Views/HomeView.jsx:10:  const [userLocation, setUserLocation] = useState('your area');
+src/components/Views/HomeView.jsx:13:  // Get user's location for personalized greeting
+src/components/Views/HomeView.jsx:80:          <p className="mobile-greeting-subtitle">What's happening in {userLocation}</p>
+src/components/Views/LoginView.jsx:8:  const [username, setUsername] = useState('');
+src/components/Views/LoginView.jsx:30:  // Clear verification message when component unmounts or user starts typing
+src/components/Views/LoginView.jsx:32:    if ((username || password) && verificationMessage?.show) {
+src/components/Views/LoginView.jsx:35:  }, [username, password, verificationMessage, actions]);
+src/components/Views/LoginView.jsx:45:      console.log('Attempting login for:', username);
+src/components/Views/LoginView.jsx:48:        email: username, // Fixed: API expects 'email' field
+src/components/Views/LoginView.jsx:60:        if (!response.data.user.email_verified_at) {
+src/components/Views/LoginView.jsx:72:        console.log('User data from API:', response.data.user);
+src/components/Views/LoginView.jsx:78:        // FIXED: Store user data properly in localStorage
+src/components/Views/LoginView.jsx:79:        const userData = response.data.user;
+src/components/Views/LoginView.jsx:80:        localStorage.setItem('user', JSON.stringify(userData));
+src/components/Views/LoginView.jsx:84:        console.log('- user:', localStorage.getItem('user'));
+src/components/Views/LoginView.jsx:86:        // Login user in context
+src/components/Views/LoginView.jsx:87:        actions.loginUser(userData);
+src/components/Views/LoginView.jsx:92:          message: `🎉 Welcome back, ${userData.first_name || userData.username}!`,
+src/components/Views/LoginView.jsx:103:          setError('Invalid username or password.');
+src/components/Views/LoginView.jsx:211:              <label htmlFor="username" className="form-label">Username</label>
+src/components/Views/LoginView.jsx:215:                  id="username"
+src/components/Views/LoginView.jsx:217:                  value={username}
+src/components/Views/LoginView.jsx:220:                  placeholder="Enter your username"
+src/components/Views/VenueDetailsView.jsx:243:                      {review.user.charAt(0)}
+src/components/Views/VenueDetailsView.jsx:246:                      <span className="mobile-reviewer-name">{review.user}</span>
+src/components/Views/ResetPasswordView.jsx:129:  // Clear errors when user types
+src/components/auth/Login.jsx:51:          localStorage.setItem('user', JSON.stringify(data.data.user));
+src/components/auth/Login.jsx:54:          if (data.user) localStorage.setItem('user', JSON.stringify(data.user));
+src/components/Auth/EmailVerificationView.jsx:6:const EmailVerificationView = ({ onBack, onSuccess, token, email, userId }) => {
+src/components/Auth/EmailVerificationView.jsx:9:    console.log("Props received:", { token, email, userId, onBack: !!onBack, onSuccess: !!onSuccess });
+src/components/Auth/EmailVerificationView.jsx:14:    const finalUserId = userId || urlParams.get('userId');
+src/components/Auth/EmailVerificationView.jsx:19:    console.log("- finalUserId:", finalUserId, "(from props:", !!userId, ")");
+src/components/Auth/EmailVerificationView.jsx:37:        // Phase 1 format: Check for user ID + token (hash) - USE FINAL PARAMS
+src/components/Auth/EmailVerificationView.jsx:51:            console.log("Props - userId:", userId, "token:", token);
+src/components/Auth/EmailVerificationView.jsx:71:     * Phase 1 Verification: Verify email using user ID + hash
+src/components/Auth/EmailVerificationView.jsx:73:    const verifyEmailWithIdAndHash = async (userId, hash) => {
+src/components/Auth/EmailVerificationView.jsx:74:        console.log("🌐 Phase 1 verifyEmailWithIdAndHash called with:", { userId, hash });
+src/components/Auth/EmailVerificationView.jsx:78:            const response = await EmailVerificationAPI.verifyEmail(userId, hash);
+src/App.example.jsx:6:  const [isAuthenticated, setIsAuthenticated] = useState(false);
+src/App.example.jsx:16:    localStorage.removeItem('user');
+src/App.example.jsx:20:  if (!isAuthenticated) {
+src/__tests__/services/authAPI.test.js:36:    test('handles user not found error', async () => {
+src/__tests__/utils/authUtils.test.js:23:    test('validates correct username', () => {
+src/__tests__/utils/authUtils.test.js:24:      const result = validateForgotPasswordForm('testuser');
+src/__tests__/utils/authUtils.test.js:32:      expect(result.errors.identifier).toBe('Email or username is required');
+src/__tests__/utils/authUtils.test.js:38:      expect(result.errors.identifier).toBe('Please enter a valid email or username');
+src/__tests__/components/Views/ForgotPasswordView.test.js:54:    // Test valid username
+src/__tests__/components/Views/ForgotPasswordView.test.js:55:    fireEvent.change(input, { target: { value: 'testuser' } });
+src/__tests__/components/Views/ForgotPasswordView.test.js:99:  test('handles user not found gracefully', async () => {

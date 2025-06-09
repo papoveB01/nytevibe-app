@@ -38,7 +38,7 @@ class RegistrationAPI {
         return allDigits;
     }
 
-    // Enhanced register method with phone fields - FIXED WITH STATE MAPPING
+    // Enhanced register method with phone fields
     async register(formData) {
         try {
             // Extract clean phone number (10 digits only)
@@ -46,36 +46,7 @@ class RegistrationAPI {
             
             console.log('🚀 REGISTRATION DEBUG - Clean phone for registration:', cleanPhone);
             
-            // Complete US state abbreviation to full name mapping
-            const STATE_NAMES = {
-                'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas',
-                'CA': 'California', 'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware',
-                'FL': 'Florida', 'GA': 'Georgia', 'HI': 'Hawaii', 'ID': 'Idaho',
-                'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa', 'KS': 'Kansas',
-                'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
-                'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi',
-                'MO': 'Missouri', 'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada',
-                'NH': 'New Hampshire', 'NJ': 'New Jersey', 'NM': 'New Mexico', 'NY': 'New York',
-                'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio', 'OK': 'Oklahoma',
-                'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
-                'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah',
-                'VT': 'Vermont', 'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia',
-                'WI': 'Wisconsin', 'WY': 'Wyoming', 'DC': 'District of Columbia'
-            };
-            
-            // Canadian province mapping
-            const PROVINCE_NAMES = {
-                'AB': 'Alberta', 'BC': 'British Columbia', 'MB': 'Manitoba',
-                'NB': 'New Brunswick', 'NL': 'Newfoundland and Labrador',
-                'NS': 'Nova Scotia', 'NT': 'Northwest Territories', 'NU': 'Nunavut',
-                'ON': 'Ontario', 'PE': 'Prince Edward Island', 'QC': 'Quebec',
-                'SK': 'Saskatchewan', 'YT': 'Yukon'
-            };
-            
-            // Determine which mapping to use based on country
-            const stateMapping = formData.country === 'CA' ? PROVINCE_NAMES : STATE_NAMES;
-            
-            // Prepare data for API - FIXED FIELD NAMES AND STATE MAPPING
+            // Prepare data for API
             const apiData = {
                 username: formData.username,
                 email: formData.email,
@@ -85,20 +56,13 @@ class RegistrationAPI {
                 last_name: formData.lastName,
                 user_type: formData.userType === 'user' ? 'customer' : formData.userType,
                 date_of_birth: formData.dateOfBirth,
-                phone: cleanPhone, // FIXED: Changed from phone_number to phone
-                country: formData.country === 'US' ? 'United States' : 
-                         formData.country === 'CA' ? 'Canada' : formData.country,
-                state: stateMapping[formData.state] || formData.state, // Convert abbreviation to full name
+                phone_number: cleanPhone, // Send clean 10-digit number
+                phone_country_code: formData.phoneCountryCode || 'US',
+                country: formData.country,
+                state: formData.state,
                 city: formData.city,
-                zipcode: formData.zipcode || '00000', // FIXED: Use non-empty default zipcode
-                terms_accepted: formData.termsAccepted === true // FIXED: Single line, ensure boolean true
+                zipcode: formData.zipcode
             };
-
-            console.log('📤 Sending registration data:', apiData);
-            console.log('📤 State conversion:', formData.state, '→', apiData.state);
-            console.log('📤 Zipcode value:', apiData.zipcode);
-            console.log('📤 Terms accepted:', apiData.terms_accepted);
-            console.log('📤 Terms accepted type:', typeof apiData.terms_accepted);
 
             const response = await fetch(`${this.baseURL}/auth/register`, {
                 method: 'POST',
@@ -110,7 +74,6 @@ class RegistrationAPI {
             const data = await response.json();
 
             if (!response.ok) {
-                console.log('❌ Registration failed:', data);
                 throw new APIError(data, response.status);
             }
 
