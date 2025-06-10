@@ -1,0 +1,14 @@
+[2025-06-10 04:20:30] Script initialization started
+[2025-06-10 04:20:30] React version: 18.2.0
+[2025-06-10 04:20:30] Found login component: src/components/auth/Login.jsx
+[2025-06-10 04:20:30] Found login component: src/components/Views/LoginView.jsx
+[2025-06-10 04:20:30] Found login component: src/components/auth/LoginTest.jsx
+[2025-06-10 04:20:49] Backed up: src/services/authAPI.js to /var/www/nytevibe/backups/persistent_login_frontend_20250610_042030/src_services_authAPI.js.backup
+[2025-06-10 04:20:49] Updated AuthAPI service with token management and refresh capabilities
+[2025-06-10 04:20:49] Created useAuthPersistence hook for automatic token management
+[2025-06-10 04:20:49] Backed up: src/context/AppContext.jsx to /var/www/nytevibe/backups/persistent_login_frontend_20250610_042030/src_context_AppContext.jsx.backup
+[2025-06-10 04:20:49] Updated AppContext with initialization and rememberMe support
+[2025-06-10 04:20:49] Backed up: src/components/Views/LoginView.jsx to /var/www/nytevibe/backups/persistent_login_frontend_20250610_042030/src_components_Views_LoginView.jsx.backup
+[2025-06-10 04:20:49] Added remember me functionality to login components
+[2025-06-10 04:20:49] Backed up: src/App.jsx to /var/www/nytevibe/backups/persistent_login_frontend_20250610_042030/src_App.jsx.backup
+[2025-06-10 04:20:49] Added useAuthPersistence hook to main App component

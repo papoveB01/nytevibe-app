@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useCallback } from 'react';
 import authAPI from '../services/authAPI';
 
 const AppContext = createContext();
@@ -14,7 +14,7 @@ const initialState = {
   // UI State
   currentView: 'landing',
   searchQuery: '',
-  isLoading: true, // 🔥 FIX: Start with loading true for initialization
+  isLoading: false,
   
   // Venue Related
   selectedVenue: null,
@@ -241,7 +241,6 @@ const actionTypes = {
   LOGIN_SUCCESS: 'LOGIN_SUCCESS',
   LOGIN_FAILURE: 'LOGIN_FAILURE',
   LOGOUT: 'LOGOUT',
-  INIT_AUTH_COMPLETE: 'INIT_AUTH_COMPLETE', // 🔥 ADD: New action for initialization
   
   // UI State actions
   SET_CURRENT_VIEW: 'SET_CURRENT_VIEW',
@@ -285,8 +284,6 @@ const actionTypes = {
 
 // Reducer
 function appReducer(state, action) {
-  console.log('🔄 AppReducer:', action.type, action.payload);
-  
   switch (action.type) {
     // Authentication cases
     case actionTypes.SET_USER:
@@ -303,30 +300,25 @@ function appReducer(state, action) {
       };
       
     case actionTypes.LOGIN_SUCCESS:
-      console.log('🎯 REDUCER: LOGIN_SUCCESS - setting currentView to home and isAuthenticated to true');
       return {
         ...state,
         user: action.payload.user,
         userProfile: action.payload.user,
         isAuthenticated: true,
         error: null,
-        currentView: 'home', // 🔥 CRITICAL: This should change the view
-        isLoading: false
+        currentView: 'home'
       };
       
     case actionTypes.LOGIN_FAILURE:
-      console.log('❌ REDUCER: LOGIN_FAILURE');
       return {
         ...state,
         user: null,
         userProfile: null,
         isAuthenticated: false,
-        error: action.payload,
-        isLoading: false
+        error: action.payload
       };
       
     case actionTypes.LOGOUT:
-      console.log('🚪 REDUCER: LOGOUT');
       return {
         ...state,
         user: null,
@@ -336,21 +328,11 @@ function appReducer(state, action) {
         currentView: 'login',
         selectedVenue: null,
         followedVenues: new Set(),
-        error: null,
-        isLoading: false
-      };
-
-    case actionTypes.INIT_AUTH_COMPLETE:
-      console.log('🏁 REDUCER: INIT_AUTH_COMPLETE');
-      return {
-        ...state,
-        isLoading: false,
-        currentView: action.payload.isAuthenticated ? 'home' : 'login'
+        error: null
       };
       
     // UI State cases
     case actionTypes.SET_CURRENT_VIEW:
-      console.log('🎯 REDUCER: currentView changing from', state.currentView, 'to', action.payload);
       return { ...state, currentView: action.payload };
       
     case actionTypes.SET_SEARCH_QUERY:
@@ -370,14 +352,12 @@ function appReducer(state, action) {
       return { ...state, userType: action.payload };
       
     case actionTypes.LOGIN_USER:
-      console.log('🎯 REDUCER: LOGIN_USER (legacy) - setting home view');
       return {
         ...state,
         isAuthenticated: true,
         userProfile: action.payload,
         user: action.payload,
-        currentView: 'home',
-        isLoading: false
+        currentView: 'home'
       };
       
     case actionTypes.LOGOUT_USER:
@@ -389,11 +369,10 @@ function appReducer(state, action) {
         user: null,
         userType: null,
         currentView: 'login',
-        followedVenues: new Set(),
-        isLoading: false
+        followedVenues: new Set()
       };
       
-    // ... (keep all other cases the same - venue, notifications, modals, etc.)
+    // Venue cases
     case actionTypes.SET_SELECTED_VENUE:
       return { ...state, selectedVenue: action.payload };
       
@@ -553,66 +532,6 @@ function appReducer(state, action) {
 export function AppProvider({ children }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
   
-  // 🔥 FIX: Initialize auth from localStorage on mount
-  useEffect(() => {
-    const initializeAuth = async () => {
-      console.log('🚀 Initializing authentication...');
-      
-      try {
-        // Check if we have stored auth data
-        const storedToken = authAPI.getToken();
-        const storedUser = authAPI.getStoredUser();
-        
-        console.log('Stored token exists:', !!storedToken);
-        console.log('Stored user exists:', !!storedUser);
-        
-        if (storedToken && storedUser) {
-          // Validate the stored token
-          console.log('🔍 Validating stored token...');
-          const validation = await authAPI.validateToken();
-          
-          if (validation.valid) {
-            console.log('✅ Token valid - restoring authentication');
-            dispatch({
-              type: actionTypes.SET_USER,
-              payload: validation.user
-            });
-            dispatch({
-              type: actionTypes.SET_AUTH,
-              payload: true
-            });
-            dispatch({
-              type: actionTypes.INIT_AUTH_COMPLETE,
-              payload: { isAuthenticated: true }
-            });
-          } else {
-            console.log('❌ Token invalid - clearing auth');
-            authAPI.clearAuth();
-            dispatch({
-              type: actionTypes.INIT_AUTH_COMPLETE,
-              payload: { isAuthenticated: false }
-            });
-          }
-        } else {
-          console.log('ℹ️ No stored auth - showing login');
-          dispatch({
-            type: actionTypes.INIT_AUTH_COMPLETE,
-            payload: { isAuthenticated: false }
-          });
-        }
-      } catch (error) {
-        console.error('❌ Auth initialization error:', error);
-        authAPI.clearAuth();
-        dispatch({
-          type: actionTypes.INIT_AUTH_COMPLETE,
-          payload: { isAuthenticated: false }
-        });
-      }
-    };
-
-    initializeAuth();
-  }, []);
-  
   // Authentication actions
   const setUser = useCallback((user) => {
     dispatch({ type: actionTypes.SET_USER, payload: user });
@@ -622,22 +541,19 @@ export function AppProvider({ children }) {
     dispatch({ type: actionTypes.SET_AUTH, payload: isAuth });
   }, []);
   
-  // 🔥 FIX: Updated login action to work with authAPI
   const login = useCallback(async (credentials, rememberMe = false) => {
-    console.log('🔐 AppContext: Starting login process...', { rememberMe });
-    
     dispatch({ type: actionTypes.SET_LOADING, payload: true });
-    
     try {
-      const response = await authAPI.login(credentials, rememberMe);
-      console.log('🔐 AppContext: AuthAPI response:', response);
+      const response = await authAPI.login(
+        credentials.login || credentials.email,
+        credentials.password,
+        rememberMe
+      );
       
       if (response.success) {
-        console.log('✅ AppContext: Login successful, dispatching LOGIN_SUCCESS');
-        
         dispatch({ 
           type: actionTypes.LOGIN_SUCCESS, 
-          payload: { user: response.data.user } 
+          payload: { user: response.user } 
         });
         
         // Add success notification
@@ -645,28 +561,27 @@ export function AppProvider({ children }) {
           type: actionTypes.ADD_NOTIFICATION,
           payload: {
             type: 'success',
-            message: `🎉 Welcome back, ${response.data.user.first_name || response.data.user.username}!`,
+            message: 'Login successful! Welcome back!',
             duration: 3000
           }
         });
-        
-        return { success: true };
       } else {
-        console.log('❌ AppContext: Login failed:', response.message);
         dispatch({ 
           type: actionTypes.LOGIN_FAILURE, 
-          payload: response.message || 'Login failed' 
+          payload: response.error 
         });
-        return { success: false, message: response.message };
       }
+      
+      return response;
     } catch (error) {
-      console.error('❌ AppContext: Login error:', error);
       const errorMessage = error.message || 'Login failed';
       dispatch({ 
         type: actionTypes.LOGIN_FAILURE, 
         payload: errorMessage 
       });
-      return { success: false, message: errorMessage };
+      throw error;
+    } finally {
+      dispatch({ type: actionTypes.SET_LOADING, payload: false });
     }
   }, []);
   
@@ -689,17 +604,13 @@ export function AppProvider({ children }) {
       console.error('Logout error:', error);
       // Still logout on client side even if API call fails
       dispatch({ type: actionTypes.LOGOUT });
+    } finally {
+      dispatch({ type: actionTypes.SET_LOADING, payload: false });
     }
   }, []);
   
   // Action creators
   const actions = {
-    // New setView action for navigation
-    setView: useCallback((view) => {
-      console.log('🎯 AppContext: Setting view to:', view);
-      dispatch({ type: actionTypes.SET_CURRENT_VIEW, payload: view });
-    }, []),
-    
     // Authentication actions
     setUser,
     setIsAuthenticated,
@@ -733,7 +644,6 @@ export function AppProvider({ children }) {
     }, []),
     
     loginUser: useCallback((userData) => {
-      console.log('🎯 AppContext: Legacy loginUser called');
       dispatch({ type: actionTypes.LOGIN_USER, payload: userData });
     }, []),
     
@@ -829,21 +739,8 @@ export function AppProvider({ children }) {
     
     clearVerificationMessage: useCallback(() => {
       dispatch({ type: actionTypes.CLEAR_VERIFICATION_MESSAGE });
-    }, []),
-    
-    // Helper action for initialization
-    setInitialized: useCallback(() => {
-      dispatch({ type: actionTypes.SET_LOADING, payload: false });
     }, [])
   };
-  
-  // Debug logging
-  console.log('🖼️ AppContext state:', {
-    currentView: state.currentView,
-    isAuthenticated: state.isAuthenticated,
-    isLoading: state.isLoading,
-    hasUser: !!state.user
-  });
   
   return (
     <AppContext.Provider value={{ state, actions }}>

@@ -1,0 +1,93 @@
+🔍 SYSTEMATIC NAVIGATION DEBUG REPORT
+Generated: Tue 10 Jun 2025 09:37:02 AM CDT
+========================================
+
+1️⃣ CHECKING MAIN APP ENTRY POINT
+=================================
+✅ Found main file: /var/www/nytevibe/src/main.jsx
+
+🔍 Checking AppProvider wrapper in main file...
+❌ CRITICAL ISSUE: AppProvider NOT found in main file!
+   This is likely the root cause of navigation issues
+📝 Current imports:
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App.jsx'
+✅ React import found
+
+2️⃣ CHECKING APPCONTEXT.JSX
+==========================
+✅ AppContext.jsx found
+✅ AppProvider export found
+✅ useApp hook export found
+
+🔍 Checking AppContext Provider value...
+✅ Provider value includes state and actions
+
+🔍 Checking actions object...
+✅ Actions object found
+✅ Navigation actions found in actions object
+
+🔍 Checking useApp hook implementation...
+✅ useApp hook uses useContext
+
+3️⃣ CHECKING EXISTINGAPP.JSX
+==========================
+✅ ExistingApp.jsx found
+✅ useApp import found
+✅ useApp hook properly destructured
+
+🔍 Checking navigation handlers...
+✅ handleShowRegistration found
+✅ handleShowRegistration uses actions
+
+🔍 Checking props passed to LoginView...
+✅ onRegister prop passed to LoginView
+
+4️⃣ CHECKING LOGINVIEW.JSX
+========================
+✅ LoginView.jsx found
+✅ LoginView properly receives props
+✅ LoginView uses useApp hook
+✅ LoginView properly destructures actions
+
+🔍 Checking onClick handlers...
+✅ Create Account onClick handler found
+✅ Forgot Password onClick handler found
+
+5️⃣ CHECKING APP.JSX STRUCTURE
+=============================
+✅ App.jsx found
+✅ App.jsx imports ExistingApp
+
+6️⃣ CHECKING DEPENDENCIES
+========================
+✅ package.json found
+✅ React dependency:     "react": "^18.2.0",
+✅ Dev script found
+
+7️⃣ GENERATING POTENTIAL FIXES
+=============================
+📁 Fix templates created in: /var/www/nytevibe/backups/systematic_debug_20250610_093702
+
+8️⃣ SUMMARY AND RECOMMENDATIONS
+==============================
+
+📊 DIAGNOSTIC SUMMARY:
+❌ CRITICAL: AppProvider wrapper missing in main file
+
+📈 ISSUE COUNT:
+   Critical issues: 1
+   Warning issues: 0
+
+🎯 RECOMMENDED FIXES (in order):
+1. 🔧 FIX MAIN FILE: Add AppProvider wrapper
+   File: /var/www/nytevibe/src/main.jsx
+   Template: /var/www/nytevibe/backups/systematic_debug_20250610_093702/fix_main_wrapper.jsx
+
+✅ SYSTEMATIC DEBUG COMPLETE!
+============================
+
+📁 Full report saved to: /var/www/nytevibe/backups/systematic_debug_20250610_093702/debug_report.txt
+📁 Backups and fixes in: /var/www/nytevibe/backups/systematic_debug_20250610_093702
+

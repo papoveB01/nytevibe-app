@@ -27,6 +27,12 @@ import './App.css';
 
 function AppContent() {
   const { state, actions } = useApp();
+    // Auto-navigate authenticated users away from login
+    useEffect(() => {
+        if (state.isAuthenticated && ['login', 'register'].includes(state.currentView)) {
+            actions.setView('home');
+        }
+    }, [state.isAuthenticated, state.currentView]);
   const { updateVenueData } = useVenues();
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobile, setIsMobile] = useState(false);
@@ -40,9 +46,9 @@ function AppContent() {
   }
 
   // Ensure currentView has a default value
+  // UPDATED: Default to 'landing' instead of 'login' to allow App.jsx to handle auth
   const currentView = state.currentView || 'landing';
   const isAuthenticated = state.isAuthenticated || false;
-  const isLoading = state.isLoading || false;
 
   // Mobile detection
   useEffect(() => {
@@ -54,6 +60,48 @@ function AppContent() {
 
     checkMobile();
     window.addEventListener('resize', checkMobile);
+    
+    // Render the appropriate view based on state
+    const renderCurrentView = () => {
+        console.log('Rendering view:', state.currentView, 'Authenticated:', state.isAuthenticated);
+        
+        // Loading state
+        if (state.isLoading) {
+            return <div>Loading...</div>;
+        }
+        
+        // Route based on currentView
+        switch (state.currentView) {
+            case 'landing':
+                return state.isAuthenticated ? <HomeView /> : <LandingView />;
+                
+            case 'login':
+                return state.isAuthenticated ? <HomeView /> : <LoginView />;
+                
+            case 'register':
+                return state.isAuthenticated ? <HomeView /> : <RegistrationView />;
+                
+            case 'home':
+                return state.isAuthenticated ? <HomeView /> : <LoginView />;
+                
+            case 'profile':
+                return state.isAuthenticated ? <ProfileView /> : <LoginView />;
+                
+            case 'venue-details':
+                return state.isAuthenticated ? <VenueDetailsView /> : <LoginView />;
+                
+            case 'reset-password':
+                return <ResetPasswordView />;
+                
+            case 'email-verification':
+                return <EmailVerificationView />;
+                
+            default:
+                console.log('Unknown view:', state.currentView);
+                return state.isAuthenticated ? <HomeView /> : <LandingView />;
+        }
+    };
+
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
@@ -138,6 +186,9 @@ function AppContent() {
     }
   }, [updateVenueData, currentView, isAuthenticated]);
 
+  // REMOVED: The useEffect that was forcing redirect to login
+  // This is now handled by App.jsx during the auth check phase
+
   const handleShowRegistration = () => {
     if (actions) actions.setCurrentView('register');
   };
@@ -201,108 +252,7 @@ function AppContent() {
     return { token, email, userId };
   };
 
-  // Render the appropriate view based on state
-  const renderCurrentView = () => {
-    console.log('🖼️ ExistingApp: Rendering view:', currentView, 'Authenticated:', isAuthenticated, 'Loading:', isLoading);
-    
-    // Show loading during initialization
-    if (isLoading) {
-      return (
-        <div className="loading-container">
-          <div className="loading-spinner">Loading...</div>
-        </div>
-      );
-    }
-    
-    // Route based on currentView - let the context handle navigation
-    switch (currentView) {
-      case 'landing':
-        return (
-          <div className="landing-view">
-            <div className="landing-content">
-              <h1>Welcome to nYtevibe</h1>
-              <p>Discover Houston's Best Nightlife</p>
-              <button onClick={handleBackToLogin} className="cta-button">
-                Get Started
-              </button>
-            </div>
-          </div>
-        );
-        
-      case 'login':
-        return (
-          <LoginView 
-            onRegister={handleShowRegistration}
-            onForgotPassword={handleShowForgotPassword}
-          />
-        );
-        
-      case 'register':
-        return (
-          <RegistrationView
-            onBack={handleBackToLogin}
-            onSuccess={handleRegistrationSuccess}
-          />
-        );
-        
-      case 'home':
-        // 🔥 FIX: Only check auth for protected routes, don't redirect here
-        // Let the context handle the proper navigation
-        return <HomeView onVenueSelect={handleVenueSelect} />;
-        
-      case 'details':
-        return <VenueDetailsView onBack={handleBackToHome} />;
-        
-      case 'email-verification':
-        return (
-          <EmailVerificationView
-            onBack={handleBackToLogin}
-            onSuccess={handleEmailVerificationSuccess}
-            token={verificationData.token}
-            email={verificationData.email}
-            userId={verificationData.userId}
-          />
-        );
-        
-      case 'forgot-password':
-        return (
-          <ForgotPasswordView
-            onBack={handleBackToLogin}
-            onSuccess={handleForgotPasswordSuccess}
-          />
-        );
-        
-      case 'reset-password':
-        return (
-          <ResetPasswordView
-            onBack={handleBackToLogin}
-            onSuccess={handlePasswordResetSuccess}
-            token={resetData.token}
-            email={resetData.email}
-          />
-        );
-        
-      case 'terms':
-        return <TermsAndConditions />;
-        
-      case 'privacy':
-        return <PrivacyPolicy />;
-        
-      default:
-        console.log('🤔 ExistingApp: Unknown view:', currentView, '- using fallback');
-        // Fallback based on authentication state
-        return isAuthenticated ? (
-          <HomeView onVenueSelect={handleVenueSelect} />
-        ) : (
-          <LoginView 
-            onRegister={handleShowRegistration}
-            onForgotPassword={handleShowForgotPassword}
-          />
-        );
-    }
-  };
-
-  // Auth views list for header visibility
+  // UPDATED: Add 'landing' to auth views list
   const authViews = ['landing', 'login', 'register', 'email-verification', 'forgot-password', 'reset-password', 'terms', 'privacy'];
 
   // Safe header visibility calculation with type validation
@@ -312,10 +262,9 @@ function AppContent() {
   }
   
   // Debug logging
-  console.log('🖼️ ExistingApp Debug:', {
+  console.log('ExistingApp Debug:', {
     currentView,
     isAuthenticated,
-    isLoading,
     stateExists: !!state,
     actionsExists: !!actions,
     verificationData: verificationData
@@ -335,7 +284,74 @@ function AppContent() {
 
       {/* Main Content */}
       <main className={`main-content ${isMobile ? 'mobile-main' : ''}`}>
-        {renderCurrentView()}
+        {/* ADDED: Landing view (optional - can show a landing page or redirect) */}
+        {currentView === 'landing' && (
+          <div className="landing-view">
+            <div className="landing-content">
+              <h1>Welcome to nYtevibe</h1>
+              <p>Discover Houston's Best Nightlife</p>
+              <button onClick={handleBackToLogin} className="cta-button">
+                Get Started
+              </button>
+            </div>
+          </div>
+        )}
+
+        {currentView === 'login' && (
+          <LoginView 
+            onRegister={handleShowRegistration}
+            onForgotPassword={handleShowForgotPassword}
+          />
+        )}
+
+        {currentView === 'register' && (
+          <RegistrationView
+            onBack={handleBackToLogin}
+            onSuccess={handleRegistrationSuccess}
+          />
+        )}
+
+        {currentView === 'email-verification' && (
+          <EmailVerificationView
+            onBack={handleBackToLogin}
+            onSuccess={handleEmailVerificationSuccess}
+            token={verificationData.token}
+            email={verificationData.email}
+            userId={verificationData.userId}
+          />
+        )}
+
+        {currentView === 'forgot-password' && (
+          <ForgotPasswordView
+            onBack={handleBackToLogin}
+            onSuccess={handleForgotPasswordSuccess}
+          />
+        )}
+
+        {currentView === 'reset-password' && (
+          <ResetPasswordView
+            onBack={handleBackToLogin}
+            onSuccess={handlePasswordResetSuccess}
+            token={resetData.token}
+            email={resetData.email}
+          />
+        )}
+
+        {currentView === 'terms' && (
+          <TermsAndConditions />
+        )}
+
+        {currentView === 'privacy' && (
+          <PrivacyPolicy />
+        )}
+
+        {currentView === 'home' && (
+          <HomeView onVenueSelect={handleVenueSelect} />
+        )}
+
+        {currentView === 'details' && (
+          <VenueDetailsView onBack={handleBackToHome} />
+        )}
       </main>
 
       {/* Modals - Only hide on Terms and Privacy pages */}
@@ -354,12 +370,10 @@ function AppContent() {
   );
 }
 
-// 🔥 CRITICAL FIX: Change from "App" to "ExistingApp"
-function ExistingApp() {
+function App() {
   return (
     <AppContent />
   );
 }
 
-// 🔥 CRITICAL FIX: Export as "ExistingApp" instead of "App"
-export default ExistingApp;
+export default App;

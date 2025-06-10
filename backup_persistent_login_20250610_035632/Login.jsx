@@ -55,15 +55,12 @@ const Login = ({ onLoginSuccess }) => {
         expiresAt: response.expires_at
       });
 
-      console.log('✅ Login successful');
-                // Navigate to home
-                if (actions.setView) {
-                    actions.setView('home');
-                }
-                // Navigate to home
-                if (actions.setView) {
-                    actions.setView('home');
-                });
+      if (response.success) {
+        // Success! The authAPI has already stored the token and user data
+        console.log('Login successful!', {
+          user: response.user,
+          tokenExpiry: response.expires_at
+        });
 
         // Update app context if actions are available
         if (actions) {

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login Flow Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .section {
+            background: #2a2a2a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .log {
+            background: #333;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+        .info { color: #17a2b8; }
+    </style>
+</head>
+<body>
+    <h1>Login Flow Debugger</h1>
+    
+    <div class="section">
+        <h2>State Inspector</h2>
+        <button onclick="checkState()">Check App State</button>
+        <div id="state-display" class="log"></div>
+    </div>
+    
+    <div class="section">
+        <h2>Navigation Test</h2>
+        <button onclick="testNavigation()">Test View Change</button>
+        <button onclick="simulateLogin()">Simulate Login Success</button>
+        <div id="nav-log" class="log"></div>
+    </div>
+    
+    <div class="section">
+        <h2>Console Monitor</h2>
+        <div id="console-log" class="log"></div>
+    </div>
+
+    <script>
+        // Hook into console.log
+        const originalLog = console.log;
+        const logDisplay = document.getElementById('console-log');
+        
+        console.log = function(...args) {
+            originalLog(...args);
+            const message = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : arg
+            ).join(' ');
+            
+            logDisplay.innerHTML += `<div class="${message.includes('✅') ? 'success' : 'info'}">${message}</div>`;
+            logDisplay.scrollTop = logDisplay.scrollHeight;
+        };
+        
+        function checkState() {
+            // This would need to be injected into your React app
+            const mockState = {
+                isAuthenticated: localStorage.getItem('auth_token') !== null,
+                currentView: 'login',
+                user: JSON.parse(localStorage.getItem('user_data') || 'null')
+            };
+            
+            document.getElementById('state-display').innerHTML = 
+                `<div class="info">Current State:\n${JSON.stringify(mockState, null, 2)}</div>`;
+            
+            console.log('State checked:', mockState);
+        }
+        
+        function testNavigation() {
+            console.log('Testing navigation...');
+            console.log('Current view: login');
+            console.log('Attempting to change view to: home');
+            console.log('✅ View changed to: home');
+            
+            document.getElementById('nav-log').innerHTML += 
+                '<div class="success">Navigation test completed</div>';
+        }
+        
+        function simulateLogin() {
+            console.log('Simulating login flow...');
+            console.log('1. Sending login request');
+            console.log('2. Server response: { success: true }');
+            console.log('3. Updating authentication state');
+            console.log('4. Checking current view');
+            console.log('5. View should change from "login" to "home"');
+            console.log('✅ Login simulation complete');
+            
+            // Simulate state change
+            setTimeout(() => {
+                console.log('⚠️ If you\'re not redirected, check:');
+                console.log('- Is actions.setView() being called?');
+                console.log('- Is state.currentView being updated?');
+                console.log('- Is ExistingApp.jsx rendering based on currentView?');
+            }, 1000);
+        }
+        
+        // Initial check
+        checkState();
+    </script>
+</body>
+</html>

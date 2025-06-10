@@ -44,6 +44,17 @@ function AppContent() {
   const isAuthenticated = state.isAuthenticated || false;
   const isLoading = state.isLoading || false;
 
+  // 🔥 REMOVE: Auto-navigation that might interfere with login flow
+  // This was causing conflicts with the context-based navigation
+  // useEffect(() => {
+  //   console.log('Auth navigation check:', { isAuthenticated, currentView });
+  //   
+  //   if (isAuthenticated && ['login', 'register', 'landing'].includes(currentView)) {
+  //     console.log('User authenticated on auth page, navigating to home...');
+  //     actions.setView('home');
+  //   }
+  // }, [isAuthenticated, currentView, actions]);
+
   // Mobile detection
   useEffect(() => {
     const checkMobile = () => {
@@ -354,12 +365,10 @@ function AppContent() {
   );
 }
 
-// 🔥 CRITICAL FIX: Change from "App" to "ExistingApp"
-function ExistingApp() {
+function App() {
   return (
     <AppContent />
   );
 }
 
-// 🔥 CRITICAL FIX: Export as "ExistingApp" instead of "App"
-export default ExistingApp;
+export default App;

@@ -7,7 +7,6 @@ const LoginView = ({ onRegister, onForgotPassword }) => {
   const { state, actions } = useApp();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false); // 🔥 ADD: Remember Me state
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -36,47 +35,84 @@ const LoginView = ({ onRegister, onForgotPassword }) => {
   }, [username, password, verificationMessage, actions]);
 
   const handleSubmit = async (e) => {
+        // DIAGNOSTIC LOGGING
+        console.log('🔍 LOGIN DIAGNOSTIC - Start');
+        console.log('1. Form submitted');
     e.preventDefault();
-    console.log('🚀 LOGIN FLOW START - Using Context Login Action');
-    console.log('🔍 LOGIN DIAGNOSTIC - Form submitted with rememberMe:', rememberMe);
-    
     setError('');
     setIsLoading(true);
 
     try {
-      // 🔥 CRITICAL FIX: Use the context login action instead of registrationAPI directly
-      console.log('Using context login action...');
-      
-      const credentials = {
-        username: username, // This will be converted to email in authAPI
-        password: password
-      };
+      // Real API login
+      console.log('=== LOGIN DEBUG ===');
+      console.log('Attempting login for:', username);
 
-      // Use the context login action that handles persistent login
-      const result = await actions.login(credentials, rememberMe);
-      
-      console.log('Context login result:', result);
+      const response = await registrationAPI.login({
+        email: username, // Fixed: API expects 'email' field
+        password
+      });
 
-      if (result.success) {
-        console.log('✅ Login successful via context - should auto-navigate to home');
-        // No manual navigation needed - the LOGIN_SUCCESS action should handle this
-      } else {
-        console.log('❌ Login failed:', result.message);
-        setError(result.message || 'Login failed. Please try again.');
+      console.log('Login API response:', response);
+
+      if (response.status === 'success') {
+        // Check if email is verified - FIXED FIELD NAME
+        // DISABLED: Frontend email verification check
+
+        /*
+
+        if (!response.data.user.email_verified_at) {
+
+          setError("Please verify your email before signing in. Check your inbox for the verification link.");
+
+          setIsLoading(false);
+
+          return;
+
+        }
+
+        */
+
+        console.log('User data from API:', response.data.user);
+        console.log('Token from API:', response.data.token);
+
+        // Store authentication token
+        localStorage.setItem('auth_token', response.data.token);
+
+        // FIXED: Store user data properly in localStorage
+        const userData = response.data.user;
+        localStorage.setItem('user', JSON.stringify(userData));
+        
+        console.log('Stored in localStorage:');
+        console.log('- auth_token:', localStorage.getItem('auth_token'));
+        console.log('- user:', localStorage.getItem('user'));
+
+        // Login user in context
+        actions.loginUser(userData);
+
+        // Show success notification
+        actions.addNotification({
+          type: 'success',
+          message: `🎉 Welcome back, ${userData.first_name || userData.username}!`,
+          important: true,
+          duration: 3000
+        });
+
+        console.log('Login successful - redirecting to home');
       }
-
     } catch (error) {
-      console.error('Login error caught:', error);
-      
-      // Handle different error types
-      if (error.message && error.message.includes('email')) {
-        setError('Please verify your email before signing in. Check your inbox for the verification link.');
-      } else if (error.message && error.message.includes('401')) {
-        setError('Invalid username or password.');
-      } else if (error.message && error.message.includes('429')) {
-        setError('Too many login attempts. Please try again later.');
+      console.error('Login failed:', error);
+      if (error instanceof APIError) {
+        if (error.status === 401) {
+          setError('Invalid username or password.');
+        } else if (error.status === 403 && error.code === 'EMAIL_NOT_VERIFIED') {
+          setError('Please verify your email before signing in. Check your inbox for the verification link.');
+        } else if (error.status === 429) {
+          setError('Too many login attempts. Please try again later.');
+        } else {
+          setError('Login failed. Please try again.');
+        }
       } else {
-        setError('Login failed. Please check your credentials and try again.');
+        setError('Network error. Please check your connection.');
       }
     } finally {
       setIsLoading(false);
@@ -213,20 +249,7 @@ const LoginView = ({ onRegister, onForgotPassword }) => {
               </div>
             </div>
 
-            {/* 🔥 ADD: Remember Me Checkbox */}
-            <div className="remember-me-section">
-              <label className="remember-me-label">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="remember-me-checkbox"
-                />
-                <span className="remember-me-text">Remember me for 30 days</span>
-              </label>
-            </div>
-
-            {/* Forgot Password Link */}
+            {/* NEW: Forgot Password Link */}
             <div className="forgot-password-section">
               <button
                 type="button"

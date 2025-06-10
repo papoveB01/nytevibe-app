@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Persistent Login Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .test-section {
+            background: #2a2a2a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success { background: #28a745; }
+        .error { background: #dc3545; }
+        .info { background: #17a2b8; }
+        pre {
+            background: #333;
+            padding: 10px;
+            overflow-x: auto;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>nYtevibe Persistent Login Test</h1>
+    
+    <div class="test-section">
+        <h2>LocalStorage Status</h2>
+        <button onclick="checkStorage()">Check Storage</button>
+        <div id="storage-info"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test Login</h2>
+        <button onclick="testLogin(false)">Login (2 hour token)</button>
+        <button onclick="testLogin(true)">Login with Remember Me (30 days)</button>
+        <div id="login-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Token Operations</h2>
+        <button onclick="validateToken()">Validate Token</button>
+        <button onclick="refreshToken()">Refresh Token</button>
+        <button onclick="checkExpiration()">Check Expiration</button>
+        <div id="token-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Clear Data</h2>
+        <button onclick="clearAuth()">Clear Authentication</button>
+    </div>
+
+    <script>
+        const API_BASE = 'https://system.nytevibe.com/api';
+        
+        function checkStorage() {
+            const info = {
+                auth_token: localStorage.getItem('auth_token'),
+                token_expires_at: localStorage.getItem('token_expires_at'),
+                remember_me: localStorage.getItem('remember_me'),
+                user_data: localStorage.getItem('user_data')
+            };
+            
+            document.getElementById('storage-info').innerHTML = 
+                '<pre>' + JSON.stringify(info, null, 2) + '</pre>';
+        }
+        
+        async function testLogin(rememberMe) {
+            const credentials = {
+                username: 'test@example.com',
+                password: 'password123',
+                remember_me: rememberMe
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(credentials)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    localStorage.setItem('auth_token', data.data.token);
+                    localStorage.setItem('token_expires_at', data.data.token_expires_at);
+                    localStorage.setItem('remember_me', rememberMe);
+                    localStorage.setItem('user_data', JSON.stringify(data.data.user));
+                    
+                    document.getElementById('login-result').innerHTML = 
+                        '<div class="status success">Login successful! Token expires: ' + 
+                        new Date(data.data.token_expires_at).toLocaleString() + '</div>';
+                } else {
+                    document.getElementById('login-result').innerHTML = 
+                        '<div class="status error">Login failed: ' + data.message + '</div>';
+                }
+            } catch (error) {
+                document.getElementById('login-result').innerHTML = 
+                    '<div class="status error">Error: ' + error.message + '</div>';
+            }
+            
+            checkStorage();
+        }
+        
+        async function validateToken() {
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                document.getElementById('token-result').innerHTML = 
+                    '<div class="status error">No token found</div>';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/validate-token`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                document.getElementById('token-result').innerHTML = 
+                    '<div class="status ' + (data.success ? 'success' : 'error') + '">' +
+                    'Token ' + (data.success ? 'valid' : 'invalid') + '</div>' +
+                    '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('token-result').innerHTML = 
+                    '<div class="status error">Error: ' + error.message + '</div>';
+            }
+        }
+        
+        async function refreshToken() {
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                document.getElementById('token-result').innerHTML = 
+                    '<div class="status error">No token found</div>';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/refresh-token`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    localStorage.setItem('auth_token', data.data.token);
+                    localStorage.setItem('token_expires_at', data.data.token_expires_at);
+                    
+                    document.getElementById('token-result').innerHTML = 
+                        '<div class="status success">Token refreshed! New expiry: ' +
+                        new Date(data.data.token_expires_at).toLocaleString() + '</div>';
+                } else {
+                    document.getElementById('token-result').innerHTML = 
+                        '<div class="status error">Refresh failed: ' + data.message + '</div>';
+                }
+                
+                checkStorage();
+            } catch (error) {
+                document.getElementById('token-result').innerHTML = 
+                    '<div class="status error">Error: ' + error.message + '</div>';
+            }
+        }
+        
+        function checkExpiration() {
+            const expiresAt = localStorage.getItem('token_expires_at');
+            if (!expiresAt) {
+                document.getElementById('token-result').innerHTML = 
+                    '<div class="status error">No expiration found</div>';
+                return;
+            }
+            
+            const expirationDate = new Date(expiresAt);
+            const now = new Date();
+            const hoursUntilExpiry = (expirationDate - now) / (1000 * 60 * 60);
+            
+            document.getElementById('token-result').innerHTML = 
+                '<div class="status info">' +
+                'Expires: ' + expirationDate.toLocaleString() + '<br>' +
+                'Hours until expiry: ' + hoursUntilExpiry.toFixed(2) + '<br>' +
+                'Needs refresh: ' + (hoursUntilExpiry < 24 ? 'Yes' : 'No') +
+                '</div>';
+        }
+        
+        function clearAuth() {
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('token_expires_at');
+            localStorage.removeItem('remember_me');
+            localStorage.removeItem('user_data');
+            
+            alert('Authentication cleared!');
+            checkStorage();
+        }
+        
+        // Check storage on load
+        checkStorage();
+    </script>
+</body>
+</html>
